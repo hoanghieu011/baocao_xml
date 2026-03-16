@@ -32,7 +32,7 @@
   },
   "HO_TEN": "Full Name",
   "TEN_BO_PHAN": "Department Name",
-  "MA_NV": "Employee ID",
+  "MA_NV": "User Name",
   "NGHI_TU_NGAY": "Leave From Date",
   "NGHI_DEN_NGAY": "Leave To Date",
   "LOAI_NGHI_PHEP": "Leave Type",

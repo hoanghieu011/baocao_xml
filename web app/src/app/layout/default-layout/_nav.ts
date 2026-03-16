@@ -70,13 +70,6 @@ export const navItems: INavDataExtended[] = [
     iconComponent: { name: 'cil-chart' },
     roles: ['bao_cao']
   },
-  // {
-  //   name: 'Báo cáo theo nhân viên',
-  //   translationKey: 'MENU.BAO_CAO_NHAN_VIEN',
-  //   url: '/bao-cao-nhan-vien',
-  //   iconComponent: { name: 'cil-address-book' },
-  //   roles: ['bao_cao']
-  // },
   {
     title: true,
     name: 'Quản trị hệ thống',

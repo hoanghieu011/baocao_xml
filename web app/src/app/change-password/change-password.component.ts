@@ -24,7 +24,8 @@ export class ChangePasswordComponent {
 
   constructor(private authService: AuthService, private translate: TranslateService, private router: Router, private http: HttpClient) {
     this.userInfo = this.authService.getUserInfo();
-    this.email = this.userInfo.ma_nv;
+    console.log(this.userInfo.USER_NAME);
+    this.email = this.userInfo.USER_NAME;
     this.translate.setDefaultLang('vi');
     const savedLang = localStorage.getItem('language') || 'vi';
     this.translate.use(savedLang);

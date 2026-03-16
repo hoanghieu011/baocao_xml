@@ -36,17 +36,13 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
             ValidIssuer = "HNM",
-            ValidAudience = "SINFONIA",
+            ValidAudience = "Audience@HNM",
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("sdfsdfdsf34fsdfs@1234fsdfsdfsdg54sdg45dsfgsg5")),
             ClockSkew = TimeSpan.Zero
         };
     });
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddScoped<NghiPhepService>();
-builder.Services.AddScoped<API.Common.ImageService>();
-builder.Services.AddSingleton<EmailService>();
-builder.Services.AddHostedService<DailyEmailJob>();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo

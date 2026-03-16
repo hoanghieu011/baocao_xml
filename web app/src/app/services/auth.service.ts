@@ -15,9 +15,9 @@ export class AuthService {
 
   constructor(private http: HttpClient, private router: Router, private httpConfig: HttpConfigService) { }
 
-  login(ma_nv: string, password: string): Observable<boolean> {
+  login(user_name: string, password: string): Observable<boolean> {
     const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
-    const body = { ma_nv, password };
+    const body = { user_name, password };
 
     return this.http.post<{ message: string; token: string }>(this.apiUrl, body, { headers }).pipe(
       map((response) => {
@@ -45,16 +45,14 @@ export class AuthService {
     try {
       const decodedToken: any = jwtDecode(token);
       return {
-        id: decodedToken.id,
-        ma_nv: decodedToken.ma_nv,
-        full_name: decodedToken.full_name,
-        id_nv: decodedToken.id_nv,
-        gioi_tinh: decodedToken.gioi_tinh,
-        vi_tri: decodedToken.vi_tri,
-        ten_bo_phan: decodedToken.ten_bo_phan,
-        cong_viec: decodedToken.cong_viec,
-        email: decodedToken.email,
-        roles: decodedToken.roles,
+        USER_ID: decodedToken.USER_ID,
+        FULL_NAME: decodedToken.FULL_NAME,
+        USER_NAME: decodedToken.USER_NAME,
+        OFFICER_ID: decodedToken.OFFICER_ID,
+        USER_LEVEL: decodedToken.USER_LEVEL,
+        CSYTID: decodedToken.CSYTID,
+        STATUS: decodedToken.STATUS,
+        NOTE: decodedToken.NOTE,
       };
     } catch (error) {
       return null;
@@ -88,13 +86,13 @@ export class AuthService {
     }
   }
 
-  changePassword(ma_nv: string, oldPassword: string, newPassword: string): Observable<boolean> {
+  changePassword(user_name: string, oldPassword: string, newPassword: string): Observable<boolean> {
     const token = localStorage.getItem('token');
     const headers = new HttpHeaders({
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`
     });
-    const body = { ma_nv, oldPassword, newPassword };
+    const body = { user_name, oldPassword, newPassword };
 
     return this.http.post<{ message: string }>(`${this.apiUrl}/ChangePassword`, body, { headers }).pipe(
       map((response) => {
@@ -108,8 +106,8 @@ export class AuthService {
       })
     );
   }
-  resetPassword(ma_nv: string, newPassword: string): Observable<boolean> {
-    const body = { ma_nv, newPassword };
+  resetPassword(user_name: string, newPassword: string): Observable<boolean> {
+    const body = { user_name, newPassword };
     const token = localStorage.getItem('token');
     const headers = new HttpHeaders({
       'Content-Type': 'application/json',

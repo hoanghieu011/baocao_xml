@@ -2,8 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Router } from '@angular/router';
-import { HttpConfigService } from './http-config.service'; // Đường dẫn có thể thay đổi tùy cấu trúc project
-
+import { HttpConfigService } from './http-config.service';
 @Injectable({
     providedIn: 'root'
 })

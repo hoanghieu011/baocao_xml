@@ -4,10 +4,16 @@ namespace API.Models
 {
     public class User
     {
-        public ulong id { get; set; }
-        public ulong id_nv { get; set; }
-        public string ma_nv { get; set; }
-        public string password { get; set; }
-        public string? role { get; set; }
+        [Key]
+        public ulong USER_ID { get; set; }
+        public string? FULL_NAME { get; set; }
+        public string USER_NAME { get; set; }
+        public string USER_PWD { get; set; }
+        public int? OFFICER_ID { get; set; }
+        public int? USER_LEVEL { get; set; }
+        public int? CSYTID { get; set; }
+        public int? STATUS { get; set; }
+        public string? NOTE { get; set; }
+        public DateTime? CREATED_DATETIME { get; set; }
     }
 }

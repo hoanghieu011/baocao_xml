@@ -76,11 +76,7 @@ export class DefaultLayoutComponent implements OnInit {
       ...item,
       name: item.translationKey ? this.translate.instant(item.translationKey) : item.name
     }));
-    this.nghiPhepService.updateNotificationBadge1()
-    this.nghiPhepService.getNotificationCount()
   }
-
-
 
   private filterNavItemsByRole(): INavDataExtended[] {
     const userInfo = this.authService.getUserInfo();
