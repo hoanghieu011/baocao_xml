@@ -1,0 +1,90 @@
+<div class="container mt-5">
+    <form [formGroup]="searchForm" (ngSubmit)="searchBoPhanForm()">
+        <div class="row mb-10">
+            <div class="col-md-8">
+                <input type="text" class="form-control" placeholder="Nhập tên bộ phận..." formControlName="searchTerm"
+                    (keyup.enter)="searchBoPhanForm()" />
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-search w-100" type="submit">Tìm kiếm</button>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-add w-100" (click)="addBoPhan()" type="button">Thêm</button>
+            </div>
+        </div>
+    </form>
+
+    <table class="table mt-3 table-bordered">
+        <thead>
+            <tr>
+                <th class="text-center">ID</th>
+                <th class="text-center">Tên bộ phận</th>
+                <th class="text-center">Số nhân viên</th>
+                <th class="text-center">Hành động</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr *ngFor="let bo_phan of ds_bo_phan">
+                <td class="text-center">{{ bo_phan.id }}</td>
+                <td class="text-center">{{ bo_phan.ten_bo_phan }}</td>
+                <td class="text-center">{{ bo_phan.so_luong_nhan_vien }}</td>
+                <td class="text-center">
+                    <button class="btn btn-link" (click)="updateBoPhan(bo_phan.id)">
+                        <i class="bi bi-pencil-square"></i>
+                    </button>
+                </td>
+            </tr>
+            <tr *ngIf="ds_bo_phan.length === 0">
+                <td colspan="4" class="text-center">Không tìm thấy dữ liệu.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="row">
+        <div class="col-md-12 text-center">
+            <button class="pagination-button" (click)="prePage()" [disabled]="currentPage === 1"
+                *ngIf="currentPage > 1">«</button>
+
+            <ng-container *ngFor="let page of getLimitedPageNumbers()">
+                <button class="pagination-button" [ngClass]="{'active': currentPage === page}" (click)="goToPage(page)">
+                    {{ page }}
+                </button>
+            </ng-container>
+
+            <button class="pagination-button" (click)="nextPage()" [disabled]="currentPage * pageSize >= totalCount"
+                *ngIf="currentPage * pageSize < totalCount">»</button>
+        </div>
+    </div>
+
+
+
+    <form [formGroup]="inforForm" (ngSubmit)="saveBoPhan()">
+        <div *ngIf="bo_phan_selected !== null || isAdd" class="modal fade show d-block custom-modal" tabindex="-1"
+            role="dialog">
+            <div class="modal-dialog modal-lg custom-dialog" role="document">
+                <div class="modal-content custom-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">{{ titleModal }}</h5>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <label for="ten_bo_phan">Tên bộ phận</label>
+                                    <input formControlName="ten_bo_phan" class="form-control" id="ten_bo_phan">
+                                </div>
+                            </div>
+                        </div>
+                        <div *ngIf="isError" class="invalid-feedback">
+                            {{ error }}
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" (click)="closeEditModal()">Đóng</button>
+                        <button type="submit" class="btn btn-primary">Lưu</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>

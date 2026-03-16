@@ -1,0 +1,113 @@
+<div class="container mt-5">
+    <form [formGroup]="searchForm" (ngSubmit)="searchNhanVienForm()">
+        <div class="row mb-10">
+            <div class="col-md-2">
+                <select2 class="form-control" formControlName="year" [overlay]="false"
+                    placeholder="{{'YEAR'|translate}}" [data]="ds_year" [styleMode]="'borderless'" id="year"
+                    (update)="update($event)" [(ngModel)]="selected_year" style="height: 38px; padding: 4px 0 0 0;">
+                </select2>
+            </div>
+            <div class="col-md-6">
+                <input type="text" class="form-control" placeholder="{{'NHAP_MA_TEN_VT_BP'|translate}}"
+                    formControlName="searchTerm" (keyup.enter)="searchNhanVienForm()" />
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-search w-100" type="submit">{{'TIM_KIEM'|translate}}</button>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn btn-import w-100" (click)="importExcel()"
+                    type="button">{{'IMPORT_EXCEL'|translate}}</button>
+            </div>
+            <input #fileInput type="file" style="display: none" (change)="onFileSelected($event)" />
+            <div *ngIf="loading" class="loading-overlay">
+                <div class="spinner"></div>
+                <p>{{'DANG_XL'|translate}}</p>
+            </div>
+        </div>
+    </form>
+
+    <table class="table mt-3 table-bordered">
+        <thead>
+            <tr>
+                <th>{{'MA_NV'|translate}}</th>
+                <th>{{'TEN_NHAN_VIEN'|translate}}</th>
+                <th>{{'GIOI_TINH'|translate}}</th>
+                <th>{{'BO_PHAN'|translate}}</th>
+                <th>{{'VI_TRI'|translate}}</th>
+                <th>{{'CONG_VIEC'|translate}}</th>
+                <th>{{'PHEP_TON'|translate}}</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr *ngFor="let nhan_vien of ds_nhan_vien" [ngClass]="'status-v1'">
+                <td>{{ nhan_vien.maNv }}</td>
+                <td>{{ nhan_vien.tenNhanVien }}</td>
+                <td>{{ 'GT_' + removeVietnameseTones(nhan_vien.gioiTinh.toUpperCase()) | translate }}</td>
+                <td>{{ nhan_vien.tenBoPhan }}</td>
+                <td> {{ nhan_vien.tenViTri | translate}}</td>
+                <td>{{nhan_vien.congViec}}</td>
+                <td class="text-center">
+                    <div class="d-flex align-items-center justify-content-center gap-1">
+                        <span>{{ nhan_vien.phepTon }}</span>
+                        <button class="btn btn-link me-1" (click)="openEdit(nhan_vien)"><i
+                                class="bi bi-pencil-square"></i></button>
+                    </div>
+                </td>
+
+            </tr>
+            <tr *ngIf="ds_nhan_vien.length === 0">
+                <td colspan="7" class="text-center">{{'KHONG_CO_DL'|translate}}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="row">
+        <div class="col-md-12 text-center">
+            <button class="pagination-button" (click)="prePage()" [disabled]="currentPage === 1"
+                *ngIf="currentPage > 1">«</button>
+
+            <ng-container *ngFor="let page of getLimitedPageNumbers()">
+                <button class="pagination-button" [ngClass]="{'active': currentPage === page}" (click)="goToPage(page)">
+                    {{ page }}
+                </button>
+            </ng-container>
+
+            <button class="pagination-button" (click)="nextPage()" [disabled]="currentPage * pageSize >= totalCount"
+                *ngIf="currentPage * pageSize < totalCount">»</button>
+        </div>
+    </div>
+
+    <form [formGroup]="inforForm" (ngSubmit)="saveNhanVien()">
+        <div *ngIf="nhan_vien_selected !== null" class="modal fade show d-block custom-modal" tabindex="-1"
+            role="dialog">
+            <div class="modal-dialog modal-lg custom-dialog" role="document">
+                <div class="modal-content custom-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">{{ titleModal |translate }}</h5>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <label for="phep_ton">{{'PHEP_TON'|translate}}</label>
+                                    <input formControlName="phep_ton" placeholder="{{'PHEP_TON'|translate}}"
+                                        class="form-control" id="phep_ton">
+                                </div>
+                            </div>
+                        </div>
+                        <div *ngIf="isError" class="invalid-feedback">
+                            {{ error | translate}}
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary"
+                            (click)="closeEditModal()">{{'DONG'|translate}}</button>
+                        <button type="submit" class="btn btn-primary">{{'LUU'|translate}}</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </form>
+
+</div>

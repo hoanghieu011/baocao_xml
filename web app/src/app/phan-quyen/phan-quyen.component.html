@@ -1,0 +1,75 @@
+<div class="container mt-5">
+    <form [formGroup]="searchForm" (ngSubmit)="searchNhanVienForm()">
+        <div class="row mb-10">
+            <div class="col-md-10">
+                <input type="text" class="form-control" placeholder="{{'NHAP_MA_TEN_BO_PHAN'|translate}}"
+                    formControlName="searchTerm" (keyup.enter)="searchNhanVienForm()" />
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-search w-100" type="submit">{{'TIM_KIEM'|translate}}</button>
+            </div>
+        </div>
+    </form>
+
+    <table class="table mt-3 table-bordered">
+        <thead>
+            <tr>
+                <th>{{'TEN_BO_PHAN'|translate}}</th>
+                <th>{{'MA_NV'|translate}}</th>
+                <th>{{'HO_TEN'|translate}}</th>
+                <th>{{'TAO_PHIEU'|translate}}</th>
+                <th>{{'XU_LY_PHIEU'|translate}}</th>
+                <th>{{'QUAN_TRI'|translate}}</th>
+                <th>{{'MENU.BAO_CAO'|translate}}</th>
+                <th>{{'MENU.BAO_CAO_BO_PHAN'|translate}}</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr *ngFor="let nhanVien of nhanViens" [ngClass]="'status-v1'">
+                <td>{{ nhanVien.ten_bo_phan }}</td>
+                <td>{{ nhanVien.ma_nv }}</td>
+                <td>{{ nhanVien.full_name }}</td>
+                <td class="text-center">
+                    <input type="checkbox" data-role="tao_phieu" [checked]="nhanVien.role.includes('tao_phieu')"
+                        (change)="onRoleChange(nhanVien, $event)" />
+                </td>
+                <td class="text-center">
+                    <input type="checkbox" data-role="xu_ly" [checked]="nhanVien.role.includes('xu_ly')"
+                        (change)="onRoleChange(nhanVien, $event)" />
+                </td>
+                <td class="text-center">
+                    <input type="checkbox" data-role="admin" [checked]="nhanVien.role.includes('admin')"
+                        (change)="onRoleChange(nhanVien, $event)" />
+                </td>
+                <td class="text-center"> 
+                    <input type="checkbox" data-role="bao_cao" [checked]="nhanVien.role.includes('bao_cao')"
+                        (change)="onRoleChange(nhanVien, $event)" />
+                </td>
+                <td class="text-center"> 
+                    <input type="checkbox" data-role="bao_bp_cao_bo_phan" [checked]="nhanVien.role.includes('bao_bp_cao_bo_phan')"
+                        (change)="onRoleChange(nhanVien, $event)" />
+                </td>
+            </tr>
+            <tr *ngIf="nhanViens.length === 0">
+                <td colspan="8" class="text-center">{{'KHONG_CO_DL'|translate}}</td>
+            </tr>
+        </tbody>
+    </table>
+
+
+    <div class="row">
+        <div class="col-md-12 text-center">
+            <button class="pagination-button" (click)="prePage()" [disabled]="currentPage === 1"
+                *ngIf="currentPage > 1">«</button>
+
+            <ng-container *ngFor="let page of getLimitedPageNumbers()">
+                <button class="pagination-button" [ngClass]="{'active': currentPage === page}" (click)="goToPage(page)">
+                    {{ page }}
+                </button>
+            </ng-container>
+
+            <button class="pagination-button" (click)="nextPage()" [disabled]="currentPage * pageSize >= totalCount"
+                *ngIf="currentPage * pageSize < totalCount">»</button>
+        </div>
+    </div>
+</div>

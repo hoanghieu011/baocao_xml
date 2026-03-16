@@ -1,0 +1,170 @@
+<div class="container mt-5">
+    <form [formGroup]="searchForm" (ngSubmit)="searchNhanVienForm()">
+        <div class="d-flex align-items-center mb-2" style="flex-wrap: wrap;">
+            <input type="text" class="form-control mr-2 mb-2" placeholder="{{ 'NHAP_MA_TEN_NV' | translate }}"
+                formControlName="searchTerm" (keyup.enter)="searchNhanVienForm()"
+                style="max-width: 400px; margin-right: 5px">
+
+            <button class="btn btn-search mr-2 mb-2" type="submit" (click)="searchNhanVienForm()"
+                style="max-width: 120px;">
+                {{ 'TIM_KIEM' | translate }}
+            </button>
+
+            <button class="btn btn-add mr-2 mb-2" (click)="addNhanVien()" type="button" style="max-width: 120px;">
+                {{ 'THEM' | translate }}
+            </button>
+
+            <button class="btn btn-load mr-2 mb-2" (click)="xuatExcel()" type="button" style="max-width: 120px;">
+                {{ 'EXPORT_EXCEL' | translate }}
+            </button>
+
+            <button class="btn btn-import mr-2 mb-2" (click)="importExcel()" type="button" style="max-width: 120px;">
+                {{ 'IMPORT_EXCEL' | translate }}
+            </button>
+            <button class="btn btn-secondary mr-2 mb-2" (click)="triggerUpdateWorkingPositionFile()" type="button"
+                style="max-width: 180px;">
+                {{ 'CAP_NHAT_CV' | translate }}
+            </button>
+
+            <input #fileInput type="file" style="display: none" (change)="onFileSelected($event)" />
+            <input #updateFileInput type="file" style="display: none"
+                (change)="onUpdateWorkingPositionFileSelected($event)" />
+
+            <div *ngIf="loading" class="loading-overlay">
+                <div class="spinner"></div>
+                <p>{{ 'DANG_XL' | translate }}</p>
+            </div>
+        </div>
+    </form>
+
+
+    <table class="table mt-3 table-bordered">
+        <thead>
+            <tr>
+                <th>{{'MA_NV'|translate}}</th>
+                <th>{{'TEN_NHAN_VIEN'|translate}}</th>
+                <th>{{'GIOI_TINH'|translate}}</th>
+                <th>{{'BO_PHAN'|translate}}</th>
+                <th>{{'VI_TRI'|translate}}</th>
+                <th>{{'CONG_VIEC'|translate}}</th>
+                <th>{{'HANH_DONG'|translate}}</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- <tr *ngFor="let nhan_vien of ds_nhan_vien" (click)="updateNhanVien(nhan_vien.id)"> -->
+            <tr *ngFor="let nhan_vien of ds_nhan_vien" [ngClass]="'status-v1'">
+                <td>{{ nhan_vien.ma_nv }}</td>
+                <td>{{ nhan_vien.full_name }}</td>
+                <td>{{ 'GT_' + removeVietnameseTones(nhan_vien.gioi_tinh.toUpperCase()) | translate }}</td>
+                <td>{{ nhan_vien.ten_bo_phan }}</td>
+                <td> {{ nhan_vien.vi_tri | translate}}</td>
+                <td> {{ nhan_vien.cong_viec }}</td>
+                <td class="text-center">
+                    <button class="btn btn-link" (click)="updateNhanVien(nhan_vien.id)">
+                        <i class="bi bi-pencil-square"></i>
+                    </button>
+                    <button class="btn btn-link text-danger" (click)="deleteNhanVien(nhan_vien.id)">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+            </tr>
+            <tr *ngIf="ds_nhan_vien.length === 0">
+                <td colspan="7" class="text-center">{{'KHONG_CO_DL'|translate}}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="row">
+        <div class="col-md-12 text-center">
+            <button class="pagination-button" (click)="prePage()" [disabled]="currentPage === 1"
+                *ngIf="currentPage > 1">«</button>
+
+            <ng-container *ngFor="let page of getLimitedPageNumbers()">
+                <button class="pagination-button" [ngClass]="{'active': currentPage === page}" (click)="goToPage(page)">
+                    {{ page }}
+                </button>
+            </ng-container>
+
+            <button class="pagination-button" (click)="nextPage()" [disabled]="currentPage * pageSize >= totalCount"
+                *ngIf="currentPage * pageSize < totalCount">»</button>
+        </div>
+    </div>
+
+
+
+    <form [formGroup]="inforForm" (ngSubmit)="saveNhanVien()">
+        <div *ngIf="nhan_vien_selected !== null || isAdd" class="modal fade show d-block custom-modal" tabindex="-1"
+            role="dialog">
+            <div class="modal-dialog modal-lg custom-dialog" role="document">
+                <div class="modal-content custom-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">{{ titleModal |translate }}</h5>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <label for="ma_nhan_vien">{{'EMPLOYEE_ID'|translate}}</label>
+                                    <input [readonly]="!isAdd" formControlName="ma_nhan_vien"
+                                        placeholder="{{'EMPLOYEE_ID'|translate}}" class="form-control"
+                                        id="ma_nhan_vien">
+                                </div>
+                                <div class="col-md-5">
+                                    <label for="ten_nhan_vien">{{'TEN_NHAN_VIEN'|translate}}</label>
+                                    <input formControlName="ten_nhan_vien" placeholder="{{'TEN_NHAN_VIEN'|translate}}"
+                                        class="form-control" id="ten_nhan_vien">
+                                </div>
+                                <div class="col-md-2">
+                                    <label for="gioi_tinh">{{'GIOI_TINH'|translate}}</label>
+                                    <select2 class="form-control custom-select" formControlName="gioi_tinh"
+                                        [overlay]="false" placeholder="{{'GIOI_TINH'|translate}}" [data]="ds_gioi_tinh"
+                                        [styleMode]="'borderless'" id="gioi_tinh">
+                                    </select2>
+                                </div>
+                                <div class="col-md-2">
+                                    <label for="bo_phan">{{'BO_PHAN'| translate}}</label>
+                                    <select2 class="form-control custom-select" formControlName="bo_phan"
+                                        [overlay]="false" placeholder="{{'BO_PHAN'|translate}}" [data]="ds_bo_phan"
+                                        [styleMode]="'borderless'" id="bo_phan">
+                                    </select2>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <label for="vi_tri">{{'VI_TRI'|translate}}</label>
+                                    <select2 class="form-control custom-select" formControlName="vi_tri"
+                                        [overlay]="false" placeholder="{{'VI_TRI'|translate}}" [data]="ds_vi_tri"
+                                        [styleMode]="'borderless'" id="vi_tri">
+                                    </select2>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="cong_viec">{{'CONG_VIEC'|translate}}</label>
+                                    <input formControlName="cong_viec" placeholder="{{'CONG_VIEC'|translate}}"
+                                        class="form-control" id="cong_viec">
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="email">{{'EMAIL'|translate}}</label>
+                                    <input formControlName="email" class="form-control" id="email">
+                                </div>
+                            </div>
+                        </div>
+                        <div *ngIf="isError" class="invalid-feedback">
+                            {{ error }}
+                        </div>
+                        <div *ngIf="isResetSuccess || isAddSuccess" class="success-feedback">
+                            {{ resetSuccessStr }}
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary"
+                            (click)="closeEditModal()">{{'DONG'|translate}}</button>
+                        <button type="button" *ngIf="nhan_vien_selected" class="btn btn-warning"
+                            (click)="resetPassword()">{{'DAT_LAI_MAT_KHAU'|translate}}</button>
+                        <button type="submit" class="btn btn-primary"
+                            [disabled]="isAddSuccess">{{'LUU'|translate}}</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>

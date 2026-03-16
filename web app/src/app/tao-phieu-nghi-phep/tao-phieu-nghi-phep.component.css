@@ -1,0 +1,172 @@
+.container {
+  max-width: 800px;
+  margin: auto;
+  padding: 20px;
+  background-color: hsl(0, 0%, 98%);
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+h4 {
+  color: #0e5dbc;
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  font-weight: 500;
+}
+
+.form-control {
+  border-radius: 0.375rem;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.form-control-1 {
+  border-radius: 1rem;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.form-control:focus {
+  border-color: #0e5dbc;
+  box-shadow: 0 0 0 0.2rem rgba(14, 93, 191, 0.25);
+}
+
+.invalid-feedback {
+  color: #dc3545;
+  font-size: 0.875rem;
+  display: block;
+}
+
+
+.btn-primary {
+  background-color: #0e5dbc;
+  border-color: #0e5dbc;
+}
+
+.btn-primary:hover {
+  background-color: #0b4a9a;
+  border-color: #0a3a7a;
+}
+
+.form-check-input:checked~.form-check-label {
+  color: #0e5dbc;
+}
+
+.form-check {
+  margin-bottom: 1rem;
+}
+
+.form-check-input {
+  margin-right: 0.5rem;
+}
+
+/* .row {
+    margin-bottom: 1rem;
+  } */
+
+.col-md-6,
+.col-md-7,
+.col-md-3,
+.col-md-2,
+.col-md-4,
+.col-md-5,
+.col-md-8,
+.col-md-12 {
+  padding: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+h5 {
+  color: #333;
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+}
+
+.text-danger {
+  font-weight: bold;
+}
+
+.header-img-container {
+  max-width: 800px;
+  margin: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: -10px;
+}
+
+.header-img-container a {
+  width: 95%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.header-img {
+  width: 100%;
+  max-width: 800px;
+  height: auto;
+  display: block;
+}
+
+#content {
+  min-height: 200px;
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #ced4da;
+  padding: 5px;
+  border-radius: 5px;
+  background-color: #fff;
+  margin-top: 5px;
+}
+
+div[matformfieldlineripple] {
+  display: none;
+}
+
+div[matformfieldnotchedoutline] {
+  display: none;
+}
+
+::ng-deep .mat-form-field-wrapper {
+  margin-bottom: -1.25em;
+}
+
+:host ::ng-deep .mat-mdc-form-field-subscript-wrapper .mat-mdc-form-field-bottom-align {
+  height: 0px;
+  width: 0px;
+}
+
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.spinner {
+  border: 8px solid #f3f3f3;
+  border-top: 8px solid #3498db;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  animation: spin 1s linear infinite;
+  margin-bottom: 10px;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}

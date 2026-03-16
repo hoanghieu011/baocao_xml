@@ -1,0 +1,74 @@
+<div class="container mt-5">
+    <div class="row mb-10">
+        <div class="col-md-2">
+            <select2 class="form-control custom-select" [overlay]="false" placeholder="" [data]="ds_types"
+                [styleMode]="'borderless'" (update)="update($event)" id="report_type" [(ngModel)]="selectedReportType">
+            </select2>
+        </div>
+        <div class="col-md-3">
+            <select2 class="form-control custom-select" [overlay]="false" placeholder="" [data]="ds_thoi_gian"
+                [styleMode]="'borderless'" (update)="update2($event)" id="report_type_thoi_gian"
+                [(ngModel)]="selectedTimeValue">
+            </select2>
+        </div>
+        <div class="col-md-7">
+            <form [formGroup]="searchForm" (ngSubmit)="searchNhanVienForm()">
+                <div class="row">
+                    <div class="col-md-8">
+                        <input type="text" class="form-control" placeholder="Nhập tên hoặc mã nhân viên..."
+                            formControlName="searchTerm" (keyup.enter)="searchNhanVienForm()" />
+                    </div>
+                    <div class="col-md-4">
+                        <button class="btn btn-search w-100 col-md-2" type="submit">Tìm kiếm</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <table class="table mt-3 table-bordered">
+        <thead>
+            <tr>
+                <th class="text-center">Mã nhân viên</th>
+                <th class="text-center">Tên nhân viên</th>
+                <th class="text-center">Số ngày nghỉ</th>
+                <th class="text-center">Đã xử lý</th>
+                <th class="text-center">Chưa xử lý</th>
+                <th class="text-center">Đã hủy</th>
+                <th class="text-center">Từ chối</th>
+                <th class="text-center">Tổng số phiếu</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr *ngFor="let nhan_vien of ds_nhan_vien">
+                <td class="text-center">{{ nhan_vien.ma_nv }}</td>
+                <td class="text-center">{{ nhan_vien.full_name }}</td>
+                <td class="text-center">{{ nhan_vien.so_ngay_nghi }}</td>
+                <td class="text-center">{{ nhan_vien.da_xu_ly }}</td>
+                <td class="text-center">{{ nhan_vien.chua_xu_ly }}</td>
+                <td class="text-center">{{ nhan_vien.da_huy }}</td>
+                <td class="text-center">{{ nhan_vien.tu_choi }}</td>
+                <td class="text-center">{{ nhan_vien.tong }}</td>
+            </tr>
+            <tr *ngIf="ds_nhan_vien.length === 0">
+                <td colspan="8" class="text-center">Không tìm thấy dữ liệu.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="row">
+        <div class="col-md-12 text-center">
+            <button class="pagination-button" (click)="prePage()" [disabled]="currentPage === 1"
+                *ngIf="currentPage > 1">«</button>
+
+            <ng-container *ngFor="let page of getLimitedPageNumbers()">
+                <button class="pagination-button" [ngClass]="{'active': currentPage === page}" (click)="goToPage(page)">
+                    {{ page }}
+                </button>
+            </ng-container>
+
+            <button class="pagination-button" (click)="nextPage()" [disabled]="currentPage * pageSize >= totalCount"
+                *ngIf="currentPage * pageSize < totalCount">»</button>
+        </div>
+    </div>
+</div>

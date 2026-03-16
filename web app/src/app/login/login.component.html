@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <title>Đăng nhập - Hệ thống quản lý nghỉ phép</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="keywords" content="Hệ thống quản lý nghỉ phép">
+    <script type="application/x-javascript">
+        addEventListener("load", function () {
+            setTimeout(hideURLbar, 0);
+        }, false);
+        function hideURLbar() {
+            window.scrollTo(0, 1);
+        }
+    </script>
+    <!-- <link href="https://fonts.googleapis.com/css?family=Raleway:100,200,300,400,500,600,700,800,900" rel="stylesheet"> -->
+    <link href="https://fonts.googleapis.com/css?family=Monoton" rel="stylesheet">
+</head>
+
+<body>
+    <div class="header-container">
+        <div class="language-switcher">
+            <button (click)="switchLanguage('vi')">🇻🇳 VN</button>
+            <button (click)="switchLanguage('en')">🇺🇸 EN</button>
+            <button (click)="switchLanguage('ja')">🇯🇵 JP</button>
+        </div>
+    </div>
+    <h1 class="w3ls">{{ 'TITLE' | translate }}</h1>
+    <div class="content-w3ls">
+        <div class="content-agile1">
+            <!-- <img src="assets/images/logo-home-dark.png" alt="Logo" class="logo"> -->
+        </div>
+        <div class="content-agile2">
+            <img src="assets/images/logo-home.png" alt="Logo" class="logo">
+            <form (ngSubmit)="onSubmit()">
+
+                <div class="form-control-1 w3layouts">
+                    <input type="text" id="firstname" [(ngModel)]="ma_nv" name="ma_nv"
+                        placeholder="{{ 'EMPLOYEE_ID' | translate }}" required>
+                </div>
+                <div class="form-control-1 agileinfo">
+                    <div class="captcha-container">
+                        <input [type]="hidePassword ? 'password' : 'text'" class="lock" name="password" id="password1"
+                            [(ngModel)]="password" placeholder="{{ 'PASSWORD' | translate }}" required>
+                        <i class="bi bi-eye-slash"
+                            (click)="togglePasswordVisibility()"
+                            style="cursor: pointer; color: white; margin-left: -33px;"></i>
+                    </div>
+                </div>
+
+
+                <div class="form-control-1 agileinfo">
+                    <div class="captcha-container">
+                        <input type="text" id="cap" [(ngModel)]="userCaptcha" name="captcha"
+                            placeholder="{{ 'CAPTCHA' | translate }}" required class="captcha-input">
+                        <img [src]="captchaImage" alt="Captcha" class="captcha-image">
+                    </div>
+                </div>
+                <div *ngIf="!captchaValid" class="invalid-feedback">{{ 'INVALID_CAPTCHA' | translate }}</div>
+                <div *ngIf="loginFalse" class="invalid-feedback">{{ 'INVALID_LOGIN' | translate }}</div>
+                <div *ngIf="connectFalse" class="invalid-feedback">{{ 'SERVER_ERROR' | translate }}</div>
+
+                <div class="form-check">
+                    <input type="checkbox" id="rememberMe" [(ngModel)]="rememberMe" name="rememberMe">
+                    <label for="rememberMe">{{ 'REMEMBER_ME' | translate }}</label>
+                </div>
+
+                <input type="submit" class="register" value="{{ 'LOGIN' | translate }}">
+            </form>
+        </div>
+        <div class="clear"></div>
+    </div>
+
+    <p class="copyright w3l">
+        {{'DESIGNED_&_OPERATED' | translate}} <a href="https://vnpthanam.vn/" target="_blank">VNPT Hà Nam</a> &copy;
+        2025
+    </p>
+</body>
+
+</html>

@@ -1,0 +1,96 @@
+<div class="container mt-5">
+    <form [formGroup]="searchForm" (ngSubmit)="searchLoaiPhepForm()">
+        <div class="row mb-10">
+            <div class="col-md-8">
+                <input type="text" class="form-control" placeholder="Nhập tên loại phép..." formControlName="searchTerm"
+                    (keyup.enter)="searchLoaiPhepForm()" />
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-search w-100" type="submit">Tìm kiếm</button>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-add w-100" (click)="addLoaiPhep()" type="button">Thêm</button>
+            </div>
+        </div>
+    </form>
+
+    <table class="table mt-3 table-bordered">
+        <thead>
+            <tr>
+                <th class="text-center">ID</th>
+                <th class="text-center">Tên loại phép</th>
+                <th class="text-center">Số ngày nghỉ tối đa</th>
+                <th class="text-center">Hành động</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr *ngFor="let loai_phep of ds_loai_phep">
+                <td class="text-center">{{ loai_phep.id }}</td>
+                <td class="text-center">{{ loai_phep.ten_loai_phep }}</td>
+                <td class="text-center">{{ loai_phep.so_ngay_nghi }}</td>
+                <td class="text-center">
+                    <button class="btn btn-link" (click)="updateLoaiPhep(loai_phep.id)">
+                        <i class="bi bi-pencil-square"></i>
+                    </button>
+                </td>
+            </tr>
+            <tr *ngIf="ds_loai_phep.length === 0">
+                <td colspan="4" class="text-center">Không tìm thấy dữ liệu.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="row">
+        <div class="col-md-12 text-center">
+            <button class="pagination-button" (click)="prePage()" [disabled]="currentPage === 1"
+                *ngIf="currentPage > 1">«</button>
+
+            <ng-container *ngFor="let page of getLimitedPageNumbers()">
+                <button class="pagination-button" [ngClass]="{'active': currentPage === page}" (click)="goToPage(page)">
+                    {{ page }}
+                </button>
+            </ng-container>
+
+            <button class="pagination-button" (click)="nextPage()" [disabled]="currentPage * pageSize >= totalCount"
+                *ngIf="currentPage * pageSize < totalCount">»</button>
+        </div>
+    </div>
+
+
+
+    <form [formGroup]="inforForm" (ngSubmit)="saveLoaiPhep()">
+        <div *ngIf="loai_phep_selected !== null || isAdd" class="modal fade show d-block custom-modal" tabindex="-1"
+            role="dialog">
+            <div class="modal-dialog modal-lg custom-dialog" role="document">
+                <div class="modal-content custom-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">{{ titleModal }}</h5>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <div class="row">
+                                <div class="col-md-9">
+                                    <label for="ten_loai_phep">Tên loại nghỉ phép</label>
+                                    <input formControlName="ten_loai_phep" class="form-control" id="ten_loai_phep">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="so_ngay_nghi">Số ngày nghỉ</label>
+                                    <input formControlName="so_ngay_nghi" class="form-control" id="so_ngay_nghi">
+                                </div>
+                            </div>
+                        </div>
+                        <div *ngIf="isError" class="invalid-feedback">
+                            {{ error }}
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" (click)="closeEditModal()">Đóng</button>
+                        <button type="submit" class="btn btn-primary">Lưu</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+
+
+</div>

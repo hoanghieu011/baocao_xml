@@ -1,0 +1,143 @@
+<div class="container mt-5">
+    <header class="text-center mb-4">
+        <h4>{{'MENU.CREATE_LEAVE_FORM' | translate}}</h4>
+    </header>
+    <div *ngIf="isSubmitting" class="loading-overlay">
+        <div class="spinner"></div>
+        <p>{{'DANG_XL'|translate}}</p>
+    </div>
+    <form [formGroup]="registerForm" novalidate>
+        <div class="form-group">
+            <div class="row">
+                <div class="col-md-6">
+                    <label for="ho_ten">{{'HO_TEN'|translate}}</label>
+                    <input formControlName="ho_ten" placeholder="" class="form-control" id="ho_ten" readonly>
+                </div>
+                <div class="col-md-3">
+                    <label for="bo_phan">{{'TEN_BO_PHAN'|translate}}</label>
+                    <input formControlName="bo_phan" placeholder="" class="form-control" id="bo_phan" readonly>
+                </div>
+                <div class="col-md-3">
+                    <label for="ma_nv">{{'MA_NV'|translate}}</label>
+                    <input formControlName="ma_nv" placeholder="" class="form-control" id="ma_nv" readonly>
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="row">
+                <div class="col-md-6">
+                    <label for="nghi_tu">{{'NGHI_TU_NGAY'|translate}}</label>
+                    <input formControlName="nghi_tu" type="date" class="form-control" id="nghi_tu" name="nghi_tu"
+                        [min]="minDate" (change)="onNghiTuChange()" (blur)="nghiTuTouched = true"
+                        onkeydown="return false" />
+
+                    <div *ngIf="nghiTuInvalid && nghiTuTouched" class="invalid-feedback">
+                        {{'ER_NGHI_TU'|translate}}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <label for="nghi_den">{{'NGHI_DEN_NGAY'|translate}}</label>
+                    <input (change)="onNghiDenChange()" formControlName="nghi_den" type="date" class="form-control"
+                        id="nghi_den" name="nghi_den" [min]="registerForm.get('nghi_tu')?.value || today"
+                        (blur)="nghiDenTouched = true" onkeydown="return false" />
+                    <div *ngIf="nghiDenInvalid && nghiDenTouched" class="invalid-feedback">
+                        {{'ER_NGHI_DEN'|translate}}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="form-group form-check">
+            <input formControlName="nghi_t7" type="checkbox" class="form-check-input" id="nghi_t7"
+                (change)="calculateSoNgayNghi()">
+            <label class="form-check-label" for="nghi_t7">{{'BAO_GOM_T7' | translate}}</label>
+        </div>
+        <div class="form-group">
+            <div class="row">
+                <div class="col-md-6">
+                    <label for="ly_do">{{'LOAI_NGHI_PHEP'|translate}}</label>
+                    <select2 class="form-control" formControlName="ly_do" [overlay]="false"
+                        placeholder="{{'CHON_LOAI_PHEP'|translate}}" [data]="dsLyDo" [styleMode]="'borderless'"
+                        id="ly_do" (update)="update($event)" style="height: 38px; padding: 4px 0 0 0;">
+                    </select2>
+                    <div *ngIf="er_loai_nghi_phep || er_np_nam" class="invalid-feedback">
+                        {{ er_loai_nghi_phep_str |translate }}
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <label for="so_ngay_nghi">{{'SO_NGAY_NGHI'|translate}}</label>
+                    <input formControlName="so_ngay_nghi" placeholder="" class="form-control" id="so_ngay_nghi"
+                        readonly>
+                </div>
+                <div class="col-md-4">
+                    <label for="phep_ton">{{'PHEP_TON_HET_NAM'|translate}}</label>
+                    <input formControlName="phep_ton" placeholder="" class="form-control" id="phep_ton" readonly>
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="row">
+                <div class="col-md-12">
+                    <label for="ly_do">{{'LY_DO_NGHI'|translate}}</label>
+                    <quill-editor id="content" [(ngModel)]="ly_do_nghi" (onEditorCreated)="onEditorCreated($event)"
+                        (ngModelChange)="onLyDoChange()" [modules]="editorModules" [ngModelOptions]="{standalone: true}"
+                        theme="snow" style="width: 100%; height: 20%;">
+                    </quill-editor>
+                </div>
+                <div *ngIf="ly_do_str" class="invalid-feedback">
+                    {{'ER_LY_DO'|translate}}
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="row">
+                <div class="col-md-12">
+                    <label for="ban_giao">{{'CONG_VIEC_BAN_GIAO'|translate}}</label>
+                    <input formControlName="ban_giao" placeholder="{{'NHAP_TT_BAN_GIAO'|translate}}"
+                        class="form-control" id="ban_giao">
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>{{ 'CHUNG_TU' | translate }}</label>
+            <div class="row" style="margin-bottom: -24px;">
+                <div class="col-md-2">
+                    <div class="form-check">
+                        <input type="checkbox" id="coChungTu" ngModelOptions="{standalone: true}"
+                            [checked]="hasChungTu === true" (change)="selectChungTu(true)" class="form-check-input">
+                        <label class="form-check-label" for="coChungTu">{{ 'CO' | translate }}</label>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-check">
+                        <input type="checkbox" id="khongChungTu" ngModelOptions="{standalone: true}"
+                            [checked]="hasChungTu === false" (change)="selectChungTu(false)" class="form-check-input">
+                        <label class="form-check-label" for="khongChungTu">{{ 'KHONG' | translate }}</label>
+                    </div>
+                </div>
+            </div>
+            <div *ngIf="hasChungTu" class="mt-2">
+                <input type="file" id="chungtu_file" (change)="onFileSelected($event)" accept="image/*"
+                    class="form-control">
+                <small class="form-text text-muted">{{ 'CHUNG_TU_HINT' | translate }}</small>
+            </div>
+            <div *ngIf="hasChungTu && ['O', 'CO', 'TS', 'DS', 'AP', 'S'].includes(registerForm.get('ly_do')?.value)"
+                class="mt-2">
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="xacNhanBosung"
+                        [(ngModel)]="additionalConfirmation" [ngModelOptions]="{standalone: true}">
+                    <label class="form-check-label" for="xacNhanBosung">{{ 'XAC_NHAN_O' | translate
+                        }}</label>
+                </div>
+            </div>
+            <div *ngIf="['O', 'CO', 'TS', 'DS', 'AP', 'S'].includes(registerForm.get('ly_do')?.value) && !hasChungTu && !selectedFile"
+                class="invalid-feedback d-block">
+                {{ 'ER_XN_O' | translate }}
+            </div>
+        </div>
+
+
+        <button type="submit" class="btn btn-primary" style="display: block; margin: 14px auto;" (click)="onSubmit()"
+            [disabled]="isSubmitting">{{'TAO_PHIEU'|translate}}</button>
+    </form>
+</div>

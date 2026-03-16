@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.app.json",
+  "compilerOptions": {
+    "outDir": "dist/coreui-free-angular-admin-template",
+    "target": "ESNext",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "types": ["node"],
+    "allowSyntheticDefaultImports": true
+  },
+  "files": ["server.mts"],
+  "angularCompilerOptions": {
+    "enableIvy": false
+  },
+
+}

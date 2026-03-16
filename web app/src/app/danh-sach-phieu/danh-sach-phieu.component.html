@@ -1,0 +1,449 @@
+<div class="container mt-5">
+    <form [formGroup]="searchForm" (ngSubmit)="searchPhieuNghiForm()">
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <select2 class="form-control" formControlName="status" [overlay]="false" placeholder=""
+                    [data]="ds_trang_thai" (update)="update($event)" [styleMode]="'borderless'" [value]="currentStatus"
+                    id="trang_thai" style="height: 38px; padding: 4px 0 0 0;">
+                </select2>
+            </div>
+        </div>
+    </form>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>{{'NGAY_TAO'|translate}}</th>
+                            <th>{{'LOAI_NGHI'|translate}}</th>
+                            <th>{{'NGHI_TU_NGAY'|translate}}</th>
+                            <th>{{'NGHI_DEN_NGAY'|translate}}</th>
+                            <th>{{'SO_NGAY_NGHI'|translate}}</th>
+                            <th>{{'LY_DO'|translate}}</th>
+                            <th>{{'CHUNG_TU' | translate}}</th>
+                            <th>{{'TRANG_THAI'|translate}}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- <tr *ngFor="let phieu_nghi of ds_phieu_nghi" [ngClass]="'status-v1'"
+                            (click)="viewPhieuNghiDetails(phieu_nghi.id)" (click)="$event.stopPropagation()"> -->
+                        <tr *ngFor="let phieu_nghi of ds_phieu_nghi"
+                            [ngClass]="{'status-v1': true, 'thong-bao': phieu_nghi.thongBao === 1}"
+                            (click)="viewPhieuNghiDetails(phieu_nghi.id)" (click)="$event.stopPropagation()">
+
+
+
+                            <td>{{ phieu_nghi.ngayTao | date: 'dd/MM/yyyy' }}</td>
+                            <td>
+                                <span *ngIf="phieu_nghi.kyHieuLyDo !== '#'">{{ phieu_nghi.kyHieuLyDo }} - </span>
+                                {{ phieu_nghi.lyDoDienGiai | translate }}
+                            </td>
+                            <td>{{phieu_nghi.nghiTu | date: 'dd/MM/yyyy'}}</td>
+                            <td>{{phieu_nghi.nghiDen | date: 'dd/MM/yyyy'}}</td>
+                            <td>{{ phieu_nghi.soNgayNghi }}</td>
+                            <td class="ly-do-column" [innerHTML]="phieu_nghi.lyDoNghiStr"></td>
+                            <td style="text-align: center;">
+                                <ng-container
+                                    *ngIf="['O', 'CO', 'TS', 'DS', 'AP', 'S'].includes(phieu_nghi?.kyHieuLyDo); else blankSpace">
+                                    <span class="text-success">✔</span>
+                                </ng-container>
+                                <ng-template #blankSpace>&nbsp;</ng-template>
+                            </td>
+                            <td>
+                                <ng-container *ngIf="phieu_nghi.trangThai === '-1'; else checkDuyet">
+                                    {{ 'DA_HUY' | translate }}
+                                </ng-container>
+                                <ng-template #checkDuyet>
+                                    <ng-container *ngIf="phieu_nghi.duyet === 0; else duyetStatus">
+                                        {{ 'TUCHOI' | translate }}
+                                    </ng-container>
+                                    <ng-template #duyetStatus>
+                                        <ng-container *ngIf="phieu_nghi.duyet === 1">
+                                            <ng-container *ngIf="phieu_nghi.trangThai === '3'; else chuaXuLy">
+                                                {{ 'DA_DUYET' | translate }}
+                                            </ng-container>
+                                            <!-- <ng-template #checkChuyenXuLy>
+                                                <ng-container *ngIf="phieu_nghi.trangThai !== '-1' && phieu_nghi.trangThai !== '3' 
+                                                            && (phieu_nghi.nvXuLy1 !== null 
+                                                            || phieu_nghi.nvXuLy2 !== null 
+                                                            || phieu_nghi.nvXuLy3 !== null); else chuaXuLy">
+                                                    {{ 'CHUYEN_XU_LY' | translate }}
+                                                </ng-container> -->
+                                            <ng-template #chuaXuLy>
+                                                {{ 'CHUA_XU_LY' | translate }}
+                                            </ng-template>
+                                            <!-- </ng-template> -->
+                                        </ng-container>
+                                    </ng-template>
+                                </ng-template>
+                            </td>
+
+
+                        </tr>
+                        <tr *ngIf="!ds_phieu_nghi || ds_phieu_nghi.length === 0">
+                            <td colspan="8" class="text-center">{{'KHONG_CO_DL'|translate}}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <form [formGroup]="inforForm">
+            <div *ngIf="phieu_nghi_selected" class="modal fade show d-block custom-modal" tabindex="-1" role="dialog">
+                <div class="modal-dialog modal-lg custom-dialog" role="document">
+                    <div class="modal-content custom-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title"> {{'THONG_TIN_PHIEU_NGHI'|translate}}</h5>
+                        </div>
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <label for="full_name">{{'TEN_NHAN_VIEN'|translate}}</label>
+                                        <input formControlName="full_name" class="form-control" id="full_name" readonly>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="ma_nv">{{'EMPLOYEE_ID'|translate}}</label>
+                                        <input formControlName="ma_nv" class="form-control" id="ma_nv" readonly>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label for="bo_phan">{{'BO_PHAN'|translate}}</label>
+                                        <input formControlName="bo_phan" class="form-control" id="bo_phan" readonly>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="vi_tri">{{'VI_TRI'|translate}}</label>
+                                        <input formControlName="vi_tri" class="form-control" id="vi_tri" readonly>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <label for="cong_viec">{{'CONG_VIEC'|translate}}</label>
+                                        <input formControlName="cong_viec" class="form-control" id="cong_viec" readonly>
+                                    </div>
+                                    <div class="col-md-5">
+                                        <label for="loai_phep_name">{{'LOAI_NGHI_PHEP'|translate}}</label>
+                                        <input formControlName="loai_phep_name" class="form-control" id="loai_phep_name"
+                                            readonly>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="so_ngay_nghi">{{'SO_NGAY_NGHI'|translate}}</label>
+                                        <input formControlName="so_ngay_nghi" class="form-control" id="so_ngay_nghi"
+                                            readonly>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label for="nghi_tu">{{'NGHI_TU_NGAY'|translate}}</label>
+                                        <input formControlName="nghi_tu" class="form-control" id="nghi_tu" readonly>
+
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="nghi_den">{{'NGHI_DEN_NGAY'|translate}}</label>
+                                        <input formControlName="nghi_den" class="form-control" id="nghi_den" readonly>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <label for="ngay_nghi">{{'CAC_NGAY_NGHI'|translate}}</label>
+                                        <textarea id="ngay_nghi" formControlName="ngay_nghi" class="form-control"
+                                            readonly rows="2"></textarea>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <label for="ly_do">{{'LY_DO_NGHI'|translate}}</label>
+                                        <div id="ly_do" [innerHTML]="phieu_nghi_selected?.lyDoNghiStr"
+                                            class="form-control"></div>
+                                        <!-- <input formControlName="ly_do" class="form-control" id="ly_do" readonly> -->
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <label for="chung_tu">{{ 'CHUNG_TU' | translate }}</label>
+                                        <div id="chung_tu" class="form-control">
+                                            <ng-container *ngIf="phieu_nghi_selected?.imageName; else noData">
+                                                <a [href]="phieu_nghi_selected.imageUrl" target="_blank">
+                                                    {{ phieu_nghi_selected.imageName }}
+                                                </a>
+                                            </ng-container>
+                                            <ng-template #noData>
+                                                <ng-container
+                                                    *ngIf="['O', 'CO', 'TS', 'DS', 'AP', 'S'].includes(phieu_nghi_selected?.kyHieuLyDo)">
+                                                    {{ 'BO_SUNG_SAU' | translate }}
+                                                </ng-container>
+                                                <ng-container
+                                                    *ngIf="!['O', 'CO', 'TS', 'DS', 'AP', 'S'].includes(phieu_nghi_selected?.kyHieuLyDo)">
+                                                    {{ 'KHONG_CO_DL' | translate }}
+                                                </ng-container>
+                                            </ng-template>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label for="ban_giao">{{'CONG_VIEC_BAN_GIAO'|translate}}</label>
+                                        <input formControlName="ban_giao" class="form-control" id="ban_giao" readonly>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="ngay_tao">{{'NGAY_TAO'|translate}}</label>
+                                        <input formControlName="ngay_tao" class="form-control" id="ngay_tao" readonly>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="trang_thai">{{'TRANG_THAI'|translate}}</label>
+                                        <input readonly formControlName="trang_thai" class="form-control"
+                                            id="trang_thai">
+                                    </div>
+                                </div>
+                                <div class="row" *ngIf="this.phieu_nghi_selected.nvXuLy1">
+                                    <div class="col-md-4">
+                                        <label for="nv_xu_ly_name_1">{{'CAN_BO_XU_LY'|translate}}</label>
+                                        <input readonly formControlName="nv_xu_ly_name_1" class="form-control"
+                                            id="nv_xu_ly_name_1">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label for="nv_xu_ly_1">{{'BO_PHAN'|translate}}</label>
+                                        <input formControlName="nv_xl_bp_1" class="form-control" id="nv_xu_ly_1"
+                                            readonly>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="nv_xl_vt_1">{{'VI_TRI'|translate}}</label>
+                                        <input formControlName="nv_xl_vt_1" class="form-control" id="nv_xl_vt_1"
+                                            readonly>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="ngay_xu_ly_1">{{'NGAY_XU_LY'|translate}}</label>
+                                        <input formControlName="ngay_xu_ly_1" class="form-control" id="ngay_xu_ly_1"
+                                            readonly>
+                                    </div>
+                                </div>
+                                <div class="row" *ngIf="this.phieu_nghi_selected.nvXuLy2">
+                                    <div class="col-md-4">
+                                        <label for="nv_xu_ly_name_2">{{'CAN_BO_XU_LY'|translate}}</label>
+                                        <input readonly formControlName="nv_xu_ly_name_2" class="form-control"
+                                            id="nv_xu_ly_name_2">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label for="nv_xu_ly_2">{{'BO_PHAN'|translate}}</label>
+                                        <input formControlName="nv_xl_bp_2" class="form-control" id="nv_xu_ly_2"
+                                            readonly>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="nv_xl_vt_2">{{'VI_TRI'|translate}}</label>
+                                        <input formControlName="nv_xl_vt_2" class="form-control" id="nv_xl_vt_2"
+                                            readonly>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="ngay_xu_ly_2">{{'NGAY_XU_LY'|translate}}</label>
+                                        <input formControlName="ngay_xu_ly_2" class="form-control" id="ngay_xu_ly_2"
+                                            readonly>
+                                    </div>
+                                </div>
+                                <div class="row" *ngIf="this.phieu_nghi_selected.nvXuLy3">
+                                    <div class="col-md-4">
+                                        <label for="nv_xu_ly_name_3">{{'CAN_BO_XU_LY'|translate}}</label>
+                                        <input readonly formControlName="nv_xu_ly_name_3" class="form-control"
+                                            id="nv_xu_ly_name_3">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label for="nv_xu_ly_3">{{'BO_PHAN'|translate}}</label>
+                                        <input formControlName="nv_xl_bp_3" class="form-control" id="nv_xu_ly_3"
+                                            readonly>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="nv_xl_vt_3">{{'VI_TRI'|translate}}</label>
+                                        <input formControlName="nv_xl_vt_3" class="form-control" id="nv_xl_vt_3"
+                                            readonly>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="ngay_xu_ly_3">{{'NGAY_XU_LY'|translate}}</label>
+                                        <input formControlName="ngay_xu_ly_3" class="form-control" id="ngay_xu_ly_3"
+                                            readonly>
+                                    </div>
+                                </div>
+                                <div class="row" *ngIf="phieu_nghi_selected.duyet == 0">
+                                    <div class="col-md-12">
+                                        <label for="ly_do_tc">{{'LY_DO_TC'|translate}}</label>
+                                        <textarea id="ly_do_tc" formControlName="ly_do_tc" class="form-control" readonly
+                                            rows="2"></textarea>
+                                    </div>
+                                </div>
+                                <div class="row" *ngIf="this.phieu_nghi_selected.maNvHuy">
+                                    <div class="col-md-5">
+                                        <label for="nv_xu_ly_name_4">{{'CAN_BO_HUY'|translate}}</label>
+                                        <input readonly formControlName="nv_xu_ly_name_4" class="form-control"
+                                            id="nv_xu_ly_name_4">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="nv_xu_ly_4">{{'BO_PHAN'|translate}}</label>
+                                        <input formControlName="nv_xl_bp_4" class="form-control" id="nv_xu_ly_4"
+                                            readonly>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="nv_xl_vt_4">{{'VI_TRI'|translate}}</label>
+                                        <input formControlName="nv_xl_vt_4" class="form-control" id="nv_xl_vt_4"
+                                            readonly>
+                                    </div>
+                                </div>
+                                <div class="row" *ngIf="phieu_nghi_selected.lyDoHuy">
+                                    <div class="col-md-3">
+                                        <label for="ngay_xu_ly_4">{{'NGAY_HUY'|translate}}</label>
+                                        <input formControlName="ngay_xu_ly_4" class="form-control" id="ngay_xu_ly_4"
+                                            readonly>
+                                    </div>
+                                    <div class="col-md-9">
+                                        <label for="ly_do_huy">{{'LY_DO_HUY'|translate}}</label>
+                                        <textarea id="ly_do_huy" formControlName="ly_do_huy" class="form-control"
+                                            readonly rows="1"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-info text-white" (click)="openQuyTrinh()">
+                                {{'QUY_TRINH_DUYET'|translate}}
+                            </button>
+                            <button type="button" class="btn btn-danger"
+                                *ngIf="phieu_nghi_selected.duyet != 0 && phieu_nghi_selected.trangThai != '3' && phieu_nghi_selected.trangThai != '-1'"
+                                (click)="openLyDoHuy()">{{'HUY'|translate}}</button>
+                            <button type="button" class="btn btn-secondary"
+                                (click)="closeEditModal()">{{'DONG'|translate}}</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12 text-center">
+            <button class="pagination-button" (click)="prePage()" [disabled]="currentPage === 1"
+                *ngIf="currentPage > 1">«</button>
+
+            <ng-container *ngFor="let page of getLimitedPageNumbers()">
+                <button class="pagination-button" [ngClass]="{'active': currentPage === page}" (click)="goToPage(page)">
+                    {{ page }}
+                </button>
+            </ng-container>
+
+            <button class="pagination-button" (click)="nextPage()" [disabled]="currentPage * pageSize >= totalCount"
+                *ngIf="currentPage * pageSize < totalCount">»</button>
+        </div>
+    </div>
+    <div *ngIf="showHuyModal" class="modal fade show d-block custom-modal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg custom-dialog" role="document" id="showHuyModal">
+            <div class="modal-content custom-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{'LY_DO_HUY'|translate}}</h5>
+                </div>
+                <div class="modal-body">
+                    <textarea [(ngModel)]="ly_do_huy" class="form-control"
+                        placeholder="{{'LY_DO_HUY'|translate}}"></textarea>
+                    <div *ngIf="ly_do_err_huy" class="invalid-feedback">
+                        {{'ER_LY_DO_HUY'|translate}}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-danger" (click)="xacNhanHuy()">{{'HUY'|translate}}</button>
+                    <button class="btn btn-secondary" (click)="huyTuChoi()">{{'DONG'|translate}}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div *ngIf="showQuyTrinh" class="modal fade show d-block custom-modal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg custom-dialog" role="document" id="showQuyTrinh">
+            <div class="modal-content custom-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{'QUY_TRINH_DUYET'|translate}}</h5>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="tier1" class="large-text text-primary"
+                            *ngIf="quyTrinhData?.tier1?.length">{{'QUAN_LY_TRUC_TIEP'|translate}}</label>
+                        <div *ngFor="let item of quyTrinhData.tier1" id="tier1">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <label for="">{{'MA_NV'|translate}}</label>
+                                    <input type="text" class="form-control" [value]="item.ma_nv" readonly>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="">{{'HO_TEN'|translate}}</label>
+                                    <input type="text" class="form-control" [value]="item.full_name" readonly>
+                                </div>
+                                <div class="col-md-2">
+                                    <label for="">{{'BO_PHAN'|translate}}</label>
+                                    <input type="text" class="form-control" value="{{item.tenBoPhan | translate}}"
+                                        readonly>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="">{{'VI_TRI'|translate}}</label>
+                                    <input type="text" class="form-control" value="{{item.vi_tri | translate}}"
+                                        readonly>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <label for="tier1" class="large-text text-primary"
+                            *ngIf="quyTrinhData?.tier2?.length">{{'CAN_BO_CHUEN_TIEP'|translate}}</label>
+
+                        <div *ngFor="let item of quyTrinhData.tier2" class="mb-2">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <label for="">{{'MA_NV'|translate}}</label>
+                                    <input type="text" class="form-control" [value]="item.ma_nv" readonly>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="">{{'HO_TEN'|translate}}</label>
+                                    <input type="text" class="form-control" [value]="item.full_name" readonly>
+                                </div>
+                                <div class="col-md-2">
+                                    <label for="">{{'BO_PHAN'|translate}}</label>
+                                    <input type="text" class="form-control" value="{{item.tenBoPhan | translate}}"
+                                        readonly>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="">{{'VI_TRI'|translate}}</label>
+                                    <input type="text" class="form-control" value="{{item.vi_tri | translate}}"
+                                        readonly>
+                                </div>
+                            </div>
+                        </div>
+
+                        <label for="tier1" class="large-text text-primary"
+                            *ngIf="quyTrinhData?.tier3?.length">{{'CAN_BO_PHE_DUYET'|translate}}</label>
+
+
+                        <div *ngFor="let item of quyTrinhData.tier3" class="mb-2">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <label for="">{{'MA_NV'|translate}}</label>
+                                    <input type="text" class="form-control" [value]="item.ma_nv" readonly>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="">{{'HO_TEN'|translate}}</label>
+                                    <input type="text" class="form-control" [value]="item.full_name" readonly>
+                                </div>
+                                <div class="col-md-2">
+                                    <label for="">{{'BO_PHAN'|translate}}</label>
+                                    <input type="text" class="form-control" value="{{item.tenBoPhan | translate}}"
+                                        readonly>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="">{{'VI_TRI'|translate}}</label>
+                                    <input type="text" class="form-control" value="{{item.vi_tri | translate}}"
+                                        readonly>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" (click)="closeQuyTrinh()">{{'DONG'|translate}}</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>

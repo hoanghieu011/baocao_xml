@@ -1,0 +1,35 @@
+/* You can add global styles to this file, and also import other style files */
+$container-max-widths: (
+  sm: 540px,
+  md: 720px,
+  lg: 960px,
+  xl: 1140px,
+  xxl: 1700px // Ghi đè kích thước mặc định của Bootstrap
+);
+
+// If you want to override variables do it here
+@import "variables";
+
+// Import styles with default layout.
+@import "@coreui/coreui/scss/coreui";
+
+// Import Chart.js custom tooltips styles
+// @import "@coreui/chartjs/scss/coreui-chartjs";
+// @import "@ng-select/ng-select/themes/default.theme.css";
+
+// Custom styles for this theme
+@import "theme";
+
+// Some temp fixes
+// @import "fixes";
+
+// If you want to add custom CSS you can put it here.
+@import "custom";
+// @import 'ngx-multiple-dates/prebuilt-themes/azure-blue.css';
+
+// Examples
+// We use those styles to show code examples, you should remove them in your application.
+// @import "examples";
+
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }

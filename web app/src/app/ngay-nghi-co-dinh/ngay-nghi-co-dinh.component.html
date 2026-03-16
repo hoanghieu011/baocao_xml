@@ -1,0 +1,159 @@
+<div class="container mt-5">
+  <form [formGroup]="registerForm" novalidate>
+    <div class="row">
+      <div class="col-md-2 year_select_2">
+        <select2 class="form-control" [ngModelOptions]="{standalone: true}" [overlay]="false"
+          placeholder="{{'YEAR'|translate}}" [data]="years" [styleMode]="'borderless'" id="year"
+          (update)="update($event)" [(ngModel)]="selectedYear" style="height: 38px; padding: 4px 0 0 0;">
+        </select2>
+      </div>
+      <div class="col-md-3 input_date">
+        <input [(ngModel)]="newHolidayDate" formControlName="newHolidayDate" type="date" class="form-control" />
+      </div>
+      <div class="col-md-3 input_select">
+        <select2 class="form-control" formControlName="loai_nghi_selected" [overlay]="false"
+          placeholder="{{'LOAI_NGAY_NGHI'|translate}}" [data]="ds_loai_nghi" [styleMode]="'borderless'"
+          style="height: 38px; padding: 4px 0 0 0;">
+        </select2>
+      </div>
+      <div class="col-md-3 input_button">
+        <button class="btn btn-search w-100" (click)="addHoliday()"
+          [disabled]="!registerForm.get('newHolidayDate')?.value || !registerForm.get('loai_nghi_selected')?.value">{{'THEM_NGAY_NGHI'|translate}}</button>
+      </div>
+    </div>
+  </form>
+
+  <!-- Legend: hiển thị ghi chú cho các loại holiday theo màu -->
+  <div class="row holiday-legend mt-3 justify-content-center">
+    <div class="col-md-2 l1">
+      <span class="legend-item holiday-nghi-le">15</span> - {{'NGHI_LE'|translate}}
+    </div>
+    <div class="col-md-2 l2">
+      <span class="legend-item holiday-nghi-kiem-ke-h">15</span> - {{'NGHI_KIEM_KE_H'|translate}}
+    </div>
+    <div class="col-md-2 l3">
+      <span class="legend-item holiday-nghi-phep-co-dinh">15</span> - {{'NGHI_PHEP_CO_DINH'|translate}}
+    </div>
+    <div class="col-md-2 l4">
+      <span class="legend-item holiday-khac">15</span> - {{'KHAC'|translate}}
+    </div>
+  </div>
+
+  <div class="calendar">
+    <div class="month" *ngFor="let month of months">
+      <h4>{{ 'MONTH.' + month.month | translate }}</h4>
+      <table>
+        <thead>
+          <tr>
+            <th *ngFor="let dayKey of dayKeys">
+              {{ dayKey | translate }}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let week of month.weeks">
+            <td *ngFor="let day of week" (click)="day && isHoliday(day) && onCalendarDayClick(day)" [ngClass]="{
+                  'holiday-nghi-le': day && isHoliday(day) && isHoliday(day).mo_ta === 'NGHI_LE',
+                  'holiday-nghi-kiem-ke-h': day && isHoliday(day) && isHoliday(day).mo_ta === 'NGHI_KIEM_KE_H',
+                  'holiday-nghi-phep-co-dinh': day && isHoliday(day) && isHoliday(day).mo_ta === 'NGHI_PHEP_CO_DINH',
+                  'holiday-khac': day && isHoliday(day) && isHoliday(day).mo_ta === 'KHAC'
+                }" [title]="day && isHoliday(day) ? getHolidayDescription(day) : ''">
+              <span *ngIf="day">{{ day.getDate() }}</span>
+              <!-- <button *ngIf="day && isHoliday(day)" class="delete-btn" (click)="deleteHoliday(isHoliday(day).id)">
+                X
+              </button> -->
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Hoàn thiện phần editform này với chức năng như sau:
+   Khi có ngày trong calendar là holiday được ấn vào (được chọn) thì modal này hiện ra với các thành phần:
+   1. Input dạng text không cho chỉnh sửa hiện thị ngày được chọn.
+   2. 1 select2 với data là ds_loai_nghi (select2 giống với CHON_LOAI_NGAY_NGHI ở registerForm), khi 
+      có day_selected thì dữ liệu của select2 tự chọn là day_selected.mo_ta.
+   3. Nếu lựa chọn của select2 bị thay đổi thì button Lưu được cho phép nhấn để lưu lại mo_ta của day_selected đó
+      , nếu lựa chọn ở select2 không đổi thì không cho nhấn
+   4. Có 1 button Xóa, khi nhấn sẽ gọi hàm deleteHoliday để xóa ngày nghỉ.
+   5. 1 button Đóng dùng để đóng modal (set daty_selected = null)-->
+
+
+  <!-- <form [formGroup]="editForm">
+    <div *ngIf="day_selected !== null" class="modal fade show d-block custom-modal" tabindex="-1"
+      role="dialog">
+      <div class="modal-dialog modal-lg custom-dialog" role="document">
+        <div class="modal-content custom-content">
+          <div class="modal-header">
+            <h5 class="modal-title">{{ titleModal |translate }}</h5>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+              <div class="row">
+                <div class="col-md-5">
+                </div>
+                <div class="col-md-7">
+
+                </div>
+              </div>`
+            </div>
+            <div *ngIf="isError" class="invalid-feedback">
+              {{ error }}
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="closeEditModal()">{{'DONG'|translate}}</button>
+            <button type="submit" class="btn btn-primary" [disabled]="isSaveProcessing">{{'LUU'|translate}}</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </form> -->
+
+  <form [formGroup]="editForm" (ngSubmit)="onSubmitEdit()">
+    <div *ngIf="day_selected !== null" class="modal fade show d-block custom-modal" tabindex="-1" role="dialog">
+      <div class="modal-dialog modal-lg custom-dialog" role="document">
+        <div class="modal-content custom-content">
+          <div class="modal-header">
+            <h5 class="modal-title">{{ titleModal | translate }}</h5>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+              <div class="row">
+                <!-- Input read-only hiển thị ngày được chọn -->
+                <div class="col-md-5">
+                  <label>{{ 'NGAY_NGHI' | translate }}</label>
+                  <input type="text" class="form-control" formControlName="selectedDate" readonly />
+                </div>
+                <!-- Select2 chọn loại ngày nghỉ -->
+                <div class="col-md-7">
+                  <label>{{ 'LOAI_NGAY_NGHI' | translate }}</label>
+                  <select2 class="form-control" formControlName="loai_nghi_selected" [overlay]="false"
+                    [data]="ds_loai_nghi" [styleMode]="'borderless'" style="height: 38px; padding: 4px 0 0 0;">
+                  </select2>
+                </div>
+              </div>
+            </div>
+            <!-- Hiển thị lỗi nếu có -->
+            <div *ngIf="isError" class="invalid-feedback">
+              {{ 'CO_LOI_XR'|translate }}
+            </div>
+          </div>
+          <div class="modal-footer">
+            <!-- Button Xóa -->
+            <button type="button" class="btn btn-danger" (click)="deleteSelectedHoliday()">{{ 'XOA' | translate
+              }}</button>
+            <!-- Button Lưu (chỉ kích hoạt khi select2 thay đổi) -->
+            <button type="submit" class="btn btn-primary" [disabled]="!isHolidayTypeChanged() || isSaveProcessing">{{
+              'LUU' | translate }}</button>
+               <!-- Button Đóng -->
+            <button type="button" class="btn btn-secondary" (click)="closeEditModal()">{{ 'DONG' | translate }}</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+
+
+</div>

@@ -1,0 +1,169 @@
+import { RouterModule, Routes } from '@angular/router';
+import { DefaultLayoutComponent } from './layout';
+import { AuthGuard } from './services/auth.guard';
+import { NgModule } from '@angular/core';
+import { RouteTitleResolver } from './services/route-title.resolver';
+
+export const routes: Routes = [
+  {
+    path: 'login',
+    loadComponent: () => import('./login/login.component').then(m => m.LoginComponent),
+  },
+  {
+    path: '',
+    redirectTo: 'thong-tin-ca-nhan',
+    pathMatch: 'full'
+  },
+  {
+    path: '',
+    component: DefaultLayoutComponent,
+    canActivate: [AuthGuard],
+    data: {
+      title: 'Home',
+      roles: ['']
+    },
+    children: [
+      {
+        path: 'tao-phieu-nghi-phep',
+        canActivate: [AuthGuard],
+        loadChildren: () => import('../app/tao-phieu-nghi-phep/tao-phieu-nghi-phep.routes').then(m => m.TAO_PHIEU_NGHI_PHEP_ROUTES),
+        data: {
+          title: 'MENU.CREATE_LEAVE_FORM',
+          roles: ['tao_phieu']
+        },
+      },
+      {
+        path: 'danh-sach-phieu-nghi-phep',
+        canActivate: [AuthGuard],
+        loadChildren: () => import('../app/danh-sach-phieu/danh-sach-phieu.routes').then(m => m.DANH_SACH_PHIEU),
+        data: {
+          title: 'MENU.LEAVE_LIST',
+          roles: ['tao_phieu']
+        }
+      },
+      {
+        path: 'xu-ly-phieu-nghi',
+        canActivate: [AuthGuard],
+        loadChildren: () => import('../app/xu-ly-phieu-nghi/xu-ly-phieu-nghi.routes').then(m => m.XU_LY_PHIEU),
+        data: {
+          title: 'MENU.XU_LY_PHIEU_NGHI',
+          roles: ['xu_ly']
+        }
+      },
+      {
+        path: 'phep-ton',
+        canActivate: [AuthGuard],
+        loadChildren: () => import('../app/phep-ton/phep-ton.routes').then(m => m.PHEP_TON),
+        data: {
+          title: 'PHEP_TON',
+          roles: ['admin']
+        }
+      },
+      {
+        path: 'bao-cao-nghi-phep',
+        canActivate: [AuthGuard],
+        loadChildren: () => import('./bao-cao/bao-cao.routes').then(m => m.BAO_CAO),
+        data: {
+          title: 'MENU.BAO_CAO',
+          roles: ['bao_cao']
+        }
+      },
+      {
+        path: 'ngay-nghi-co-dinh',
+        canActivate: [AuthGuard],
+        loadChildren: () => import('./ngay-nghi-co-dinh/ngay-nghi-co-dinh.routes').then(m => m.NGAY_NGHI_CO_DINH),
+        data: {
+          title: 'MENU.NGAY_NGHI_CD',
+          roles: ['admin']
+        }
+      },
+      {
+        path: 'bao-cao-bo-phan',
+        canActivate: [AuthGuard],
+        loadChildren: () => import('./bao-cao-bo-phan/bao-cao-bo-phan.routes').then(m => m.BAO_CAO_BO_PHAN),
+        data: {
+          title: 'MENU.BAO_CAO_BO_PHAN',
+          roles: ['bao_bp_cao_bo_phan']
+        }
+      },
+      {
+        path: 'bao-cao-nhan-vien',
+        canActivate: [AuthGuard],
+        loadChildren: () => import('./bao-cao-nhan-vien/bao-cao-nhan-vien.routers').then(m => m.BAO_CAO_NHAN_VIEN),
+        data: {
+          title: 'MENU.BAO_CAO_NHAN_VIEN',
+          roles: ['bao_cao']
+        }
+      },
+      {
+        path: 'quan-ly-nhan-vien',
+        canActivate: [AuthGuard],
+        loadChildren: () => import('../app/quan-ly-nhan-vien/quan-ly-nhan-vien.routes').then(m => m.QUAN_LY_NV),
+        data: {
+          title: 'MENU.QUAN_LY_NHAN_VIEN',
+          roles: ['admin']
+        }
+      },
+      {
+        path: 'quan-ly-phieu-nghi',
+        canActivate: [AuthGuard],
+        loadChildren: () => import('../app/quan-ly-phieu-nghi/quan-ly-phieu-nghi.routes').then(m => m.QUAN_LY_PHIEU_NGHI),
+        data: {
+          title: 'MENU.QUAN_LY_PHIEU_NGHI',
+          roles: ['admin', 'bao_bp_cao_bo_phan']
+        }
+      },
+      // {
+      //   path: 'loai-phep',
+      //   canActivate: [AuthGuard],
+      //   loadComponent: () => import('../app/loai-phep/loai-phep.component').then(m => m.LoaiPhepComponent),
+      //   data: {
+      //     title: '',
+      //     roles: ['admin']
+      //   }
+      // },
+      {
+        path: 'phan-quyen',
+        canActivate: [AuthGuard],
+        loadChildren: () => import('../app/phan-quyen/phan-quyen.routes').then(m => m.PHAN_QUYEN),
+        data: {
+          title: 'MENU.PHAN_QUYEN',
+          roles: ['admin']
+        }
+      },
+      {
+        path: 'thong-tin-ca-nhan',
+        canActivate: [AuthGuard],
+        loadChildren: () => import('../app/user-info/user-info.routes').then(m => m.USER_INFO_ROUTES),
+        data: {
+          title: 'MENU.THONG_TIN_CA_NHAN',
+          roles: ['']
+        }
+      },
+      {
+        path: 'doi-mat-khau',
+        canActivate: [AuthGuard],
+        loadChildren: () => import('../app/change-password/change-password.routes').then(m => m.DOI_MAT_KHAU),
+        data: {
+          title: 'MENU.DOI_MAT_KHAU',
+          roles: ['']
+        }
+      },
+    ]
+  },
+  {
+    path: '',
+    loadChildren: () => import('../views/pages/routes').then(m => m.routes),
+    data: {
+      title: 'Page'
+    }
+  },
+  { path: '**', redirectTo: 'login' }
+];
+@NgModule({
+  imports: [RouterModule.forRoot(routes)],
+  exports: [RouterModule]
+})
+export class AppRoutingModule {
+  static routes = routes;
+}

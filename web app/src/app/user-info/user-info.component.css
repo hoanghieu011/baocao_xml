@@ -1,0 +1,28 @@
+.user-info-container {
+    max-width: 700px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin: auto;
+    margin-bottom: 3rem;
+}
+
+.user-info-container h5 {
+    margin-bottom: 20px;
+    color: #0e5dbc;
+}
+
+.user-info-container p {
+    margin-bottom: 10px;
+    font-size: 16px;
+    color: #495057;
+    border-bottom: 1px solid #dee2e6;
+    padding-bottom: 5px;
+}
+
+.text-danger {
+    font-weight: bold;
+    text-align: center;
+    margin-top: 15px;
+}

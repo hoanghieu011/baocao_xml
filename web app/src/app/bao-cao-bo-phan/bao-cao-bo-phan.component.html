@@ -1,0 +1,83 @@
+<div class="container mt-5">
+    <form [formGroup]="searchForm" (ngSubmit)="searchBaoCaoForm()">
+        <div class="row">
+            <div class="col-md-2">
+                <input formControlName="nghi_tu" type="date" class="form-control" id="nghi_tu" name="nghi_tu"
+                    (change)="onNghiTuChange()" onkeydown="return false" />
+            </div>
+            <div class="col-md-2">
+                <input (change)="onNghiDenChange()" formControlName="nghi_den" type="date" class="form-control"
+                    id="nghi_den" name="nghi_den" [min]="searchForm.get('nghi_tu')?.value || today" onkeydown="return false" />
+            </div>
+            <div class="col-md-4">
+                <input type="text" class="form-control" placeholder="{{'NHAP_MA_TEN_NV'|translate}}"
+                    formControlName="searchTerm" (keyup.enter)="searchBaoCaoForm()" />
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-search w-100" type="submit"
+                    >{{'TIM_KIEM'|translate}}</button>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-add w-100" (click)="exportExcel()"
+                    type="button">{{'EXPORT_EXCEL'|translate}}</button>
+            </div>
+            <div *ngIf="loading" class="loading-overlay">
+                <div class="spinner"></div>
+                <p>{{'DANG_XL'|translate}}</p>
+            </div>
+        </div>
+    </form>
+    <table class="table mt-3 table-bordered">
+        <thead>
+            <tr>
+                <th>{{'MA_NV'|translate}}</th>
+                <th>{{'TEN_NHAN_VIEN'|translate}}</th>
+                <th>{{'BO_PHAN'|translate}}</th>
+                <th>{{'A'|translate}}</th>
+                <th>{{'H'|translate}}</th>
+                <th [innerHTML]="'O_CO_TS_DS' | translate"></th>
+                <th>{{'S'|translate}}</th>
+                <th [innerHTML]="'AP' | translate"></th>
+                <th>{{'K'|translate}}</th>
+                <th>{{'RH'|translate}}</th>
+                <th>{{'NK'|translate}}</th>
+                <th>{{'TONG'|translate}}</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr *ngFor="let nhan_vien of ds_nhan_vien" [ngClass]="'status-v1'">
+                <td>{{ nhan_vien.ma_nv }}</td>
+                <td>{{ nhan_vien.full_name }}</td>
+                <td>{{ nhan_vien.ten_bo_phan || 'N/A' }}</td>
+                <td>{{nhan_vien.a}}</td>
+                <td>{{nhan_vien.h}}</td>
+                <td>{{nhan_vien.o_CO_TS_DS}}</td>
+                <td>{{nhan_vien.s}}</td>
+                <td>{{nhan_vien.ap}}</td>
+                <td>{{nhan_vien.k}}</td>
+                <td>{{nhan_vien.rh}}</td>
+                <td>{{nhan_vien.nk}}</td>
+                <td>{{nhan_vien.total}}</td>
+            </tr>
+            <tr *ngIf="ds_nhan_vien.length === 0">
+                <td colspan="12" class="text-center">{{'KHONG_CO_DL'|translate}}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="row">
+        <div class="col-md-12 text-center">
+            <button class="pagination-button" (click)="prePage()" [disabled]="currentPage === 1"
+                *ngIf="currentPage > 1">«</button>
+
+            <ng-container *ngFor="let page of getLimitedPageNumbers()">
+                <button class="pagination-button" [ngClass]="{'active': currentPage === page}" (click)="goToPage(page)">
+                    {{ page }}
+                </button>
+            </ng-container>
+
+            <button class="pagination-button" (click)="nextPage()" [disabled]="currentPage * pageSize >= totalCount"
+                *ngIf="currentPage * pageSize < totalCount">»</button>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,65 @@
+<div class="user-info-container">
+    <h5 class="text-center">{{'THONG_TIN_NHAN_VIEN'|translate}}</h5>
+    <div *ngIf="userInfo; else noData">
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>{{'MA_NV'|translate}}:</strong> {{ userInfo.ma_nv || 'N/A' }}</p>
+                <p><strong>{{'HO_TEN'|translate}}:</strong> {{ userInfo.full_name || 'N/A' }}</p>
+                <p><strong>{{'GIOI_TINH'|translate}}:</strong> {{ 'GT_' + removeVietnameseTones(userInfo.gioi_tinh.toUpperCase()) | translate }}</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>{{ 'VI_TRI' | translate }}:</strong> {{ userInfo.vi_tri ? (userInfo.vi_tri | translate) : 'N/A' }}</p>
+                <p><strong>{{'BO_PHAN'|translate}}:</strong> {{ userInfo.ten_bo_phan || 'N/A' }}</p>
+                <p><strong>{{'CONG_VIEC'|translate}}:</strong> {{ userInfo.cong_viec || 'N/A' }}</p>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-4"></div>
+            <div class="col-md-4">
+                <p><strong>{{'EMAIL'|translate}}:</strong> {{ userInfo.email || 'N/A'}}</p>
+            </div>
+            <div class="col-md-4"></div>
+        </div>
+    </div>
+    <ng-template #noData>
+        <p class="text-danger">{{'KHONG_CO_DL'|translate}}</p>
+    </ng-template>
+</div>
+<div class="user-info-container">
+    <h5 class="text-center">{{ 'THONG_TIN_NGHI_PHEP_NAM' | translate }} {{ currentYear }}</h5>
+    <div *ngIf="phepTonDetails; else noPhepData">
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>{{ 'SO_NAY_DA_NGHI' | translate }}</strong> {{ totalDaysOff }}</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>{{ 'SO_NGAY_PHEP_TON' | translate }}</strong> {{ totalDaysRemaining }}</p>
+            </div>
+        </div>
+        <div class="row">
+            <p style="color: #0e5dbc; margin-top: 15px;">
+                <strong>{{ 'SO_NGAY_NGHI_THEO_LOAI' | translate }}</strong>
+            </p>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>{{ 'BAN_THAN_OM' | translate }}: </strong> {{ getSoNgayDaNghi('O') }}</p>
+                <p><strong>{{ 'CON_OM' | translate }}: </strong> {{ getSoNgayDaNghi('CO') }}</p>
+                <p><strong>{{ 'NGHI_KIEM_KE' | translate }}: </strong> {{ getSoNgayDaNghi('K') }}</p>
+                <p><strong>{{ 'NGHI_KHONG_LUON_OBM' | translate }}: </strong> {{ getSoNgayDaNghi('AP') }}</p>
+                <p><strong>{{ 'DUONG_SUC' | translate }}: </strong> {{ getSoNgayDaNghi('DS') }}</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>{{ 'NGHI_KHONG_LUONG' | translate }}: </strong> {{ getSoNgayDaNghi('A') }}</p>
+                <p><strong>{{ 'NGHI_PHEP_NHAT' | translate }}: </strong> {{ getSoNgayDaNghi('RH') }}</p>
+                <p><strong>{{ 'KHAC' | translate }}: </strong> {{ getSoNgayDaNghi('#') }}</p>
+                <p><strong>{{ 'NGHI_PHEP_NAM' | translate }}: </strong> {{ getSoNgayDaNghi('H') }}</p>
+                <p><strong>{{ 'KHAM_THAI' | translate }}: </strong> {{ getSoNgayDaNghi('TS') }}</p>
+            </div>
+        </div>
+
+    </div>
+    <ng-template #noPhepData>
+        <p class="text-danger">{{ 'KHONG_CO_DL' | translate }}</p>
+    </ng-template>
+</div>
