@@ -1,5 +1,4 @@
 api/.vs/
 api/bin/
 api/obj
-api/Common/ConnectionStrings.cs
 api/wwwroot/images
