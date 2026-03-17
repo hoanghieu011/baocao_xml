@@ -30,7 +30,7 @@ builder.Services.AddCors(options =>
 });
 var connectionStrings = new ConnectionStrings();
 builder.Services.AddControllers();
-// builder.Services.AddScoped<DatabaseResolver>();
+builder.Services.AddScoped<API.Common.DatabaseResolver>();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseMySql(connectionStrings.DefaultConnection,
         connectionStrings.MySqlVersion));
