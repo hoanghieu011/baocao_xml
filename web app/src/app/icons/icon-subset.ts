@@ -62,6 +62,7 @@ import {
   cilLockLocked,
   cilMagnifyingGlass,
   cilMap,
+  cibAboutMe,
   cilMediaPlay,
   cilMediaRecord,
   cilMenu,
@@ -103,6 +104,7 @@ import { logo } from './logo';
 
 export const iconSubset = {
   cilAddressBook,
+  cibAboutMe,
   cibCcAmex,
   cibCcApplePay,
   cibCcMastercard,
@@ -205,6 +207,7 @@ export const iconSubset = {
 
 export enum IconSubset {
   cilFlagAlt = 'cilFlagAlt',
+  cibAboutMe = 'cibAboutMe',
   cibCcAmex = 'cibCcAmex',
   cilAddressBook = 'cilAddressBook',
   cibCcApplePay = 'cibCcApplePay',

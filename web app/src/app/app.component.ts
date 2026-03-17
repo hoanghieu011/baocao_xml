@@ -19,7 +19,7 @@ import { AuthService } from './services/auth.service';
   imports: [RouterOutlet, HttpClientModule]
 })
 export class AppComponent implements OnInit {
-  title = 'SINFONIA - Quản lý nghỉ phép';
+  title = 'Quản lý báo cáo';
   notificationCount: number = 0;
 
   readonly #destroyRef: DestroyRef = inject(DestroyRef);

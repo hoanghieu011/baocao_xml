@@ -9,6 +9,7 @@ namespace API.Data
         {
         }
         public DbSet<User> adm_user { get; set; }
+        public DbSet<XML1> xml1 { get; set; }
         // public DbSet<NhanVien> nhan_vien { get; set; }
         // public DbSet<NghiPhep> nghi_phep { get; set; }
         // public DbSet<LoaiPhep> loai_phep { get; set; }

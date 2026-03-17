@@ -53,6 +53,7 @@ export class AuthService {
         CSYTID: decodedToken.CSYTID,
         STATUS: decodedToken.STATUS,
         NOTE: decodedToken.NOTE,
+        roles: decodedToken.ROLE,
       };
     } catch (error) {
       return null;
@@ -82,7 +83,7 @@ export class AuthService {
     } else if (roles.includes('admin')) {
       this.router.navigate(['/quan-ly-nhan-vien']);
     } else {
-      this.router.navigate(['/thong-tin-ca-nhan']);
+      this.router.navigate(['tai-khoan/thong-tin-ca-nhan']);
     }
   }
 

@@ -14,6 +14,7 @@ namespace API.Models
         public int? CSYTID { get; set; }
         public int? STATUS { get; set; }
         public string? NOTE { get; set; }
+        public string? ROLE { get; set; }
         public DateTime? CREATED_DATETIME { get; set; }
     }
 }

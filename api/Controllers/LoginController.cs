@@ -49,7 +49,8 @@ namespace API.Controllers
                             u.USER_LEVEL,
                             u.CSYTID,
                             u.STATUS,
-                            u.NOTE
+                            u.NOTE,
+                            u.ROLE
                         }).FirstOrDefault();
 
             if (user == null)
@@ -69,7 +70,9 @@ namespace API.Controllers
                 new Claim("USER_LEVEL", user.USER_LEVEL.ToString()),
                 new Claim("CSYTID", user.CSYTID.ToString()),
                 new Claim("STATUS", user.STATUS.ToString()),
-                new Claim("NOTE", user.NOTE ?? "")
+                new Claim("NOTE", user.NOTE ?? ""),
+                new Claim("ROLE", user.ROLE ?? "")
+
             };
 
             var tokenDescriptor = new SecurityTokenDescriptor

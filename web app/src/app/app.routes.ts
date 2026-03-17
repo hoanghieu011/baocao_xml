@@ -11,7 +11,7 @@ export const routes: Routes = [
   },
   {
     path: '',
-    redirectTo: 'thong-tin-ca-nhan',
+    redirectTo: 'tai-khoan/thong-tin-ca-nhan',
     pathMatch: 'full'
   },
   {
@@ -40,6 +40,29 @@ export const routes: Routes = [
           title: 'MENU.LEAVE_LIST',
           roles: ['tao_phieu']
         }
+      },
+      {
+        path: 'tai-khoan',
+        children: [
+          {
+            path: 'thong-tin-ca-nhan',
+            canActivate: [AuthGuard],
+            loadChildren: () => import('../app/user-info/user-info.routes').then(m => m.USER_INFO_ROUTES),
+            data: {
+              title: 'MENU.THONG_TIN_CA_NHAN',
+              roles: ['']
+            }
+          },
+          {
+            path: 'doi-mat-khau',
+            canActivate: [AuthGuard],
+            loadChildren: () => import('../app/change-password/change-password.routes').then(m => m.DOI_MAT_KHAU),
+            data: {
+              title: 'MENU.DOI_MAT_KHAU',
+              roles: ['']
+            }
+          },
+        ]
       },
       {
         path: 'xu-ly-phieu-nghi',
@@ -113,15 +136,6 @@ export const routes: Routes = [
           roles: ['admin', 'bao_bp_cao_bo_phan']
         }
       },
-      // {
-      //   path: 'loai-phep',
-      //   canActivate: [AuthGuard],
-      //   loadComponent: () => import('../app/loai-phep/loai-phep.component').then(m => m.LoaiPhepComponent),
-      //   data: {
-      //     title: '',
-      //     roles: ['admin']
-      //   }
-      // },
       {
         path: 'phan-quyen',
         canActivate: [AuthGuard],
@@ -129,24 +143,6 @@ export const routes: Routes = [
         data: {
           title: 'MENU.PHAN_QUYEN',
           roles: ['admin']
-        }
-      },
-      {
-        path: 'thong-tin-ca-nhan',
-        canActivate: [AuthGuard],
-        loadChildren: () => import('../app/user-info/user-info.routes').then(m => m.USER_INFO_ROUTES),
-        data: {
-          title: 'MENU.THONG_TIN_CA_NHAN',
-          roles: ['']
-        }
-      },
-      {
-        path: 'doi-mat-khau',
-        canActivate: [AuthGuard],
-        loadChildren: () => import('../app/change-password/change-password.routes').then(m => m.DOI_MAT_KHAU),
-        data: {
-          title: 'MENU.DOI_MAT_KHAU',
-          roles: ['']
         }
       },
     ]

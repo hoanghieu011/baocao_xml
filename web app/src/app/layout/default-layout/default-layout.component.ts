@@ -88,16 +88,7 @@ export class DefaultLayoutComponent implements OnInit {
   }
 
   ngOnInit() {
-    if (this.authService.hasRole('xu_ly')) {
-      this.nghiPhepService.updateNotificationBadge1()
-      this.nghiPhepService.notificationCount1$.subscribe(count => {
-        this.updateBadge(count);
-      });
-    }
-    this.nghiPhepService.getNotificationCount()
-    this.nghiPhepService.notificationCount_cn$.subscribe(count => {
-      this.updateBadge_CN(count)
-    })
+    
   }
   updateBadge_CN(notificationCount: number) {
     this.navItems = this.navItems.map(item => {
@@ -116,47 +107,6 @@ export class DefaultLayoutComponent implements OnInit {
     });
   }
 
-  updateBadge(notificationCount: number) {
-    this.navItems = this.navItems.map(item => {
-      if (item.translationKey === 'MENU.XU_LY_PHIEU_NGHI') {
-        return {
-          ...item,
-          badge: {
-            text: notificationCount > 0 ? `${notificationCount}` : '',
-            color: item.badge?.color ?? 'danger',
-            size: item.badge?.size,
-            class: item.badge?.class
-          }
-        } as INavDataExtended;
-      }
-      return item;
-    });
-  }
-
-
-
-  updateNotificationBadge(): Promise<number> {
-    const searchDto: NghiPhepSearchDto = {
-      trang_thai: 'Chưa xử lý',
-      searchTerm: 'All',
-      Page: 1,
-      PageSize: 1
-    };
-
-    return new Promise((resolve, reject) => {
-      this.nghiPhepService.searchNghiPhep(searchDto).subscribe({
-        next: response => {
-          resolve(response.totalCount);
-        },
-        error: (error: HttpErrorResponse) => {
-          if (error.status === 401) {
-            this.router.navigate(['/login']);
-          }
-          resolve(0);
-        }
-      });
-    });
-  }
 
   onScrollbarUpdate($event: any) {
   }
@@ -166,7 +116,7 @@ export class DefaultLayoutComponent implements OnInit {
     localStorage.removeItem('token');
     localStorage.removeItem('ma_nv')
     localStorage.removeItem('password')
-    // this.router.navigate(['/login']);
-    window.location.reload()
+    this.router.navigate(['/login']);
+    // window.location.reload()
   }
 }

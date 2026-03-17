@@ -18,9 +18,19 @@ builder.Services.AddCors(options =>
         .AllowAnyMethod();
         });
 });
-
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowSpecificOrigin",
+        policy =>
+        {
+            policy.AllowAnyOrigin()
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        });
+});
 var connectionStrings = new ConnectionStrings();
 builder.Services.AddControllers();
+// builder.Services.AddScoped<DatabaseResolver>();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseMySql(connectionStrings.DefaultConnection,
         connectionStrings.MySqlVersion));
@@ -108,4 +118,5 @@ app.UseMiddleware<RequestSizeLimitMiddleware>(2 * 1024 * 1024); // 2 MB
 app.UseMiddleware<QueryParamSizeLimitMiddleware>(1024); // 1 KB
 app.MapControllers();
 
-app.Run();
+// app.Run();
+app.Run("http://0.0.0.0:5000");
