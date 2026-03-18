@@ -5,11 +5,14 @@ using API.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using MySqlConnector;
 using OfficeOpenXml;
+using Org.BouncyCastle.Utilities;
 using System.Globalization;
+using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 using Telegram.BotAPI.AvailableTypes;
@@ -67,91 +70,94 @@ namespace api.Controllers
                         foreach (var fileHNode in hosoEl.Elements("FILEHOSO"))
                         {
                                 var loai = (string?)fileHNode.Element("LOAIHOSO") ?? "";
-                                var noidung = fileHNode.Element("NOIDUNGFILE");
-                               
+                                var noidungXml = fileHNode.Element("NOIDUNGFILE");
+                                var encodedContent = noidungXml.Value;
+                                byte[] decoded = Convert.FromBase64String(encodedContent);
+                            string xml = Encoding.UTF8.GetString(decoded);
+                            XElement noidung = XElement.Parse(xml);
+
                                 if (loai.Equals("XML1"))
                                 {
-                                    var xmlBenhNhan = noidung.Element("TONG_HOP");
-                                    if (xmlBenhNhan == null) continue;
+                                    if (noidung == null) continue;
 
-                                    maLK = (string?)xmlBenhNhan.Element("MA_LK") ?? "";
+                                    maLK = (string?)noidung.Element("MA_LK") ?? "";
                                     if (string.IsNullOrWhiteSpace(maLK)) continue;
 
                                     // Check existence by MA_LK (adjust to your key)
-                                    var exists = await _dbContext.thong_tin_benh_nhan
+                                    var exists = await _dbContext.xml1
                                                     .AnyAsync(x => x.MA_LK == maLK);
                                     if (exists)
                                         continue;
                                     var benhNhan = new XML1
                                     {
                                         MA_LK = maLK,
-                                        STT = GetInt(xmlBenhNhan.Element("STT")),
-                                        MA_BN = (string?)xmlBenhNhan.Element("MA_BN") ?? "",
-                                        HO_TEN = ReplaceCData(((string?)xmlBenhNhan.Element("HO_TEN") ?? "")),
-                                        SO_CCCD = (string?)xmlBenhNhan.Element("SO_CCCD") ?? "",
-                                        //NGAY_SINH = ConvertCompactTimestampToStr(GetLong(xmlBenhNhan.Element("NGAY_SINH")), "dd-MM-yyyy"),
-                                        NGAY_SINH = (string?)(xmlBenhNhan.Element("NGAY_SINH")),
-                                        GIOI_TINH = GetInt(xmlBenhNhan.Element("GIOI_TINH")),
-                                        NHOM_MAU = (string?)xmlBenhNhan.Element("NHOM_MAU") ?? "",
-                                        MA_QUOCTICH = (string?)xmlBenhNhan.Element("MA_QUOCTICH") ?? "",
-                                        MA_DANTOC = (string?)xmlBenhNhan.Element("MA_DANTOC") ?? "",
-                                        MA_NGHE_NGHIEP = (string?)xmlBenhNhan.Element("MA_NGHE_NGHIEP") ?? "",
-                                        DIA_CHI = ReplaceCData( ((string?)xmlBenhNhan.Element("DIA_CHI") ?? "")),
-                                        MATINH_CU_TRU = (string?)xmlBenhNhan.Element("MATINH_CU_TRU") ?? "",
-                                        MAHUYEN_CU_TRU = (string?)xmlBenhNhan.Element("MAHUYEN_CU_TRU") ?? "",
-                                        MAXA_CU_TRU = (string?)xmlBenhNhan.Element("MAXA_CU_TRU") ?? "",
-                                        DIEN_THOAI = (string?)xmlBenhNhan.Element("DIEN_THOAI") ?? "",
-                                        MA_THE_BHYT = (string?)xmlBenhNhan.Element("MA_THE_BHYT") ?? "",
-                                        MA_DKBD = (string?)xmlBenhNhan.Element("MA_DKBD") ?? "",
-                                        GT_THE_TU = (string?)xmlBenhNhan.Element("GT_THE_TU") ?? "",
-                                        GT_THE_DEN = (string?)xmlBenhNhan.Element("GT_THE_DEN") ?? "",
-                                        //NGAY_MIEN_CCT = ConvertCompactTimestampToStr(GetLong(xmlBenhNhan.Element("NGAY_MIEN_CCT")), "dd-MM-yyyy"),
-                                        NGAY_MIEN_CCT = (string?)(xmlBenhNhan.Element("NGAY_MIEN_CCT")),
-                                        LY_DO_VV = (string?)xmlBenhNhan.Element("LY_DO_VV") ?? "",
-                                        LY_DO_VNT = (string?)xmlBenhNhan.Element("LY_DO_VNT") ?? "",
-                                        MA_LY_DO_VNT = (string?)xmlBenhNhan.Element("MA_LY_DO_VNT") ?? "",
-                                        CHAN_DOAN_VAO = ReplaceCData(((string?)xmlBenhNhan.Element("CHAN_DOAN_VAO") ?? "")),
-                                        CHAN_DOAN_RV = ReplaceCData(((string?)xmlBenhNhan.Element("CHAN_DOAN_RV") ?? "")),
-                                        MA_BENH_CHINH = (string?)xmlBenhNhan.Element("MA_BENH_CHINH") ?? "",
-                                        MA_BENH_KT = (string?)xmlBenhNhan.Element("MA_BENH_KT") ?? "",
-                                        MA_BENH_YHCT = (string?)xmlBenhNhan.Element("MA_BENH_YHCT") ?? "",
-                                        MA_PTTT_QT = (string?)xmlBenhNhan.Element("MA_PTTT_QT") ?? "",
-                                        MA_DOITUONG_KCB = (string?)xmlBenhNhan.Element("MA_DOITUONG_KCB") ?? "",
-                                        MA_NOI_DI = (string?)xmlBenhNhan.Element("MA_NOI_DI") ?? "",
-                                        MA_NOI_DEN = (string?)xmlBenhNhan.Element("MA_NOI_DEN") ?? "",
-                                        MA_TAI_NAN = (string?)xmlBenhNhan.Element("MA_TAI_NAN") ?? "",
-                                        NGAY_VAO = GetLong(xmlBenhNhan.Element("NGAY_VAO")) != 0 ? ConvertCompactTimestampToDateTime(GetLong(xmlBenhNhan.Element("NGAY_VAO"))) : ConvertCompactTimestampToDateTime(180001010000),
-                                        NGAY_VAO_NOI_TRU = GetLong(xmlBenhNhan.Element("NGAY_VAO_NOI_TRU")) != 0 ? ConvertCompactTimestampToDateTime(GetLong(xmlBenhNhan.Element("NGAY_VAO_NOI_TRU"))) : ConvertCompactTimestampToDateTime(180001010000),
-                                        NGAY_RA = GetLong(xmlBenhNhan.Element("NGAY_RA"))!=0 ? ConvertCompactTimestampToDateTime(GetLong(xmlBenhNhan.Element("NGAY_RA"))) : ConvertCompactTimestampToDateTime(180001010000),
-                                        GIAY_CHUYEN_TUYEN = (string?)xmlBenhNhan.Element("GIAY_CHUYEN_TUYEN") ?? "",
-                                        SO_NGAY_DTRI = (string?)xmlBenhNhan.Element("SO_NGAY_DTRI") ?? "",
-                                        PP_DIEU_TRI = (string?)xmlBenhNhan.Element("PP_DIEU_TRI") ?? "",
-                                        KET_QUA_DTRI = (string?)xmlBenhNhan.Element("KET_QUA_DTRI") ?? "",
-                                        MA_LOAI_RV = (string?)xmlBenhNhan.Element("MA_LOAI_RV") ?? "",
-                                        GHI_CHU = ReplaceCData(((string?)xmlBenhNhan.Element("GHI_CHU") ?? "")),
-                                        NGAY_TTOAN = GetLong(xmlBenhNhan.Element("NGAY_TTOAN")) != 0 ? ConvertCompactTimestampToDateTime(GetLong(xmlBenhNhan.Element("NGAY_TTOAN"))) : ConvertCompactTimestampToDateTime(180001010000),
-                                        T_THUOC = GetInt(xmlBenhNhan.Element("T_THUOC")),
-                                        T_VTYT = GetInt(xmlBenhNhan.Element("T_VTYT")),
-                                        T_TONGCHI_BV = GetInt(xmlBenhNhan.Element("T_TONGCHI_BV")),
-                                        T_TONGCHI_BH = GetInt(xmlBenhNhan.Element("T_TONGCHI_BH")),
-                                        T_BNTT = GetInt(xmlBenhNhan.Element("T_BNTT")),
-                                        T_BNCCT = GetInt(xmlBenhNhan.Element("T_BNCCT")),
-                                        T_BHTT = GetInt(xmlBenhNhan.Element("T_BHTT")),
-                                        T_NGUONKHAC = GetInt(xmlBenhNhan.Element("T_NGUONKHAC")),
-                                        T_BHTT_GDV = GetInt(xmlBenhNhan.Element("T_BHTT_GDV")),
-                                        NAM_QT = (string?)xmlBenhNhan.Element("NAM_QT") ?? "",
-                                        THANG_QT = (string?)xmlBenhNhan.Element("THANG_QT") ?? "",
-                                        MA_LOAI_KCB = (string?)xmlBenhNhan.Element("MA_LOAI_KCB") ?? "",
-                                        MA_KHOA = (string?)xmlBenhNhan.Element("MA_KHOA") ?? "",
-                                        MA_CSKCB = (string?)xmlBenhNhan.Element("MA_CSKCB") ?? "",
-                                        MA_KHUVUC = (string?)xmlBenhNhan.Element("MA_KHUVUC") ?? "",
-                                        CAN_NANG = (string?)xmlBenhNhan.Element("CAN_NANG") ?? "",
-                                        CAN_NANG_CON = (string?)xmlBenhNhan.Element("CAN_NANG_CON") ?? "",
-                                        NAM_NAM_LIEN_TUC = GetInt(xmlBenhNhan.Element("NAM_NAM_LIEN_TUC")),
-                                        NGAY_TAI_KHAM = (string?)xmlBenhNhan.Element("NGAY_TAI_KHAM") ?? "",
-                                        MA_HSBA = (string?)xmlBenhNhan.Element("MA_HSBA") ?? "",
-                                        MA_TTDV = (string?)xmlBenhNhan.Element("MA_TTDV") ?? "",
-                                        DU_PHONG = (string?)xmlBenhNhan.Element("DU_PHONG") ?? "",
+                                        STT = GetInt(noidung.Element("STT")),
+                                        MA_BN = (string?)noidung.Element("MA_BN") ?? "",
+                                        HO_TEN = ReplaceCData(((string?)noidung.Element("HO_TEN") ?? "")),
+                                        SO_CCCD = (string?)noidung.Element("SO_CCCD") ?? "",
+                                        //NGAY_SINH = ConvertCompactTimestampToStr(GetLong(noidung.Element("NGAY_SINH")), "dd-MM-yyyy"),
+                                        NGAY_SINH = (string?)(noidung.Element("NGAY_SINH")),
+                                        GIOI_TINH = GetInt(noidung.Element("GIOI_TINH")),
+                                        NHOM_MAU = (string?)noidung.Element("NHOM_MAU") ?? "",
+                                        MA_QUOCTICH = (string?)noidung.Element("MA_QUOCTICH") ?? "",
+                                        MA_DANTOC = (string?)noidung.Element("MA_DANTOC") ?? "",
+                                        MA_NGHE_NGHIEP = (string?)noidung.Element("MA_NGHE_NGHIEP") ?? "",
+                                        DIA_CHI = ReplaceCData( ((string?)noidung.Element("DIA_CHI") ?? "")),
+                                        MATINH_CU_TRU = (string?)noidung.Element("MATINH_CU_TRU") ?? "",
+                                        MAHUYEN_CU_TRU = (string?)noidung.Element("MAHUYEN_CU_TRU") ?? "",
+                                        MAXA_CU_TRU = (string?)noidung.Element("MAXA_CU_TRU") ?? "",
+                                        DIEN_THOAI = (string?)noidung.Element("DIEN_THOAI") ?? "",
+                                        MA_THE_BHYT = (string?)noidung.Element("MA_THE_BHYT") ?? "",
+                                        MA_DKBD = (string?)noidung.Element("MA_DKBD") ?? "",
+                                        GT_THE_TU = (string?)noidung.Element("GT_THE_TU") ?? "",
+                                        GT_THE_DEN = (string?)noidung.Element("GT_THE_DEN") ?? "",
+                                        //NGAY_MIEN_CCT = ConvertCompactTimestampToStr(GetLong(noidung.Element("NGAY_MIEN_CCT")), "dd-MM-yyyy"),
+                                        NGAY_MIEN_CCT = (string?)(noidung.Element("NGAY_MIEN_CCT")),
+                                        LY_DO_VV = (string?)noidung.Element("LY_DO_VV") ?? "",
+                                        LY_DO_VNT = (string?)noidung.Element("LY_DO_VNT") ?? "",
+                                        MA_LY_DO_VNT = (string?)noidung.Element("MA_LY_DO_VNT") ?? "",
+                                        CHAN_DOAN_VAO = ReplaceCData(((string?)noidung.Element("CHAN_DOAN_VAO") ?? "")),
+                                        CHAN_DOAN_RV = ReplaceCData(((string?)noidung.Element("CHAN_DOAN_RV") ?? "")),
+                                        MA_BENH_CHINH = (string?)noidung.Element("MA_BENH_CHINH") ?? "",
+                                        MA_BENH_KT = (string?)noidung.Element("MA_BENH_KT") ?? "",
+                                        MA_BENH_YHCT = (string?)noidung.Element("MA_BENH_YHCT") ?? "",
+                                        MA_PTTT_QT = (string?)noidung.Element("MA_PTTT_QT") ?? "",
+                                        MA_DOITUONG_KCB = (string?)noidung.Element("MA_DOITUONG_KCB") ?? "",
+                                        MA_NOI_DI = (string?)noidung.Element("MA_NOI_DI") ?? "",
+                                        MA_NOI_DEN = (string?)noidung.Element("MA_NOI_DEN") ?? "",
+                                        MA_TAI_NAN = (string?)noidung.Element("MA_TAI_NAN") ?? "",
+                                        NGAY_VAO = GetLong(noidung.Element("NGAY_VAO")) != 0 ? ConvertCompactTimestampToDateTime(GetLong(noidung.Element("NGAY_VAO"))) : ConvertCompactTimestampToDateTime(180001010000),
+                                        NGAY_VAO_NOI_TRU = GetLong(noidung.Element("NGAY_VAO_NOI_TRU")) != 0 ? ConvertCompactTimestampToDateTime(GetLong(noidung.Element("NGAY_VAO_NOI_TRU"))) : ConvertCompactTimestampToDateTime(180001010000),
+                                        NGAY_RA = GetLong(noidung.Element("NGAY_RA"))!=0 ? ConvertCompactTimestampToDateTime(GetLong(noidung.Element("NGAY_RA"))) : ConvertCompactTimestampToDateTime(180001010000),
+                                        GIAY_CHUYEN_TUYEN = (string?)noidung.Element("GIAY_CHUYEN_TUYEN") ?? "",
+                                        SO_NGAY_DTRI = (string?)noidung.Element("SO_NGAY_DTRI") ?? "",
+                                        PP_DIEU_TRI = (string?)noidung.Element("PP_DIEU_TRI") ?? "",
+                                        KET_QUA_DTRI = (string?)noidung.Element("KET_QUA_DTRI") ?? "",
+                                        MA_LOAI_RV = (string?)noidung.Element("MA_LOAI_RV") ?? "",
+                                        GHI_CHU = ReplaceCData(((string?)noidung.Element("GHI_CHU") ?? "")),
+                                        NGAY_TTOAN = GetLong(noidung.Element("NGAY_TTOAN")) != 0 ? ConvertCompactTimestampToDateTime(GetLong(noidung.Element("NGAY_TTOAN"))) : ConvertCompactTimestampToDateTime(180001010000),
+                                        T_THUOC = GetInt(noidung.Element("T_THUOC")),
+                                        T_VTYT = GetInt(noidung.Element("T_VTYT")),
+                                        T_TONGCHI_BV = GetInt(noidung.Element("T_TONGCHI_BV")),
+                                        T_TONGCHI_BH = GetInt(noidung.Element("T_TONGCHI_BH")),
+                                        T_BNTT = GetInt(noidung.Element("T_BNTT")),
+                                        T_BNCCT = GetInt(noidung.Element("T_BNCCT")),
+                                        T_BHTT = GetInt(noidung.Element("T_BHTT")),
+                                        T_NGUONKHAC = GetInt(noidung.Element("T_NGUONKHAC")),
+                                        T_BHTT_GDV = GetInt(noidung.Element("T_BHTT_GDV")),
+                                        NAM_QT = (string?)noidung.Element("NAM_QT") ?? "",
+                                        THANG_QT = (string?)noidung.Element("THANG_QT") ?? "",
+                                        MA_LOAI_KCB = (string?)noidung.Element("MA_LOAI_KCB") ?? "",
+                                        MA_KHOA = (string?)noidung.Element("MA_KHOA") ?? "",
+                                        MA_CSKCB = (string?)noidung.Element("MA_CSKCB") ?? "",
+                                        MA_KHUVUC = (string?)noidung.Element("MA_KHUVUC") ?? "",
+                                        CAN_NANG = (string?)noidung.Element("CAN_NANG") ?? "",
+                                        CAN_NANG_CON = (string?)noidung.Element("CAN_NANG_CON") ?? "",
+                                        NAM_NAM_LIEN_TUC = GetInt(noidung.Element("NAM_NAM_LIEN_TUC")),
+                                        NGAY_TAI_KHAM = (string?)noidung.Element("NGAY_TAI_KHAM") ?? "",
+                                        MA_HSBA = (string?)noidung.Element("MA_HSBA") ?? "",
+                                        MA_TTDV = (string?)noidung.Element("MA_TTDV") ?? "",
+                                        DU_PHONG = (string?)noidung.Element("DU_PHONG") ?? "",
                                         CSYTID = csytId
                                     };
                                     // thông tin bệnh nhân
@@ -159,8 +165,7 @@ namespace api.Controllers
                                 }
                                 else if (loai.Equals("XML2"))
                                 {
-                                    var chiTieuChiTietThuoc = noidung.Element("CHITIEU_CHITIET_THUOC");
-                                    var chiTietThuocXmWrapper = chiTieuChiTietThuoc.Element("DSACH_CHI_TIET_THUOC");
+                                    var chiTietThuocXmWrapper = noidung.Element("DSACH_CHI_TIET_THUOC");
                                     var dsChiTietThuocXml = chiTietThuocXmWrapper.Elements("CHI_TIET_THUOC");
                                     foreach (var chiTietThuoc in dsChiTietThuocXml)
                                     {
@@ -213,8 +218,7 @@ namespace api.Controllers
                                 }
                                 else if (loai.Equals("XML3"))
                                 {
-                                    var chiTieuChiTietDvkt = noidung.Element("CHITIEU_CHITIET_DVKT_VTYT");
-                                    var chiTietDvktXmWrapper = chiTieuChiTietDvkt.Element("DSACH_CHI_TIET_DVKT");
+                                    var chiTietDvktXmWrapper = noidung.Element("DSACH_CHI_TIET_DVKT");
                                     var dsChiTietDvktXml = chiTietDvktXmWrapper.Elements("CHI_TIET_DVKT");
                                     foreach (var chiTietDvkt in dsChiTietDvktXml)
                                     {
@@ -276,9 +280,9 @@ namespace api.Controllers
                         }
 
 
-                        if (bn.MA_LK != "") _dbContext.thong_tin_benh_nhan.Add(bn);
-                        if (dsChiTietThuoc.Count > 0) _dbContext.chi_tiet_thuoc.AddRange(dsChiTietThuoc);
-                        if (dsDichVuKiThuat.Count > 0) _dbContext.dich_vu_ki_thuat.AddRange(dsDichVuKiThuat);
+                        if (bn.MA_LK != "") _dbContext.xml1.Add(bn);
+                        if (dsChiTietThuoc.Count > 0) _dbContext.xml2.AddRange(dsChiTietThuoc);
+                        if (dsDichVuKiThuat.Count > 0) _dbContext.xml3.AddRange(dsDichVuKiThuat);
 
                         await _dbContext.SaveChangesAsync();
                         msg += "\n";
@@ -292,6 +296,10 @@ namespace api.Controllers
                 catch (XmlException xe)
                 {
                     return BadRequest($"Lỗi XML: "+ xe.Message);
+                }
+                catch (FormatException fe)
+                {
+                    return BadRequest($"Lỗi Base64: " + fe.Message);
                 }
                 catch (Exception ex)
                 {

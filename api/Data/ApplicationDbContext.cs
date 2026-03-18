@@ -19,8 +19,7 @@ namespace API.Data
         // public DbSet<LyDoNghi> ly_do_nghi { get; set; }
         // public DbSet<PhepTon> phep_ton { get; set; }
         // public DbSet<Holiday> holiday { get; set; }
-        public DbSet<XML1> thong_tin_benh_nhan { get; set; }
-        public DbSet<XML2> chi_tiet_thuoc { get; set; }
-        public DbSet<XML3> dich_vu_ki_thuat { get; set; }
+        public DbSet<XML2> xml2 { get; set; }
+        public DbSet<XML3> xml3 { get; set; }
     }
 }
