@@ -1,6 +1,7 @@
 ﻿using api.Models;
 using API.Common;
 using API.Data;
+using API.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -59,9 +60,9 @@ namespace api.Controllers
                         var hosoEl = XElement.ReadFrom(reader) as XElement;
                         if (hosoEl == null) continue;
 
-                        var bn = new ThongTinBenhNhan();
-                        var dsChiTietThuoc = new List<ChiTietThuoc>();
-                        var dsDichVuKiThuat = new List<DichVuKiThuat>();
+                        var bn = new XML1();
+                        var dsChiTietThuoc = new List<XML2>();
+                        var dsDichVuKiThuat = new List<XML3>();
                         var maLK = "";
                         foreach (var fileHNode in hosoEl.Elements("FILEHOSO"))
                         {
@@ -81,7 +82,7 @@ namespace api.Controllers
                                                     .AnyAsync(x => x.MA_LK == maLK);
                                     if (exists)
                                         continue;
-                                    var benhNhan = new ThongTinBenhNhan
+                                    var benhNhan = new XML1
                                     {
                                         MA_LK = maLK,
                                         STT = GetInt(xmlBenhNhan.Element("STT")),
@@ -163,7 +164,7 @@ namespace api.Controllers
                                     var dsChiTietThuocXml = chiTietThuocXmWrapper.Elements("CHI_TIET_THUOC");
                                     foreach (var chiTietThuoc in dsChiTietThuocXml)
                                     {
-                                        var thuoc = new ChiTietThuoc
+                                        var thuoc = new XML2
                                         {
                                             STT = GetInt(chiTietThuoc.Element("STT")),
                                             MA_LK = maLK,
@@ -217,7 +218,7 @@ namespace api.Controllers
                                     var dsChiTietDvktXml = chiTietDvktXmWrapper.Elements("CHI_TIET_DVKT");
                                     foreach (var chiTietDvkt in dsChiTietDvktXml)
                                     {
-                                        var dvkt = new DichVuKiThuat
+                                        var dvkt = new XML3
                                         {
                                             STT = GetInt(chiTietDvkt.Element("STT")),
                                             MA_LK = maLK,

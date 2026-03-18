@@ -4,6 +4,7 @@ namespace API.Models
 {
     public class XML1
     {
+        [Key]
         public ulong XML1ID { get; set; }
         public int? STT { get; set; }
         public string MA_LK { get; set; }
