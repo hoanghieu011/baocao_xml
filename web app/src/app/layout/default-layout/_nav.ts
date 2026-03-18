@@ -9,21 +9,16 @@ export interface INavDataExtended extends INavData {
 
 export const navItems: INavDataExtended[] = [
   {
-    name: 'Quản lý',
-    iconComponent: { name: 'cil-settings' },
+    name: 'Báo cáo và tra cứu',
+    iconComponent: { name: 'cilSearch' },
+    url: '/baocao-tracuu',
     roles: ['all'],
     children: [
       {
-        name: 'Nhân viên',
-        url: '#',
+        name: 'Danh sách bệnh nhân',
         roles: ['all'],
-        iconComponent: { name: 'cil-user' }
-      },
-      {
-        name: 'Phòng ban',
-        url: '#',
-        roles: ['all'],
-        iconComponent: { name: 'cil-building' }
+        url: '/baocao-tracuu/ds_benhnhan',
+        iconComponent: { name: 'cil-people' }
       }
     ]
   },
