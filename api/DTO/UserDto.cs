@@ -1,5 +1,5 @@
 public class UpdateUserRoleDto
 {
-    public string ma_nv { get; set; }
-    public string role { get; set; }
+    public string USER_NAME { get; set; }
+    public string USER_LEVEL { get; set; }
 }

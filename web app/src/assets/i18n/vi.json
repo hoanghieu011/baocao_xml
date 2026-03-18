@@ -1,5 +1,5 @@
 {
-  "TITLE": "Hệ thống quản lý nghỉ phép",
+  "TITLE": "Hệ thống quản lý báo cáo",
   "LOGIN": "Đăng nhập",
   "EMPLOYEE_ID": "Mã nhân viên",
   "PASSWORD": "Mật khẩu",
@@ -32,7 +32,7 @@
   },
   "HO_TEN": "Họ tên",
   "TEN_BO_PHAN": "Tên bộ phận",
-  "MA_NV": "Mã NV",
+  "MA_NV": "Mã nhân viên",
   "NGHI_TU_NGAY": "Nghỉ từ ngày",
   "NGHI_DEN_NGAY": "Nghỉ đến ngày",
   "LOAI_NGHI_PHEP": "Loại nghỉ phép",

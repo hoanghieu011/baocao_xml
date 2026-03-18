@@ -3,10 +3,30 @@ import { INavData } from '@coreui/angular';
 export interface INavDataExtended extends INavData {
   roles?: string[];
   notificationCount?: number; 
-  translationKey?: string
+  translationKey?: string;
+  children?: INavDataExtended[];
 }
 
 export const navItems: INavDataExtended[] = [
+  {
+    name: 'Quản lý',
+    iconComponent: { name: 'cil-settings' },
+    roles: ['all'],
+    children: [
+      {
+        name: 'Nhân viên',
+        url: '#',
+        roles: ['all'],
+        iconComponent: { name: 'cil-user' }
+      },
+      {
+        name: 'Phòng ban',
+        url: '#',
+        roles: ['all'],
+        iconComponent: { name: 'cil-building' }
+      }
+    ]
+  },
   {
     title: true,
     name: 'Nghỉ phép',
@@ -70,13 +90,6 @@ export const navItems: INavDataExtended[] = [
     iconComponent: { name: 'cil-chart' },
     roles: ['bao_cao']
   },
-  // {
-  //   name: 'Báo cáo theo nhân viên',
-  //   translationKey: 'MENU.BAO_CAO_NHAN_VIEN',
-  //   url: '/bao-cao-nhan-vien',
-  //   iconComponent: { name: 'cil-address-book' },
-  //   roles: ['bao_cao']
-  // },
   {
     title: true,
     name: 'Quản trị hệ thống',
@@ -119,25 +132,30 @@ export const navItems: INavDataExtended[] = [
     roles: ['admin']
   },
   {
-    title: true,
+    title: false,
     name: 'Thông tin tài khoản',
+    url: '/tai-khoan',
     translationKey: 'MENU.THONG_TIN_TAI_KHOAN',
-    roles: ['all']
+    roles: ['all'],
+    iconComponent: { name: 'cibAboutMe' },
+    children: [
+      {
+        name: 'Thông tin cá nhân',
+        translationKey: 'MENU.THONG_TIN_CA_NHAN',
+        url: '/tai-khoan/thong-tin-ca-nhan',
+        iconComponent: { name: 'cil-user' },
+        roles: ['all']
+      },
+      {
+        name: 'Đổi mật khẩu',
+        translationKey: 'MENU.DOI_MAT_KHAU',
+        url: '/tai-khoan/doi-mat-khau',
+        iconComponent: { name: 'cil-lock-locked' },
+        roles: ['all']
+      },
+    ]
   },
-  {
-    name: 'Thông tin cá nhân',
-    translationKey: 'MENU.THONG_TIN_CA_NHAN',
-    url: '/thong-tin-ca-nhan',
-    iconComponent: { name: 'cil-user' },
-    roles: ['all']
-  },
-  {
-    name: 'Đổi mật khẩu',
-    translationKey: 'MENU.DOI_MAT_KHAU',
-    url: '/doi-mat-khau',
-    iconComponent: { name: 'cil-lock-locked' },
-    roles: ['all']
-  },
+  
 ];
 export const navItems1: INavDataExtended[] = [
   {

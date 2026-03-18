@@ -36,27 +36,21 @@ namespace API.Controllers
         {
             string hashedPassword = HashPassword(loginUser.password);
 
-            var user = (from u in _context.user
-                        join nv in _context.nhan_vien on u.ma_nv equals nv.ma_nv
-                        join vt in _context.vi_tri on nv.ma_vi_tri equals vt.ma_vi_tri into vtGroup
-                        from vt in vtGroup.DefaultIfEmpty()
-                        join bp in _context.bo_phan on nv.bo_phan_id equals bp.id into bpGroup
-                        from bp in bpGroup.DefaultIfEmpty()
-                        where (nv.ma_nv == loginUser.ma_nv && u.password == hashedPassword &&
-                                nv.xoa != 1)
+            var user = (from u in _context.adm_user
+                        where u.USER_NAME == loginUser.user_name
+                        && u.USER_PWD == hashedPassword
+                        && u.STATUS == 1
                         select new
                         {
-                            u.id,
-                            u.id_nv,
-                            nv.ma_nv,
-                            nv.full_name,
-                            nv.gioi_tinh,
-                            nv.ma_vi_tri,
-                            ten_vi_tri = vt != null ? vt.ten_vi_tri : null,
-                            ten_bo_phan = bp != null ? bp.ten_bo_phan : null,
-                            nv.cong_viec,
-                            nv.email,
-                            role = u.role
+                            u.USER_ID,
+                            u.FULL_NAME,
+                            u.USER_NAME,
+                            u.OFFICER_ID,
+                            u.USER_LEVEL,
+                            u.CSYTID,
+                            u.STATUS,
+                            u.NOTE,
+                            u.ROLE
                         }).FirstOrDefault();
 
             if (user == null)
@@ -66,34 +60,31 @@ namespace API.Controllers
 
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.UTF8.GetBytes("sdfsdfdsf34fsdfs@1234fsdfsdfsdg54sdg45dsfgsg5");
-            var roles = user.role.Split(',');
-            var claims = new List<Claim>
+            var roles = "";
+            var claims = new List<System.Security.Claims.Claim>
             {
-                new Claim("id", user.id.ToString()),
-                new Claim("id_nv", user.id_nv.ToString()),
-                new Claim("ma_nv", user.ma_nv),
-                new Claim("full_name", user.full_name),
-                new Claim("gioi_tinh", user.gioi_tinh ?? string.Empty),
-                new Claim("ma_vi_tri", user.ma_vi_tri ?? string.Empty),
-                new Claim("vi_tri", user.ten_vi_tri ?? string.Empty),
-                new Claim("ten_bo_phan", user.ten_bo_phan ?? string.Empty),
-                new Claim("cong_viec", user.cong_viec ?? string.Empty),
-                new Claim("email", user.email ?? string.Empty),
-                new Claim("roles", user.role ?? string.Empty)
-            };
+                new Claim("USER_ID", user.USER_ID.ToString()),
+                new Claim("FULL_NAME", user.FULL_NAME ?? ""),
+                new Claim("USER_NAME", user.USER_NAME ?? ""),
+                new Claim("OFFICER_ID", user.OFFICER_ID.ToString()),
+                new Claim("USER_LEVEL", user.USER_LEVEL.ToString()),
+                new Claim("CSYTID", user.CSYTID.ToString()),
+                new Claim("STATUS", user.STATUS.ToString()),
+                new Claim("NOTE", user.NOTE ?? ""),
+                new Claim("ROLE", user.ROLE ?? "")
 
-            foreach (var role in roles)
-            {
-                claims.Add(new Claim(ClaimTypes.Role, role.Trim()));
-            }
+            };
 
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(claims),
                 Expires = DateTime.UtcNow.AddHours(3),
                 Issuer = "HNM",
-                Audience = "SINFONIA",
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+                Audience = "Audience@HNM",
+                SigningCredentials = new SigningCredentials(
+                    new SymmetricSecurityKey(key),
+                    SecurityAlgorithms.HmacSha256Signature
+                )
             };
 
             var token = tokenHandler.CreateToken(tokenDescriptor);
@@ -117,19 +108,19 @@ namespace API.Controllers
         [HttpPost("ChangePassword")]
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
         {
-            var user = _context.user.FirstOrDefault(u => u.ma_nv == request.ma_nv);
+            var user = _context.adm_user.FirstOrDefault(u => u.USER_NAME == request.USER_NAME);
             if (user == null)
             {
                 return NotFound(new { message = "Không tìm thấy người dùng." });
             }
 
             string hashedOldPassword = HashPassword(request.oldPassword);
-            if (user.password != hashedOldPassword)
+            if (user.USER_PWD != hashedOldPassword)
             {
                 return NotFound(new { message = "Mật khẩu cũ không chính xác." });
             }
 
-            user.password = HashPassword(request.newPassword);
+            user.USER_PWD = HashPassword(request.newPassword);
             await _context.SaveChangesAsync();
 
             return Ok(new { message = "Đổi mật khẩu thành công." });
@@ -158,12 +149,12 @@ namespace API.Controllers
         [HttpPost("ResetPassword")]
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
         {
-            var user = await _context.user.FirstOrDefaultAsync(u => u.ma_nv == request.ma_nv);
+            var user = await _context.adm_user.FirstOrDefaultAsync(u => u.USER_NAME == request.USER_NAME);
             if (user == null)
             {
                 return NotFound(new { message = "Không tìm thấy người dùng." });
             }
-            user.password = HashPassword(request.newPassword);
+            user.USER_PWD = HashPassword(request.newPassword);
             await _context.SaveChangesAsync();
 
             return Ok(new { message = "Đặt lại mật khẩu thành công!" });
@@ -171,17 +162,17 @@ namespace API.Controllers
     }
     public class ResetPasswordRequest
     {
-        public string ma_nv { get; set; }
+        public string USER_NAME { get; set; }
         public string newPassword { get; set; }
     }
     public class Login
     {
-        public string ma_nv { get; set; }
+        public string user_name { get; set; }
         public string password { get; set; }
     }
     public class ChangePasswordRequest
     {
-        public string ma_nv { get; set; }
+        public string USER_NAME { get; set; }
         public string oldPassword { get; set; }
         public string newPassword { get; set; }
     }

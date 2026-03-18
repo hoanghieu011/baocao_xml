@@ -18,9 +18,19 @@ builder.Services.AddCors(options =>
         .AllowAnyMethod();
         });
 });
-
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowSpecificOrigin",
+        policy =>
+        {
+            policy.AllowAnyOrigin()
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        });
+});
 var connectionStrings = new ConnectionStrings();
 builder.Services.AddControllers();
+builder.Services.AddScoped<API.Common.DatabaseResolver>();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseMySql(connectionStrings.DefaultConnection,
         connectionStrings.MySqlVersion));
@@ -36,17 +46,13 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
             ValidIssuer = "HNM",
-            ValidAudience = "SINFONIA",
+            ValidAudience = "Audience@HNM",
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("sdfsdfdsf34fsdfs@1234fsdfsdfsdg54sdg45dsfgsg5")),
             ClockSkew = TimeSpan.Zero
         };
     });
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddScoped<NghiPhepService>();
-builder.Services.AddScoped<API.Common.ImageService>();
-builder.Services.AddSingleton<EmailService>();
-builder.Services.AddHostedService<DailyEmailJob>();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo
@@ -112,4 +118,5 @@ app.UseMiddleware<RequestSizeLimitMiddleware>(2 * 1024 * 1024); // 2 MB
 app.UseMiddleware<QueryParamSizeLimitMiddleware>(1024); // 1 KB
 app.MapControllers();
 
-app.Run();
+// app.Run();
+app.Run("http://0.0.0.0:5000");

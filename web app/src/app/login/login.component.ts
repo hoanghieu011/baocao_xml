@@ -13,7 +13,7 @@ import { TranslateService, TranslateModule  } from '@ngx-translate/core';
   styleUrls: ['./login.component.css']
 })
 export class LoginComponent implements OnInit {
-  ma_nv: string = '';
+  user_name: string = '';
   password: string = '';
   rememberMe: boolean = false;
   loginFalse: boolean = false;
@@ -45,11 +45,11 @@ export class LoginComponent implements OnInit {
       this.authService.redirectBasedOnRole();
       return;
     }
-    const storedEmail = localStorage.getItem('ma_nv');
+    const storedEmail = localStorage.getItem('user_name');
     const storedPassword = localStorage.getItem('password');
 
     if (storedEmail && storedPassword) {
-      this.ma_nv = storedEmail;
+      this.user_name = storedEmail;
       this.password = storedPassword;
       this.rememberMe = true;
     }
@@ -98,21 +98,21 @@ export class LoginComponent implements OnInit {
     this.loginFalse = false
     this.captchaValid = true
     this.connectFalse = false
-    if (this.userCaptcha !== this.captchaText) {
-      this.captchaValid = false
-      this.refreshCaptcha();
-      return;
-    }
-    if (!this.ma_nv || !this.password) {
+    // if (this.userCaptcha !== this.captchaText) {
+    //   this.captchaValid = false
+    //   this.refreshCaptcha();
+    //   return;
+    // }
+    if (!this.user_name || !this.password) {
       this.loginFalse = true;
       this.connectFalse = false;
       return;
     }
-    this.authService.login(this.ma_nv, this.password).subscribe(
+    this.authService.login(this.user_name, this.password).subscribe(
       (isLoggedIn: boolean) => {
         if (isLoggedIn) {
           if (this.rememberMe) {
-            localStorage.setItem('ma_nv', this.ma_nv);
+            localStorage.setItem('user_name', this.user_name);
             localStorage.setItem('password', this.password);
           } else {
             localStorage.removeItem('password');

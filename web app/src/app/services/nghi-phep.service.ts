@@ -21,12 +21,12 @@ export class NghiPhepService {
   notificationCount_cn$ = this.notificationCountSubject_cn.asObservable();
 
   getNotificationCount(): void {
-    this.http.get<{ totalCount: number }>(`${this.apiUrl}/thong-bao-cn`, { headers: this.httpConfig.getHeaders() })
-      .subscribe(response => {
-        this.notificationCountSubject_cn.next(response.totalCount);
-      }, error => {
-        console.error('Lỗi khi lấy số lượng thông báo:', error);
-      });
+    // this.http.get<{ totalCount: number }>(`${this.apiUrl}/thong-bao-cn`, { headers: this.httpConfig.getHeaders() })
+    //   .subscribe(response => {
+    //     this.notificationCountSubject_cn.next(response.totalCount);
+    //   }, error => {
+    //     console.error('Lỗi khi lấy số lượng thông báo:', error);
+    //   });
   }
   updateThongBao(id: number): void {
     this.http.post(`${this.apiUrl}/cap-nhat-thong-bao`, id, { headers: this.httpConfig.getHeaders() })
