@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using API.Models;
+using api.Models;
 
 namespace API.Data
 {
@@ -18,5 +19,7 @@ namespace API.Data
         // public DbSet<LyDoNghi> ly_do_nghi { get; set; }
         // public DbSet<PhepTon> phep_ton { get; set; }
         // public DbSet<Holiday> holiday { get; set; }
+        public DbSet<XML2> xml2 { get; set; }
+        public DbSet<XML3> xml3 { get; set; }
     }
 }
