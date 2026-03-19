@@ -6,7 +6,7 @@ namespace api.Models
     public class XML2
     {
         [Key]
-        public int XML2ID { get; set; }
+        public ulong XML2ID { get; set; }
         public int? STT { get; set; }
         public string MA_LK { get; set; }
         public string? MA_THUOC { get; set; }
@@ -47,6 +47,5 @@ namespace api.Models
         public string? VET_THUONG_TP { get; set; }
         public string? DU_PHONG { get; set; }
         public int? CSYTID { get; set; }
-        public DateTime VERSION { get; set; }
     }
 }

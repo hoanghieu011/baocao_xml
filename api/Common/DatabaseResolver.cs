@@ -1,7 +1,8 @@
-using System.Data;
-using System.Threading.Tasks;
 using API.Data;
 using Microsoft.EntityFrameworkCore;
+using System.Data;
+using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace API.Common
 {
@@ -43,6 +44,52 @@ namespace API.Common
 
             var result = await cmd.ExecuteScalarAsync();
             return result?.ToString();
+        }
+
+        public async Task<string?> GetCsytIdByUserAsync(string userName)
+        {
+            var conn = _context.Database.GetDbConnection();
+
+            if (conn.State != ConnectionState.Open)
+                await conn.OpenAsync();
+
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = @"
+               SELECT CSYTID FROM org_officer 
+                    WHERE OFFICER_ID = (
+                        SELECT OFFICER_ID FROM adm_user 
+                        WHERE USER_NAME = @user
+                    )";
+
+            var p = cmd.CreateParameter();
+            p.ParameterName = "@user";
+            p.Value = userName;
+            cmd.Parameters.Add(p);
+
+            var result = await cmd.ExecuteScalarAsync();
+            return result?.ToString();
+        }
+
+        public async Task<int> CheckIfBenhNhanTonTai(string maLK, string dbData)
+        {
+            var conn = _context.Database.GetDbConnection();
+
+            if (conn.State != ConnectionState.Open)
+                await conn.OpenAsync();
+
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = $"SELECT COUNT(1) from {dbData} WHERE MA_LK= @p ";
+
+            var p = cmd.CreateParameter();
+            p.ParameterName = "@p";
+            p.Value = maLK;
+            cmd.Parameters.Add(p);
+
+            var sqlres = await cmd.ExecuteScalarAsync();
+            if(int.TryParse(sqlres?.ToString(), out int res)) {
+                return res;
+            }
+            return 0;
         }
     }
 }
