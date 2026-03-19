@@ -19,7 +19,7 @@ export const routes: Routes = [
     component: DefaultLayoutComponent,
     canActivate: [AuthGuard],
     data: {
-      title: 'Home',
+      title: 'Quản lý báo cáo',
       roles: ['']
     },
     children: [
@@ -144,6 +144,20 @@ export const routes: Routes = [
           title: 'MENU.PHAN_QUYEN',
           roles: ['admin']
         }
+      },
+      {
+        path: 'baocao-tracuu',
+        children: [
+          {
+            path: 'ds_benhnhan',
+            canActivate: [AuthGuard],
+            loadChildren: () => import('../app/ds-benhnhan/ds-benhnhan.routes').then(m => m.DS_BENHNHAN),
+            data: {
+              title: 'Danh sách bệnh nhân',
+              roles: ['']
+            }
+          }
+        ]
       },
     ]
   },

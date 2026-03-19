@@ -17,7 +17,6 @@ namespace API.Common
 
         /// <summary>
         /// Trả về tên database (DB_DATA) tương ứng với userName.
-        /// Chú ý: không dispose connection do DbContext quản lý lifecycle.
         /// </summary>
         public async Task<string?> GetDatabaseByUserAsync(string userName)
         {

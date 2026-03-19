@@ -22,79 +22,91 @@ namespace API.Controllers
             _context = context;
             _dbResolver = dbResolver;
         }
-
         [Authorize]
-        [HttpGet("ds_benh_nhan")]
-        public async Task<ActionResult<object>> GetDsBenhNhan(
-            [FromQuery] int pageNumber = 1,
-            [FromQuery] int pageSize = 10,
-            [FromQuery] string? searchTerm = null)
+        [HttpPost("ds_benh_nhan")]
+        public async Task<ActionResult<object>> GetDsBenhNhan([FromBody] DsBenhNhanRequest req)
         {
+            if (req.TuNgay == null || req.DenNgay == null)
+            {
+                return BadRequest("Từ ngày và đến ngày không được để trống");
+            }
             try
             {
+                if (req == null)
+                    return BadRequest("Yêu cầu không hợp lệ.");
+
                 var userName = User.FindFirst(ClaimTypes.Name)?.Value
                     ?? User.FindFirst("USER_NAME")?.Value;
 
                 if (string.IsNullOrEmpty(userName))
                     return Unauthorized();
 
-                // Lấy tên database động thông qua service dùng chung
+                // Lấy database
                 var dbData = await _dbResolver.GetDatabaseByUserAsync(userName);
                 if (string.IsNullOrEmpty(dbData))
                     return BadRequest("Không xác định được database dữ liệu cho user.");
 
-                // Validate identifier (chỉ cho phép chữ, số, underscore)
-                if (!Regex.IsMatch(dbData, @"^[A-Za-z0-9_]+$"))
-                    return BadRequest("Tên database không hợp lệ.");
-
-                // normalize paging
-                pageNumber = Math.Max(1, pageNumber);
-                pageSize = Math.Clamp(pageSize, 1, 1000);
+                var pageNumber = Math.Max(1, req.PageNumber);
+                var pageSize = Math.Clamp(req.PageSize, 1, 1000);
                 var offset = (pageNumber - 1) * pageSize;
 
-                // Build WHERE (parameterized for search term)
-                string whereClause = string.Empty;
-                object[]? sqlParams = null;
-                if (!string.IsNullOrWhiteSpace(searchTerm) && searchTerm != "All")
+                var whereBuilder = new System.Text.StringBuilder(" WHERE 1=1");
+                var paramList = new List<DbParameter>();
+
+                var conn = _context.Database.GetDbConnection();
+                using var tempCmd = conn.CreateCommand();
+
+                if (!string.IsNullOrWhiteSpace(req.SearchTerm) && req.SearchTerm != "All")
                 {
-                    whereClause = "WHERE HOTEN LIKE {0}";
-                    sqlParams = new object[] { $"%{searchTerm.Trim()}%" };
+                    var p = tempCmd.CreateParameter();
+                    p.ParameterName = "@search";
+                    p.Value = $"%{req.SearchTerm}%";
+                    paramList.Add(p);
+
+                    whereBuilder.Append(" AND (HO_TEN LIKE @search OR MA_BN LIKE @search)");
                 }
 
-                // Compose SELECT SQL (dbData validated, safe to interpolate as identifier)
-                var sqlSelect = $"SELECT * FROM `{dbData}`.xml1 {whereClause} LIMIT {pageSize} OFFSET {offset}";
+                if (req.TuNgay.HasValue && req.DenNgay.HasValue)
+                {
+                    var p1 = tempCmd.CreateParameter();
+                    p1.ParameterName = "@tungay";
+                    p1.Value = req.TuNgay.Value.Date;
+                    paramList.Add(p1);
 
-                List<XML1> dsBenhNhan;
-                if (sqlParams is null)
-                    dsBenhNhan = await _context.xml1
-                        .FromSqlRaw(sqlSelect)
-                        .AsNoTracking()
-                        .ToListAsync();
-                else
-                    dsBenhNhan = await _context.xml1
-                        .FromSqlRaw(sqlSelect, sqlParams)
-                        .AsNoTracking()
-                        .ToListAsync();
+                    var p2 = tempCmd.CreateParameter();
+                    p2.ParameterName = "@dengay";
+                    p2.Value = req.DenNgay.Value.Date;
+                    paramList.Add(p2);
 
-                // Lấy tổng số bản ghi (dùng same connection của DbContext)
-                var conn = _context.Database.GetDbConnection();
+                    whereBuilder.Append(" AND NGAY_RA BETWEEN @tungay AND @dengay");
+                }
+
+                var sql = $"SELECT * FROM `{dbData}`.xml1" + whereBuilder.ToString() + $" LIMIT {pageSize} OFFSET {offset}";
+
+                var dsBenhNhan = await _context.xml1
+                    .FromSqlRaw(sql, paramList.ToArray())
+                    .AsNoTracking()
+                    .ToListAsync();
+
                 if (conn.State != System.Data.ConnectionState.Open)
                     await conn.OpenAsync();
 
-                int totalRecords = 0;
+                int totalRecords;
                 using (var cmd = conn.CreateCommand())
                 {
-                    cmd.CommandText = $"SELECT COUNT(*) FROM `{dbData}`.xml1 " + (whereClause == "" ? "" : whereClause.Replace("{0}", "@p"));
-                    if (sqlParams is not null)
+                    cmd.CommandText = $"SELECT COUNT(*) FROM `{dbData}`.xml1" + whereBuilder.ToString();
+
+                    cmd.Parameters.Clear();
+                    foreach (var p in paramList)
                     {
-                        var p = cmd.CreateParameter();
-                        p.ParameterName = "@p";
-                        p.Value = sqlParams[0];
-                        cmd.Parameters.Add(p);
+                        var np = cmd.CreateParameter();
+                        np.ParameterName = p.ParameterName;
+                        np.Value = p.Value;
+                        cmd.Parameters.Add(np);
                     }
 
-                    var cnt = await cmd.ExecuteScalarAsync();
-                    totalRecords = Convert.ToInt32(cnt ?? 0);
+                    var scalar = await cmd.ExecuteScalarAsync();
+                    totalRecords = Convert.ToInt32(scalar ?? 0);
                 }
 
                 return Ok(new
@@ -107,9 +119,16 @@ namespace API.Controllers
             }
             catch (Exception ex)
             {
-                // Tùy môi trường, bạn có thể log ex.ToString() bằng logger
                 return StatusCode(500, new { message = "Lỗi server", detail = ex.Message });
             }
         }
+    }
+    public class DsBenhNhanRequest
+    {
+        public int PageNumber { get; set; } = 1;
+        public int PageSize { get; set; } = 50;
+        public string? SearchTerm { get; set; }
+        public DateTime? TuNgay { get; set; }
+        public DateTime? DenNgay { get; set; }
     }
 }

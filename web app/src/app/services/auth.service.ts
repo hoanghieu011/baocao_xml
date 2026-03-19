@@ -83,7 +83,7 @@ export class AuthService {
     } else if (roles.includes('admin')) {
       this.router.navigate(['/quan-ly-nhan-vien']);
     } else {
-      this.router.navigate(['tai-khoan/thong-tin-ca-nhan']);
+      this.router.navigate(['baocao-tracuu/ds_benhnhan']);
     }
   }
 
