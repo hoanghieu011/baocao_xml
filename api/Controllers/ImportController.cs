@@ -12,7 +12,10 @@ using MySqlConnector;
 using OfficeOpenXml;
 using Org.BouncyCastle.Utilities;
 using System.Globalization;
+using System.Reflection;
+using System.Security.Claims;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Linq;
 using Telegram.BotAPI.AvailableTypes;
@@ -24,11 +27,30 @@ namespace api.Controllers
     public class ImportController : ControllerBase
     {
         private readonly ApplicationDbContext _dbContext;
-        public ImportController(ApplicationDbContext dbContext)
+        private readonly DatabaseResolver _dbResolver;
+        public ImportController(ApplicationDbContext dbContext, DatabaseResolver dbResolver)
         {
             _dbContext = dbContext;
+            _dbResolver = dbResolver;
         }
-
+        [HttpPost("test")]
+        public async Task<IActionResult> TestUnderlyingType()
+        {
+            Type t = typeof(XML3);
+            PropertyInfo[] props = t.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            var res = "";
+            foreach(var p in props)
+            {
+                Type propertyType = p.PropertyType;
+                Type underlyingType = Nullable.GetUnderlyingType(propertyType);
+                var pName = underlyingType!=null ? underlyingType.Name : propertyType.Name;
+                res += "\n";
+                res += $"{p.Name}:{pName}";
+            }
+            return Ok(res);
+        }
+        
+        [Authorize]
         [HttpPost("ImportHospitalData")]
         public async Task<IActionResult> ImportHospitalData(IFormFile file)
         {
@@ -40,256 +62,101 @@ namespace api.Controllers
             {
                 return BadRequest("Vui lòng Upload file .xml!");
             }
-                var settings = new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, Async = true };
-                try
-                {
-                    using var stream = file.OpenReadStream();
-                    using var reader = XmlReader.Create(stream, settings);
+            var userName = User.FindFirst(ClaimTypes.Name)?.Value
+                    ?? User.FindFirst("USER_NAME")?.Value;
+
+            if (string.IsNullOrEmpty(userName))
+                return Unauthorized();
+
+            // Lấy tên database động thông qua service dùng chung
+            var dbData = await _dbResolver.GetDatabaseByUserAsync(userName);
+            if (string.IsNullOrEmpty(dbData))
+                return BadRequest("Không xác định được database dữ liệu cho user.");
+            // Lấy csyt Id động thông qua service dùng chung
+            var tempCsytId = await _dbResolver.GetCsytIdByUserAsync(userName);
+            if (string.IsNullOrEmpty(tempCsytId))
+                return BadRequest("Không xác định được csyt cho user.");
+            var csytId = 0;
+            if(int.TryParse(tempCsytId, out int value))
+            {
+                csytId = value;
+            }
+            // Validate identifier (chỉ cho phép chữ, số, underscore)
+            if (!Regex.IsMatch(dbData, @"^[A-Za-z0-9_]+$"))
+                return BadRequest("Tên database không hợp lệ.");
+            var settings = new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, Async = true };
+            try{
+                using var stream = file.OpenReadStream();
+                using var reader = XmlReader.Create(stream, settings);
                 var msg = "";
                     // đọc xml
-                    while (reader.Read())
-                    {
-                        var csytId = 0;
-                        if (reader.Name == "MACSKCB")
-                        {
-                   
-                            var val = await reader.ReadElementContentAsStringAsync();
-                            if (int.TryParse(val.Trim(), out var parsed)) csytId = parsed;
-                            continue; 
-                        }
+                while (reader.Read())
+                {
                         if (reader.NodeType != XmlNodeType.Element || reader.Name != "HOSO")
                             continue;
-
                         var hosoEl = XElement.ReadFrom(reader) as XElement;
                         if (hosoEl == null) continue;
 
                         var bn = new XML1();
                         var dsChiTietThuoc = new List<XML2>();
                         var dsDichVuKiThuat = new List<XML3>();
+
+                        var sqlThemBn = "";
+                        var sqlThemDsThuoc = "";
+                        var sqlThemDsDvkt = "";
                         var maLK = "";
                         foreach (var fileHNode in hosoEl.Elements("FILEHOSO"))
                         {
-                                var loai = (string?)fileHNode.Element("LOAIHOSO") ?? "";
-                                var noidungXml = fileHNode.Element("NOIDUNGFILE");
-                                var encodedContent = noidungXml.Value;
-                                byte[] decoded = Convert.FromBase64String(encodedContent);
+                            var loai = (string?)fileHNode.Element("LOAIHOSO") ?? "";
+                            var noidungXml = fileHNode.Element("NOIDUNGFILE");
+                            var encodedContent = noidungXml.Value;
+                            byte[] decoded = Convert.FromBase64String(encodedContent);
                             string xml = Encoding.UTF8.GetString(decoded);
                             XElement noidung = XElement.Parse(xml);
+                            maLK = "";
+                        if (loai.Equals("XML1"))
+                            {
+                                if (noidung == null) continue;
+                                maLK = (string?)noidung.Element("MA_LK") ?? "";
+                                if (string.IsNullOrWhiteSpace(maLK)) continue;
+                                var exists = await _dbResolver.CheckIfBenhNhanTonTai(maLK, $"`{dbData}`.xml1");
+                                if (exists!=0) continue;
 
-                                if (loai.Equals("XML1"))
-                                {
-                                    if (noidung == null) continue;
-
-                                    maLK = (string?)noidung.Element("MA_LK") ?? "";
-                                    if (string.IsNullOrWhiteSpace(maLK)) continue;
-
-                                    // Check existence by MA_LK (adjust to your key)
-                                    var exists = await _dbContext.xml1
-                                                    .AnyAsync(x => x.MA_LK == maLK);
-                                    if (exists)
-                                        continue;
-                                    var benhNhan = new XML1
-                                    {
-                                        MA_LK = maLK,
-                                        STT = GetInt(noidung.Element("STT")),
-                                        MA_BN = (string?)noidung.Element("MA_BN") ?? "",
-                                        HO_TEN = ReplaceCData(((string?)noidung.Element("HO_TEN") ?? "")),
-                                        SO_CCCD = (string?)noidung.Element("SO_CCCD") ?? "",
-                                        //NGAY_SINH = ConvertCompactTimestampToStr(GetLong(noidung.Element("NGAY_SINH")), "dd-MM-yyyy"),
-                                        NGAY_SINH = (string?)(noidung.Element("NGAY_SINH")),
-                                        GIOI_TINH = GetInt(noidung.Element("GIOI_TINH")),
-                                        NHOM_MAU = (string?)noidung.Element("NHOM_MAU") ?? "",
-                                        MA_QUOCTICH = (string?)noidung.Element("MA_QUOCTICH") ?? "",
-                                        MA_DANTOC = (string?)noidung.Element("MA_DANTOC") ?? "",
-                                        MA_NGHE_NGHIEP = (string?)noidung.Element("MA_NGHE_NGHIEP") ?? "",
-                                        DIA_CHI = ReplaceCData( ((string?)noidung.Element("DIA_CHI") ?? "")),
-                                        MATINH_CU_TRU = (string?)noidung.Element("MATINH_CU_TRU") ?? "",
-                                        MAHUYEN_CU_TRU = (string?)noidung.Element("MAHUYEN_CU_TRU") ?? "",
-                                        MAXA_CU_TRU = (string?)noidung.Element("MAXA_CU_TRU") ?? "",
-                                        DIEN_THOAI = (string?)noidung.Element("DIEN_THOAI") ?? "",
-                                        MA_THE_BHYT = (string?)noidung.Element("MA_THE_BHYT") ?? "",
-                                        MA_DKBD = (string?)noidung.Element("MA_DKBD") ?? "",
-                                        GT_THE_TU = (string?)noidung.Element("GT_THE_TU") ?? "",
-                                        GT_THE_DEN = (string?)noidung.Element("GT_THE_DEN") ?? "",
-                                        //NGAY_MIEN_CCT = ConvertCompactTimestampToStr(GetLong(noidung.Element("NGAY_MIEN_CCT")), "dd-MM-yyyy"),
-                                        NGAY_MIEN_CCT = (string?)(noidung.Element("NGAY_MIEN_CCT")),
-                                        LY_DO_VV = (string?)noidung.Element("LY_DO_VV") ?? "",
-                                        LY_DO_VNT = (string?)noidung.Element("LY_DO_VNT") ?? "",
-                                        MA_LY_DO_VNT = (string?)noidung.Element("MA_LY_DO_VNT") ?? "",
-                                        CHAN_DOAN_VAO = ReplaceCData(((string?)noidung.Element("CHAN_DOAN_VAO") ?? "")),
-                                        CHAN_DOAN_RV = ReplaceCData(((string?)noidung.Element("CHAN_DOAN_RV") ?? "")),
-                                        MA_BENH_CHINH = (string?)noidung.Element("MA_BENH_CHINH") ?? "",
-                                        MA_BENH_KT = (string?)noidung.Element("MA_BENH_KT") ?? "",
-                                        MA_BENH_YHCT = (string?)noidung.Element("MA_BENH_YHCT") ?? "",
-                                        MA_PTTT_QT = (string?)noidung.Element("MA_PTTT_QT") ?? "",
-                                        MA_DOITUONG_KCB = (string?)noidung.Element("MA_DOITUONG_KCB") ?? "",
-                                        MA_NOI_DI = (string?)noidung.Element("MA_NOI_DI") ?? "",
-                                        MA_NOI_DEN = (string?)noidung.Element("MA_NOI_DEN") ?? "",
-                                        MA_TAI_NAN = (string?)noidung.Element("MA_TAI_NAN") ?? "",
-                                        NGAY_VAO = GetLong(noidung.Element("NGAY_VAO")) != 0 ? ConvertCompactTimestampToDateTime(GetLong(noidung.Element("NGAY_VAO"))) : ConvertCompactTimestampToDateTime(180001010000),
-                                        NGAY_VAO_NOI_TRU = GetLong(noidung.Element("NGAY_VAO_NOI_TRU")) != 0 ? ConvertCompactTimestampToDateTime(GetLong(noidung.Element("NGAY_VAO_NOI_TRU"))) : ConvertCompactTimestampToDateTime(180001010000),
-                                        NGAY_RA = GetLong(noidung.Element("NGAY_RA"))!=0 ? ConvertCompactTimestampToDateTime(GetLong(noidung.Element("NGAY_RA"))) : ConvertCompactTimestampToDateTime(180001010000),
-                                        GIAY_CHUYEN_TUYEN = (string?)noidung.Element("GIAY_CHUYEN_TUYEN") ?? "",
-                                        SO_NGAY_DTRI = (string?)noidung.Element("SO_NGAY_DTRI") ?? "",
-                                        PP_DIEU_TRI = (string?)noidung.Element("PP_DIEU_TRI") ?? "",
-                                        KET_QUA_DTRI = (string?)noidung.Element("KET_QUA_DTRI") ?? "",
-                                        MA_LOAI_RV = (string?)noidung.Element("MA_LOAI_RV") ?? "",
-                                        GHI_CHU = ReplaceCData(((string?)noidung.Element("GHI_CHU") ?? "")),
-                                        NGAY_TTOAN = GetLong(noidung.Element("NGAY_TTOAN")) != 0 ? ConvertCompactTimestampToDateTime(GetLong(noidung.Element("NGAY_TTOAN"))) : ConvertCompactTimestampToDateTime(180001010000),
-                                        T_THUOC = GetInt(noidung.Element("T_THUOC")),
-                                        T_VTYT = GetInt(noidung.Element("T_VTYT")),
-                                        T_TONGCHI_BV = GetInt(noidung.Element("T_TONGCHI_BV")),
-                                        T_TONGCHI_BH = GetInt(noidung.Element("T_TONGCHI_BH")),
-                                        T_BNTT = GetInt(noidung.Element("T_BNTT")),
-                                        T_BNCCT = GetInt(noidung.Element("T_BNCCT")),
-                                        T_BHTT = GetInt(noidung.Element("T_BHTT")),
-                                        T_NGUONKHAC = GetInt(noidung.Element("T_NGUONKHAC")),
-                                        T_BHTT_GDV = GetInt(noidung.Element("T_BHTT_GDV")),
-                                        NAM_QT = (string?)noidung.Element("NAM_QT") ?? "",
-                                        THANG_QT = (string?)noidung.Element("THANG_QT") ?? "",
-                                        MA_LOAI_KCB = (string?)noidung.Element("MA_LOAI_KCB") ?? "",
-                                        MA_KHOA = (string?)noidung.Element("MA_KHOA") ?? "",
-                                        MA_CSKCB = (string?)noidung.Element("MA_CSKCB") ?? "",
-                                        MA_KHUVUC = (string?)noidung.Element("MA_KHUVUC") ?? "",
-                                        CAN_NANG = (string?)noidung.Element("CAN_NANG") ?? "",
-                                        CAN_NANG_CON = (string?)noidung.Element("CAN_NANG_CON") ?? "",
-                                        NAM_NAM_LIEN_TUC = GetInt(noidung.Element("NAM_NAM_LIEN_TUC")),
-                                        NGAY_TAI_KHAM = (string?)noidung.Element("NGAY_TAI_KHAM") ?? "",
-                                        MA_HSBA = (string?)noidung.Element("MA_HSBA") ?? "",
-                                        MA_TTDV = (string?)noidung.Element("MA_TTDV") ?? "",
-                                        DU_PHONG = (string?)noidung.Element("DU_PHONG") ?? "",
-                                        CSYTID = csytId
-                                    };
-                                    // thông tin bệnh nhân
-                                    bn = benhNhan;
-                                }
-                                else if (loai.Equals("XML2"))
-                                {
-                                    var chiTietThuocXmWrapper = noidung.Element("DSACH_CHI_TIET_THUOC");
-                                    var dsChiTietThuocXml = chiTietThuocXmWrapper.Elements("CHI_TIET_THUOC");
-                                    foreach (var chiTietThuoc in dsChiTietThuocXml)
-                                    {
-                                        var thuoc = new XML2
-                                        {
-                                            STT = GetInt(chiTietThuoc.Element("STT")),
-                                            MA_LK = maLK,
-                                            MA_THUOC = (string?)chiTietThuoc.Element("MA_THUOC") ?? "",
-                                            MA_PP_CHEBIEN = (string?)chiTietThuoc.Element("MA_PP_CHEBIEN") ?? "",
-                                            MA_CSKCB_THUOC = (string?)chiTietThuoc.Element("MA_CSKCB_THUOC") ?? "",
-                                            MA_NHOM = (string?)chiTietThuoc.Element("MA_NHOM") ?? "",
-                                            TEN_THUOC = ReplaceCData(((string?)chiTietThuoc.Element("TEN_THUOC") ?? "")),
-                                            DON_VI_TINH = (string?)chiTietThuoc.Element("DON_VI_TINH") ?? "",
-                                            HAM_LUONG = ReplaceCData(((string?)chiTietThuoc.Element("HAM_LUONG") ?? "")),
-                                            DUONG_DUNG = ReplaceCData(((string?)chiTietThuoc.Element("DUONG_DUNG") ?? "")),
-                                            DANG_BAO_CHE = ReplaceCData(((string?)chiTietThuoc.Element("DANG_BAO_CHE") ?? "")),
-                                            LIEU_DUNG = ReplaceCData(((string?)chiTietThuoc.Element("LIEU_DUNG") ?? "")),
-                                            CACH_DUNG = ReplaceCData(((string?)chiTietThuoc.Element("CACH_DUNG") ?? "")),
-                                            SO_DANG_KY = ReplaceCData(((string?)chiTietThuoc.Element("SO_DANG_KY") ?? "")),
-                                            TT_THAU = ReplaceCData(((string?)chiTietThuoc.Element("TT_THAU") ?? "")),
-                                            PHAM_VI = (string?)chiTietThuoc.Element("PHAM_VI") ?? "",
-                                            TYLE_TT_BH = GetInt(chiTietThuoc.Element("TYLE_TT_BH")),
-                                            SO_LUONG = GetInt(chiTietThuoc.Element("SO_LUONG")),
-                                            DON_GIA = GetInt(chiTietThuoc.Element("DON_GIA")),
-                                            THANH_TIEN_BV = GetInt(chiTietThuoc.Element("THANH_TIEN_BV")),
-                                            THANH_TIEN_BH = GetInt(chiTietThuoc.Element("THANH_TIEN_BH")),
-                                            T_NGUONKHAC_NSNN = GetInt(chiTietThuoc.Element("T_NGUONKHAC_NSNN")),
-                                            T_NGUONKHAC_VTNN = GetInt(chiTietThuoc.Element("T_NGUONKHAC_VTNN")),
-                                            T_NGUONKHAC_VTTN = GetInt(chiTietThuoc.Element("T_NGUONKHAC_VTTN")),
-                                            T_NGUONKHAC_CL = GetInt(chiTietThuoc.Element("T_NGUONKHAC_CL")),
-                                            T_NGUONKHAC = GetInt(chiTietThuoc.Element("T_NGUONKHAC")),
-                                            MUC_HUONG = GetInt(chiTietThuoc.Element("MUC_HUONG")),
-                                            T_BNTT = GetInt(chiTietThuoc.Element("T_BNTT")),
-                                            T_BNCCT = GetInt(chiTietThuoc.Element("T_BNCCT")),
-                                            T_BHTT = GetInt(chiTietThuoc.Element("T_BHTT")),
-                                            MA_KHOA = (string?)chiTietThuoc.Element("MA_KHOA") ?? "",
-                                            MA_BAC_SI = (string?)chiTietThuoc.Element("MA_BAC_SI") ?? "",
-                                            MA_DICH_VU = (string?)chiTietThuoc.Element("MA_DICH_VU") ?? "",
-                                            NGAY_YL = GetLong(chiTietThuoc.Element("NGAY_YL"))!=0 ? ConvertCompactTimestampToDateTime(GetLong(chiTietThuoc.Element("NGAY_YL"))) : ConvertCompactTimestampToDateTime(180001010000),
-                                            NGAY_TH_YL = GetLong(chiTietThuoc.Element("NGAY_TH_YL")) != 0 ? ConvertCompactTimestampToDateTime(GetLong(chiTietThuoc.Element("NGAY_TH_YL"))) : ConvertCompactTimestampToDateTime(180001010000),
-                                            MA_PTTT = (string?)chiTietThuoc.Element("MA_PTTT") ?? "",
-                                            NGUON_CTRA = (string?)chiTietThuoc.Element("NGUON_CTRA") ?? "",
-                                            VET_THUONG_TP = (string?)chiTietThuoc.Element("VET_THUONG_TP") ?? "",
-                                            DU_PHONG = (string?)chiTietThuoc.Element("DU_PHONG") ?? "",
-                                            CSYTID = csytId,
-                                        };
-                                        dsChiTietThuoc.Add(thuoc);
-                                        //await _dbContext.SaveChangesAsync();
-                                    }
-                                }
-                                else if (loai.Equals("XML3"))
-                                {
-                                    var chiTietDvktXmWrapper = noidung.Element("DSACH_CHI_TIET_DVKT");
-                                    var dsChiTietDvktXml = chiTietDvktXmWrapper.Elements("CHI_TIET_DVKT");
-                                    foreach (var chiTietDvkt in dsChiTietDvktXml)
-                                    {
-                                        var dvkt = new XML3
-                                        {
-                                            STT = GetInt(chiTietDvkt.Element("STT")),
-                                            MA_LK = maLK,
-                                            MA_DICH_VU = (string?)chiTietDvkt.Element("MA_DICH_VU") ?? "",
-                                            MA_PTTT_QT = (string?)chiTietDvkt.Element("MA_PTTT_QT") ?? "",
-                                            MA_VAT_TU = (string?)chiTietDvkt.Element("MA_VAT_TU") ?? "",
-                                            MA_NHOM = (string?)chiTietDvkt.Element("MA_NHOM") ?? "",
-                                            GOI_VTYT = (string?)chiTietDvkt.Element("GOI_VTYT") ?? "",
-                                            TEN_VAT_TU = (string?)chiTietDvkt.Element("TEN_VAT_TU") ?? "",
-                                            TEN_DICH_VU = ReplaceCData(((string?)chiTietDvkt.Element("TEN_DICH_VU") ?? "")),
-                                            MA_XANG_DAU = (string?)chiTietDvkt.Element("MA_XANG_DAU") ?? "",
-                                            DON_VI_TINH = (string?)chiTietDvkt.Element("DON_VI_TINH") ?? "",
-                                            PHAM_VI = (string?)chiTietDvkt.Element("PHAM_VI") ?? "",
-                                            SO_LUONG = GetInt(chiTietDvkt.Element("SO_LUONG")),
-                                            DON_GIA_BV = GetInt(chiTietDvkt.Element("DON_GIA_BV")),
-                                            DON_GIA_BH = GetInt(chiTietDvkt.Element("DON_GIA_BH")),
-                                            TT_THAU = GetInt(chiTietDvkt.Element("TT_THAU")),
-                                            TYLE_TT_DV = GetInt(chiTietDvkt.Element("TYLE_TT_DV")),
-                                            TYLE_TT_BH = GetInt(chiTietDvkt.Element("TYLE_TT_BH")),
-                                            THANH_TIEN_BV = GetInt(chiTietDvkt.Element("THANH_TIEN_BV")),
-                                            THANH_TIEN_BH = GetInt(chiTietDvkt.Element("THANH_TIEN_BH")),
-                                            T_TRANTT = GetInt(chiTietDvkt.Element("T_TRANTT")),
-                                            MUC_HUONG = GetInt(chiTietDvkt.Element("MUC_HUONG")),
-                                            T_NGUONKHAC_NSNN = GetInt(chiTietDvkt.Element("T_NGUONKHAC_NSNN")),
-                                            T_NGUONKHAC_VTNN = GetInt(chiTietDvkt.Element("T_NGUONKHAC_VTNN")),
-                                            T_NGUONKHAC_VTTN = GetInt(chiTietDvkt.Element("T_NGUONKHAC_VTTN")),
-                                            T_NGUONKHAC_CL = GetInt(chiTietDvkt.Element("T_NGUONKHAC_CL")),
-                                            T_NGUONKHAC = GetInt(chiTietDvkt.Element("T_NGUONKHAC")),
-                                            T_BNTT = GetInt(chiTietDvkt.Element("T_BNTT")),
-                                            T_BNCCT = GetInt(chiTietDvkt.Element("T_BNCCT")),
-                                            T_BHTT = GetInt(chiTietDvkt.Element("T_BHTT")),
-                                            MA_KHOA = (string?)chiTietDvkt.Element("MA_KHOA") ?? "",
-                                            MA_GIUONG = (string?)chiTietDvkt.Element("MA_GIUONG") ?? "",
-                                            MA_BAC_SI = (string?)chiTietDvkt.Element("MA_BAC_SI") ?? "",
-                                            NGUOI_THUC_HIEN = (string?)chiTietDvkt.Element("NGUOI_THUC_HIEN") ?? "",
-                                            MA_BENH = (string?)chiTietDvkt.Element("MA_BENH") ?? "",
-                                            MA_BENH_YHCT = (string?)chiTietDvkt.Element("MA_BENH_YHCT") ?? "",
-                                            NGAY_YL = GetLong(chiTietDvkt.Element("NGAY_YL")) !=0 ? ConvertCompactTimestampToDateTime(GetLong(chiTietDvkt.Element("NGAY_YL"))) : ConvertCompactTimestampToDateTime(180001010000),
-                                            NGAY_TH_YL = GetLong(chiTietDvkt.Element("NGAY_TH_YL"))!=0 ? ConvertCompactTimestampToDateTime(GetLong(chiTietDvkt.Element("NGAY_TH_YL"))) : ConvertCompactTimestampToDateTime(180001010000),
-                                            NGAY_KQ = GetLong(chiTietDvkt.Element("NGAY_KQ")) != 0 ? ConvertCompactTimestampToDateTime(GetLong(chiTietDvkt.Element("NGAY_KQ"))) : ConvertCompactTimestampToDateTime(180001010000),
-                                            MA_PTTT = (string?)chiTietDvkt.Element("MA_PTTT") ?? "",
-                                            VET_THUONG_TP = (string?)chiTietDvkt.Element("VET_THUONG_TP") ?? "",
-                                            PP_VO_CAM = (string?)chiTietDvkt.Element("PP_VO_CAM") ?? "",
-                                            VI_TRI_TH_DVKT = (string?)chiTietDvkt.Element("VI_TRI_TH_DVKT") ?? "",
-                                            MA_MAY = (string?)chiTietDvkt.Element("MA_MAY") ?? "",
-                                            MA_HIEU_SP = (string?)chiTietDvkt.Element("MA_HIEU_SP") ?? "",
-                                            TAI_SU_DUNG = (string?)chiTietDvkt.Element("TAI_SU_DUNG") ?? "",
-                                            DU_PHONG = (string?)chiTietDvkt.Element("DU_PHONG") ?? "",
-                                            CSYTID = csytId,
-                                        };
-                                        dsDichVuKiThuat.Add(dvkt);
-                                        //await _dbContext.SaveChangesAsync();
-                                    }
-                                }
+                                // thông tin bệnh nhân
+                                sqlThemBn = GenerateSqlThemBenhNhan(noidung, $"`{dbData}`.xml1", csytId);
+                            }
+                            else if (loai.Equals("XML2"))
+                            {
+                                var chiTietThuocXmWrapper = noidung.Element("DSACH_CHI_TIET_THUOC");
+                                var dsChiTietThuocXml = chiTietThuocXmWrapper.Elements("CHI_TIET_THUOC");
+                                sqlThemDsThuoc = GenerateSqlThemChiTietThuoc(dsChiTietThuocXml, $"`{dbData}`.xml2", csytId);
+                            }
+                            else if (loai.Equals("XML3"))
+                            {
+                                var chiTietDvktXmWrapper = noidung.Element("DSACH_CHI_TIET_DVKT");
+                                var dsChiTietDvktXml = chiTietDvktXmWrapper.Elements("CHI_TIET_DVKT");
+                                sqlThemDsDvkt = GenerateSqlThemDichVuKiThuat(dsChiTietDvktXml, $"`{dbData}`.xml3", csytId);
+                            }
                         }
-
-
-                        if (bn.MA_LK != "") _dbContext.xml1.Add(bn);
-                        if (dsChiTietThuoc.Count > 0) _dbContext.xml2.AddRange(dsChiTietThuoc);
-                        if (dsDichVuKiThuat.Count > 0) _dbContext.xml3.AddRange(dsDichVuKiThuat);
-
-                        await _dbContext.SaveChangesAsync();
-                        msg += "\n";
-                        msg += $"Thêm mới thành công: Bệnh nhân mã: {bn.MA_LK} Tên: {bn.HO_TEN} Ngày sinh:{bn.NGAY_SINH}";
-                        msg += "\n";
-                        msg += $"{dsChiTietThuoc.Count} Chi Tiết Thuốc, {dsDichVuKiThuat.Count} Dịch vụ kĩ thuật!";
-                        
+                       try
+                        {
+                            if (sqlThemBn != "") await _dbContext.Database.ExecuteSqlRawAsync(sqlThemBn);
+                            if (sqlThemDsThuoc != "") await _dbContext.Database.ExecuteSqlRawAsync(sqlThemDsThuoc);
+                            if (sqlThemDsDvkt != "") await _dbContext.Database.ExecuteSqlRawAsync(sqlThemDsDvkt);
+                            msg = "Thêm mới thành công!";
+                        }
+                        catch(Exception e)
+                        {
+                            Console.WriteLine(e);
+                            if(maLK!="")
+                            {
+                            // xoá dữ liệu với mã lk đang bị lỗi;
+                                await _dbContext.Database.ExecuteSqlRawAsync($"DELETE FROM $`{dbData}`.xml1 WHERE MA_LK='{maLK}'");
+                                await _dbContext.Database.ExecuteSqlRawAsync($"DELETE FROM $`{dbData}`.xml2 WHERE MA_LK='{maLK}'");
+                                await _dbContext.Database.ExecuteSqlRawAsync($"DELETE FROM $`{dbData}`.xml3 WHERE MA_LK='{maLK}'");
+                            }
+                            return StatusCode(500, "Lỗi SQL: " + e.Message);
+                        }
                     }
                     return Ok(msg);
                 }
@@ -304,6 +171,7 @@ namespace api.Controllers
                 catch (Exception ex)
                 {
                     Console.WriteLine(ex);
+                
                     return StatusCode(500, "Lỗi server: " + ex.Message);
                 }
             
@@ -341,7 +209,7 @@ namespace api.Controllers
             }
         static string ReplaceCData(string inp)
         {
-            var res = inp.Replace("<![CDATA[", "").Replace("]]>", "");
+            var res = inp.Replace("<![CDATA[", "").Replace("]]>", "").Replace("\\", "").Replace("'", "''");
             return res;
         }
 
@@ -359,5 +227,158 @@ namespace api.Controllers
             return defaultVal;
             throw new Exception("GetLong exception: " + e);
         }
+
+        static string GenerateSqlThemBenhNhan(XElement xmlData, string table, int csytid)
+        {
+            Type t = typeof(XML1);
+            PropertyInfo[] props = t.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            return GenerateSqlAddSingleObj(xmlData, props, table,csytid);
+        }
+
+        static string GenerateSqlThemChiTietThuoc(IEnumerable<XElement> xmlData, string table, int csytid)
+        {
+            Type t = typeof(XML2);
+            PropertyInfo[] props = t.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            return GenerateSqlAddMultipleObj(xmlData, props, table, csytid);
+        }
+
+        static string GenerateSqlThemDichVuKiThuat(IEnumerable<XElement> xmlData, string table, int csytid)
+        {
+            Type t = typeof(XML3);
+            PropertyInfo[] props = t.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            return GenerateSqlAddMultipleObj(xmlData, props, table, csytid);
+        }
+
+        static string GenerateSqlAddSingleObj(XElement xmlData, PropertyInfo[] props, string table, int csytid)
+        {
+            var sql = $"INSERT INTO {table} ";
+            var cols = "(";
+            var vals = "(";
+            string[] exceptProps =new string[] { "XML1ID", "XML2ID", "XML3ID" };
+            for(int i=0; i < props.Count(); i++)
+            {
+                var p = props[i];
+                Type propertyType = p.PropertyType;
+                Type underlyingType = Nullable.GetUnderlyingType(propertyType);
+                var pName = underlyingType!=null ? underlyingType.Name : propertyType.Name;
+                if (!exceptProps.Contains(p.Name)) {
+                    cols += p.Name;
+                    if (p.Name == "CSYTID")
+                    {
+                        vals += csytid ;
+                    }
+                    else
+                    {
+                        switch (pName)
+                        {
+                            case "Int32": /// kiểu dữ liệu int
+                                vals += GetInt(xmlData.Element(p.Name));
+                                break;
+                            case "String": /// kiểu dữ liệu String
+                                vals += $"'{ReplaceCData((string?)xmlData.Element(p.Name) ?? "")}'";
+                                break;
+                            case "DateTime": /// kiểu dữ liệu DateTime
+                                var temp = GetLong(xmlData.Element(p.Name)) != 0 ? ConvertCompactTimestampToDateTime(GetLong(xmlData.Element(p.Name))) : ConvertCompactTimestampToDateTime(180001010000);
+                                vals += $"'{temp.ToString("yyyy-MM-dd HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture)}'";
+                                //vals += temp;
+                                break;
+                            default:
+                                vals += "";
+                                break;
+
+                        }
+                    }
+                    if (i != props.Count() - 1)
+                    {
+                        cols += ",";
+                        vals += ",";
+                    }
+                    else
+                    {
+                        cols += ")";
+                        vals += ")";
+                    }
+                }
+            }
+            
+            sql = $"{sql} {cols} VALUE {vals}";
+            return sql;
+        }
+        private class MyProp
+        {
+            public string propName { get; set; }
+            public string propDataType { get; set; }
+        }
+        static string GenerateSqlAddMultipleObj(IEnumerable<XElement> xmlDataArr, PropertyInfo[] props, string table, int csytid)
+        {
+            var sql = $"INSERT INTO {table} ";
+            var cols = "(";
+            var vals = "";
+            var first = 1;
+            string[] exceptProps = new string[] { "XML1ID", "XML2ID", "XML3ID" };
+            // chuyển thông tin thuộc tính trong class thành dạng dictionary
+            List<MyProp> mappedProps = new List<MyProp>();
+            foreach(var p in props)
+            {
+                Type propertyType = p.PropertyType;
+                Type underlyingType = Nullable.GetUnderlyingType(propertyType);
+                var pName = underlyingType != null ? underlyingType.Name : propertyType.Name;
+                mappedProps.Add(new MyProp { propName = p.Name, propDataType = pName});
+            }
+            foreach(var xmlData in xmlDataArr)
+            {
+                vals += "(";
+                for (int i = 0; i < mappedProps.Count; i++)
+                {
+                    var p = mappedProps[i];
+                    
+                    if (!exceptProps.Contains(p.propName))
+                    {
+                        if(first == 1) cols += p.propName;
+                        if(p.propName=="CSYTID")
+                        {
+                            vals += csytid;
+                        }
+                        else
+                        {
+                            switch (p.propDataType)
+                            {
+                                case "Int32": /// kiểu dữ liệu int
+                                    vals += GetInt(xmlData.Element(p.propName));
+                                    break;
+                                case "String": /// kiểu dữ liệu String
+                                    vals += $"'{ReplaceCData((string?)xmlData.Element(p.propName) ?? "")}'";
+                                    break;
+                                case "DateTime": /// kiểu dữ liệu DateTime
+                                    var temp = GetLong(xmlData.Element(p.propName)) != 0 ? ConvertCompactTimestampToDateTime(GetLong(xmlData.Element(p.propName))) : ConvertCompactTimestampToDateTime(180001010000);
+                                    vals += $"'{temp.ToString("yyyy-MM-dd HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture)}'";
+                                    //vals += temp;
+                                    break;
+                                default:
+                                    vals += "";
+                                    break;
+
+                            }
+                        }
+                        if (i != props.Count() - 1)
+                        {
+                            if( first == 1)cols += ",";
+                            vals += ",";
+                        }
+                        else
+                        {
+                            if (first == 1) cols += ")";
+                            vals += ")";
+                        }
+                    }
+                }
+                first = 0;
+                vals += ",";
+            }
+            vals = vals.Remove(vals.Length - 1);
+            sql = $"{sql} {cols} VALUES {vals}";
+            return sql;
+        }
+        
     }
 }

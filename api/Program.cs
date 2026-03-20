@@ -114,7 +114,7 @@ app.UseHttpsRedirection();
 app.UseCors("AllowSpecificOrigin");
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseMiddleware<RequestSizeLimitMiddleware>(2 * 1024 * 1024); // 2 MB
+app.UseMiddleware<RequestSizeLimitMiddleware>(30 * 1024 * 1024); // 30 MB
 app.UseMiddleware<QueryParamSizeLimitMiddleware>(1024); // 1 KB
 app.MapControllers();
 

@@ -6,7 +6,7 @@ namespace api.Models
     public class XML3
     {
         [Key]
-        public int XML3ID { get; set; }
+        public ulong XML3ID { get; set; }
         public int? STT { get; set; }
         public string MA_LK { get; set; }
         public string? MA_DICH_VU { get; set; }
@@ -55,6 +55,5 @@ namespace api.Models
         public string? TAI_SU_DUNG { get; set; }
         public string? DU_PHONG { get; set; }
         public int? CSYTID { get; set; }
-        public DateTime VERSION { get; set; }
     }
 }
