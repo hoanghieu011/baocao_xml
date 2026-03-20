@@ -22,6 +22,11 @@ namespace API.Controllers
             _context = context;
             _dbResolver = dbResolver;
         }
+
+        /// <summary>
+        /// Tra cứu danh sách bệnh nhân.
+        /// </summary>
+        /// <returns>Trả về danh sách bệnh nhân.</returns>
         [Authorize]
         [HttpPost("ds_benh_nhan")]
         public async Task<ActionResult<object>> GetDsBenhNhan([FromBody] DsBenhNhanRequest req)

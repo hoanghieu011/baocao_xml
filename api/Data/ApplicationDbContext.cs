@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using API.Models;
+using API.DTO;
 using api.Models;
 
 namespace API.Data
@@ -11,15 +12,16 @@ namespace API.Data
         }
         public DbSet<User> adm_user { get; set; }
         public DbSet<XML1> xml1 { get; set; }
-        // public DbSet<NhanVien> nhan_vien { get; set; }
-        // public DbSet<NghiPhep> nghi_phep { get; set; }
-        // public DbSet<LoaiPhep> loai_phep { get; set; }
-        // public DbSet<BoPhan> bo_phan { get; set; }
-        // public DbSet<ViTri> vi_tri { get; set; }
-        // public DbSet<LyDoNghi> ly_do_nghi { get; set; }
-        // public DbSet<PhepTon> phep_ton { get; set; }
-        // public DbSet<Holiday> holiday { get; set; }
         public DbSet<XML2> xml2 { get; set; }
         public DbSet<XML3> xml3 { get; set; }
+        public DbSet<DichVu> dmc_dichvu { get; set; }
+        public DbSet<LoaiDichVu> dmc_nhom_mabhyt { get; set; }
+        public DbSet<DichVuDto> dto_dichvu { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<DichVuDto>().HasNoKey();
+        }
     }
+
 }
