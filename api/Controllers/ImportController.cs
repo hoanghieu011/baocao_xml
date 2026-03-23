@@ -190,7 +190,7 @@ namespace api.Controllers
             
         }
 
-            static string ConvertCompactTimestampToStr(long compactTimestamp, string formatStr= "HH:mm:ss dd-MM-yyyy")
+        static string ConvertCompactTimestampToStr(long compactTimestamp, string formatStr= "HH:mm:ss dd-MM-yyyy")
             {
                 if (compactTimestamp == 0) return "";
                 string s = compactTimestamp.ToString().PadLeft(12, '0');
@@ -206,7 +206,7 @@ namespace api.Controllers
                 throw new FormatException($" '{compactTimestamp}' không đúng định dạng '{format}'.");
             }
 
-            static DateTime ConvertCompactTimestampToDateTime(long compactTimestamp)
+        static DateTime ConvertCompactTimestampToDateTime(long compactTimestamp)
             {
                 string s = compactTimestamp.ToString().PadLeft(12, '0');
 
