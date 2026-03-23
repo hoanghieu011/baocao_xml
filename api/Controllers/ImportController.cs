@@ -11,14 +11,18 @@ using Microsoft.EntityFrameworkCore.Storage;
 using MySqlConnector;
 using OfficeOpenXml;
 using Org.BouncyCastle.Utilities;
+using System.Data;
+using System.Data.Common;
 using System.Globalization;
 using System.Reflection;
 using System.Security.Claims;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Transactions;
 using System.Xml;
 using System.Xml.Linq;
 using Telegram.BotAPI.AvailableTypes;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace api.Controllers
 {
@@ -43,9 +47,9 @@ namespace api.Controllers
             {
                 Type propertyType = p.PropertyType;
                 Type underlyingType = Nullable.GetUnderlyingType(propertyType);
-                var pName = underlyingType!=null ? underlyingType.Name : propertyType.Name;
+                var pTypeName = underlyingType!=null ? underlyingType.Name : propertyType.Name;
                 res += "\n";
-                res += $"{p.Name}:{pName}";
+                res += $"{p.Name}:{pTypeName}";
             }
             return Ok(res);
         }
@@ -85,99 +89,108 @@ namespace api.Controllers
             if (!Regex.IsMatch(dbData, @"^[A-Za-z0-9_]+$"))
                 return BadRequest("Tên database không hợp lệ.");
             var settings = new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, Async = true };
-            try{
+            try
+            {
                 using var stream = file.OpenReadStream();
                 using var reader = XmlReader.Create(stream, settings);
                 var msg = "";
-                    // đọc xml
+                // đọc xml
                 while (reader.Read())
                 {
-                        if (reader.NodeType != XmlNodeType.Element || reader.Name != "HOSO")
-                            continue;
-                        var hosoEl = XElement.ReadFrom(reader) as XElement;
-                        if (hosoEl == null) continue;
+                    if (reader.NodeType != XmlNodeType.Element || reader.Name != "HOSO")
+                        continue;
+                    var hosoEl = XElement.ReadFrom(reader) as XElement;
+                    if (hosoEl == null) continue;
 
-                        var bn = new XML1();
-                        var dsChiTietThuoc = new List<XML2>();
-                        var dsDichVuKiThuat = new List<XML3>();
+                    var bn = new XML1();
+                    var dsChiTietThuoc = new List<XML2>();
+                    var dsDichVuKiThuat = new List<XML3>();
 
-                        var sqlThemBn = "";
-                        var sqlThemDsThuoc = "";
-                        var sqlThemDsDvkt = "";
-                        var maLK = "";
-                        foreach (var fileHNode in hosoEl.Elements("FILEHOSO"))
-                        {
-                            var loai = (string?)fileHNode.Element("LOAIHOSO") ?? "";
-                            var noidungXml = fileHNode.Element("NOIDUNGFILE");
-                            var encodedContent = noidungXml.Value;
-                            byte[] decoded = Convert.FromBase64String(encodedContent);
-                            string xml = Encoding.UTF8.GetString(decoded);
-                            XElement noidung = XElement.Parse(xml);
-                            maLK = "";
+                    ResultInfo resThemBn = null;
+                    ResultInfo resThemDsThuoc = null;
+                    ResultInfo resThemDsDvkt = null;
+                    var maLK = "";
+                    foreach (var fileHNode in hosoEl.Elements("FILEHOSO"))
+                    {
+                        var loai = (string?)fileHNode.Element("LOAIHOSO") ?? "";
+                        var noidungXml = fileHNode.Element("NOIDUNGFILE");
+                        var encodedContent = noidungXml.Value;
+                        byte[] decoded = Convert.FromBase64String(encodedContent);
+                        string xml = Encoding.UTF8.GetString(decoded);
+                        XElement noidung = XElement.Parse(xml);
                         if (loai.Equals("XML1"))
-                            {
-                                if (noidung == null) continue;
-                                maLK = (string?)noidung.Element("MA_LK") ?? "";
-                                if (string.IsNullOrWhiteSpace(maLK)) continue;
-                                var exists = await _dbResolver.CheckIfBenhNhanTonTai(maLK, $"`{dbData}`.xml1");
-                                if (exists!=0) continue;
+                        {
+                            if (noidung == null) continue;
+                            maLK = (string?)noidung.Element("MA_LK") ?? "";
+                            if (string.IsNullOrWhiteSpace(maLK)) continue;
+                            var exists = await _dbResolver.CheckIfBenhNhanTonTai(maLK, $"`{dbData}`.xml1");
+                            if (exists != 0) continue;
 
-                                // thông tin bệnh nhân
-                                sqlThemBn = GenerateSqlThemBenhNhan(noidung, $"`{dbData}`.xml1", csytId);
-                            }
-                            else if (loai.Equals("XML2"))
-                            {
-                                var chiTietThuocXmWrapper = noidung.Element("DSACH_CHI_TIET_THUOC");
-                                var dsChiTietThuocXml = chiTietThuocXmWrapper.Elements("CHI_TIET_THUOC");
-                                sqlThemDsThuoc = GenerateSqlThemChiTietThuoc(dsChiTietThuocXml, $"`{dbData}`.xml2", csytId);
-                            }
-                            else if (loai.Equals("XML3"))
-                            {
-                                var chiTietDvktXmWrapper = noidung.Element("DSACH_CHI_TIET_DVKT");
-                                var dsChiTietDvktXml = chiTietDvktXmWrapper.Elements("CHI_TIET_DVKT");
-                                sqlThemDsDvkt = GenerateSqlThemDichVuKiThuat(dsChiTietDvktXml, $"`{dbData}`.xml3", csytId);
-                            }
+                            // thông tin bệnh nhân
+                            resThemBn = await ThemBenhNhan(noidung, $"`{dbData}`.xml1", csytId);
                         }
-                       try
+                        else if (loai.Equals("XML2"))
                         {
-                            if (sqlThemBn != "") await _dbContext.Database.ExecuteSqlRawAsync(sqlThemBn);
-                            if (sqlThemDsThuoc != "") await _dbContext.Database.ExecuteSqlRawAsync(sqlThemDsThuoc);
-                            if (sqlThemDsDvkt != "") await _dbContext.Database.ExecuteSqlRawAsync(sqlThemDsDvkt);
-                            msg = "Thêm mới thành công!";
+                            var chiTietThuocXmWrapper = noidung.Element("DSACH_CHI_TIET_THUOC");
+                            var dsChiTietThuocXml = chiTietThuocXmWrapper.Elements("CHI_TIET_THUOC");
+                            resThemDsThuoc = await ThemChiTietThuoc(dsChiTietThuocXml, $"`{dbData}`.xml2", csytId);
                         }
-                        catch(Exception e)
+                        else if (loai.Equals("XML3"))
                         {
-                            Console.WriteLine(e);
-                            if(maLK!="")
-                            {
-                            // xoá dữ liệu với mã lk đang bị lỗi;
-                                await _dbContext.Database.ExecuteSqlRawAsync($"DELETE FROM $`{dbData}`.xml1 WHERE MA_LK='{maLK}'");
-                                await _dbContext.Database.ExecuteSqlRawAsync($"DELETE FROM $`{dbData}`.xml2 WHERE MA_LK='{maLK}'");
-                                await _dbContext.Database.ExecuteSqlRawAsync($"DELETE FROM $`{dbData}`.xml3 WHERE MA_LK='{maLK}'");
-                            }
-                            return StatusCode(500, "Lỗi SQL: " + e.Message);
+                            var chiTietDvktXmWrapper = noidung.Element("DSACH_CHI_TIET_DVKT");
+                            var dsChiTietDvktXml = chiTietDvktXmWrapper.Elements("CHI_TIET_DVKT");
+                            resThemDsThuoc = await ThemDvkt(dsChiTietDvktXml, $"`{dbData}`.xml3", csytId);
                         }
                     }
-                    return Ok(msg);
+                    var flag = 0;
+                    if (resThemBn != null && resThemBn.status_code != 200)
+                    {
+                        flag = 1;
+                        msg += resThemBn.message + "\n";
+                    }
+                    if (resThemDsDvkt != null && resThemDsDvkt.status_code != 200)
+                    {
+                        flag = 1;
+                        msg += resThemDsDvkt.message + "\n";
+                    }
+                    if (resThemDsThuoc != null && resThemDsThuoc.status_code != 200)
+                    {
+                        flag = 1;
+                        msg += resThemDsThuoc.message + "\n";
+                    }
+                    if (flag == 1)
+                    {
+                        if (maLK != "")
+                        {
+                            // xoá dữ liệu với mã lk đang bị lỗi;
+                            await _dbContext.Database.ExecuteSqlRawAsync($"DELETE FROM $`{dbData}`.xml1 WHERE MA_LK='{maLK}'");
+                            await _dbContext.Database.ExecuteSqlRawAsync($"DELETE FROM $`{dbData}`.xml2 WHERE MA_LK='{maLK}'");
+                            await _dbContext.Database.ExecuteSqlRawAsync($"DELETE FROM $`{dbData}`.xml3 WHERE MA_LK='{maLK}'");
+                        }
+                        return StatusCode(500, $"Lỗi SQL: ở {maLK} : {msg}");
+                    }
                 }
-                catch (XmlException xe)
-                {
-                    return BadRequest($"Lỗi XML: "+ xe.Message);
-                }
-                catch (FormatException fe)
-                {
-                    return BadRequest($"Lỗi Base64: " + fe.Message);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex);
-                
-                    return StatusCode(500, "Lỗi server: " + ex.Message);
-                }
+                msg = "Thêm mới thành công!";
+                return Ok(msg);
+            }
+            catch (XmlException xe)
+            {
+                return BadRequest($"Lỗi XML: " + xe.Message);
+            }
+            catch (FormatException fe)
+            {
+                return BadRequest($"Lỗi Base64: " + fe.Message);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+
+                return StatusCode(500, "Lỗi server: " + ex.Message);
+            }
             
         }
 
-            static string ConvertCompactTimestampToStr(long compactTimestamp, string formatStr= "HH:mm:ss dd-MM-yyyy")
+        static string ConvertCompactTimestampToStr(long compactTimestamp, string formatStr= "HH:mm:ss dd-MM-yyyy")
             {
                 if (compactTimestamp == 0) return "";
                 string s = compactTimestamp.ToString().PadLeft(12, '0');
@@ -193,7 +206,7 @@ namespace api.Controllers
                 throw new FormatException($" '{compactTimestamp}' không đúng định dạng '{format}'.");
             }
 
-            static DateTime ConvertCompactTimestampToDateTime(long compactTimestamp)
+        static DateTime ConvertCompactTimestampToDateTime(long compactTimestamp)
             {
                 string s = compactTimestamp.ToString().PadLeft(12, '0');
 
@@ -228,28 +241,28 @@ namespace api.Controllers
             throw new Exception("GetLong exception: " + e);
         }
 
-        static string GenerateSqlThemBenhNhan(XElement xmlData, string table, int csytid)
+        async Task<ResultInfo> ThemBenhNhan(XElement xmlData, string table, int csytid)
         {
             Type t = typeof(XML1);
             PropertyInfo[] props = t.GetProperties(BindingFlags.Public | BindingFlags.Instance);
-            return GenerateSqlAddSingleObj(xmlData, props, table,csytid);
+            return await GenerateSqlAddSingleObj(xmlData, props, table,csytid);
         }
 
-        static string GenerateSqlThemChiTietThuoc(IEnumerable<XElement> xmlData, string table, int csytid)
+        async Task<ResultInfo> ThemChiTietThuoc(IEnumerable<XElement> xmlData, string table, int csytid)
         {
             Type t = typeof(XML2);
             PropertyInfo[] props = t.GetProperties(BindingFlags.Public | BindingFlags.Instance);
-            return GenerateSqlAddMultipleObj(xmlData, props, table, csytid);
+            return await GenerateSqlAddMultipleObj(xmlData, props, table, csytid);
         }
 
-        static string GenerateSqlThemDichVuKiThuat(IEnumerable<XElement> xmlData, string table, int csytid)
+        async Task<ResultInfo> ThemDvkt(IEnumerable<XElement> xmlData, string table, int csytid)
         {
             Type t = typeof(XML3);
             PropertyInfo[] props = t.GetProperties(BindingFlags.Public | BindingFlags.Instance);
-            return GenerateSqlAddMultipleObj(xmlData, props, table, csytid);
+            return await GenerateSqlAddMultipleObj(xmlData, props, table, csytid);
         }
 
-        static string GenerateSqlAddSingleObj(XElement xmlData, PropertyInfo[] props, string table, int csytid)
+        private async Task<ResultInfo> GenerateSqlAddSingleObj(XElement xmlData, PropertyInfo[] props, string table, int csytid)
         {
             var sql = $"INSERT INTO {table} ";
             var cols = "(";
@@ -258,36 +271,10 @@ namespace api.Controllers
             for(int i=0; i < props.Count(); i++)
             {
                 var p = props[i];
-                Type propertyType = p.PropertyType;
-                Type underlyingType = Nullable.GetUnderlyingType(propertyType);
-                var pName = underlyingType!=null ? underlyingType.Name : propertyType.Name;
-                if (!exceptProps.Contains(p.Name)) {
-                    cols += p.Name;
-                    if (p.Name == "CSYTID")
-                    {
-                        vals += csytid ;
-                    }
-                    else
-                    {
-                        switch (pName)
-                        {
-                            case "Int32": /// kiểu dữ liệu int
-                                vals += GetInt(xmlData.Element(p.Name));
-                                break;
-                            case "String": /// kiểu dữ liệu String
-                                vals += $"'{ReplaceCData((string?)xmlData.Element(p.Name) ?? "")}'";
-                                break;
-                            case "DateTime": /// kiểu dữ liệu DateTime
-                                var temp = GetLong(xmlData.Element(p.Name)) != 0 ? ConvertCompactTimestampToDateTime(GetLong(xmlData.Element(p.Name))) : ConvertCompactTimestampToDateTime(180001010000);
-                                vals += $"'{temp.ToString("yyyy-MM-dd HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture)}'";
-                                //vals += temp;
-                                break;
-                            default:
-                                vals += "";
-                                break;
-
-                        }
-                    }
+                var pName = p.Name.ToUpper();
+                if (!exceptProps.Contains(pName)) {
+                    cols += pName;
+                    vals += $"@{pName}";
                     if (i != props.Count() - 1)
                     {
                         cols += ",";
@@ -301,15 +288,77 @@ namespace api.Controllers
                 }
             }
             
-            sql = $"{sql} {cols} VALUE {vals}";
-            return sql;
+            sql = $"{sql} {cols} VALUE {vals}"; // raw sql with params
+            var conn = _dbContext.Database.GetDbConnection();
+
+            if (conn.State != ConnectionState.Open)
+                await conn.OpenAsync();
+
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = sql;
+
+            foreach ( var p in props )
+            {
+                Type propertyType = p.PropertyType;
+                Type underlyingType = Nullable.GetUnderlyingType(propertyType);
+                var pTypeName = underlyingType != null ? underlyingType.Name : propertyType.Name;
+                var pName = p.Name.ToUpper();
+                if (!exceptProps.Contains(p.Name))
+                {
+                    if (pName == "CSYTID")
+                    {
+                        cmd.Parameters.Add(new MySqlParameter(pName, csytid));
+                    }
+                    else
+                    {
+                        switch (pTypeName)
+                        {
+                            case "Int32": /// kiểu dữ liệu int
+                                cmd.Parameters.Add(new MySqlParameter(pName, GetInt(xmlData.Element(pName))));
+                                break;
+                            case "String": /// kiểu dữ liệu String
+                                cmd.Parameters.Add(new MySqlParameter(pName, $"{ReplaceCData((string?)xmlData.Element(pName) ?? "")}"));
+                                break;
+                            case "DateTime": /// kiểu dữ liệu DateTime
+                                var temp = GetLong(xmlData.Element(pName)) != 0 ? ConvertCompactTimestampToDateTime(GetLong(xmlData.Element(pName))) : ConvertCompactTimestampToDateTime(180001010000);
+                                cmd.Parameters.Add(new MySqlParameter(pName, $"{temp.ToString("yyyy-MM-dd HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture)}"));
+                                break;
+                            default:
+                                cmd.Parameters.Add(new MySqlParameter(pName, ""));
+                                break;
+
+                        }
+                    }
+                }
+            }
+            ResultInfo result;
+            DbTransaction transaction = conn.BeginTransaction();
+            try
+            {
+                // Start a local transaction.
+                cmd.Transaction = transaction;
+                cmd.ExecuteNonQuery();
+                transaction.Commit();
+                return new ResultInfo { message = "Ok", status_code = 200 };
+            }
+            catch (Exception ex) {
+                Console.WriteLine(ex.Message);
+                transaction.Rollback();
+                return new ResultInfo { message = ex.Message, status_code = 500 };
+            }  
         }
         private class MyProp
         {
             public string propName { get; set; }
             public string propDataType { get; set; }
         }
-        static string GenerateSqlAddMultipleObj(IEnumerable<XElement> xmlDataArr, PropertyInfo[] props, string table, int csytid)
+        
+        private class ResultInfo
+        {
+            public int status_code { get; set; }
+            public string message { get; set; }
+        }
+        private async Task<ResultInfo> GenerateSqlAddMultipleObj(IEnumerable<XElement> xmlDataArr, PropertyInfo[] props, string table, int csytid)
         {
             var sql = $"INSERT INTO {table} ";
             var cols = "(";
@@ -322,9 +371,10 @@ namespace api.Controllers
             {
                 Type propertyType = p.PropertyType;
                 Type underlyingType = Nullable.GetUnderlyingType(propertyType);
-                var pName = underlyingType != null ? underlyingType.Name : propertyType.Name;
-                mappedProps.Add(new MyProp { propName = p.Name, propDataType = pName});
+                var pTypeName = underlyingType != null ? underlyingType.Name : propertyType.Name;
+                mappedProps.Add(new MyProp { propName = p.Name.ToUpper(), propDataType = pTypeName });
             }
+            var j = 0;
             foreach(var xmlData in xmlDataArr)
             {
                 vals += "(";
@@ -335,31 +385,7 @@ namespace api.Controllers
                     if (!exceptProps.Contains(p.propName))
                     {
                         if(first == 1) cols += p.propName;
-                        if(p.propName=="CSYTID")
-                        {
-                            vals += csytid;
-                        }
-                        else
-                        {
-                            switch (p.propDataType)
-                            {
-                                case "Int32": /// kiểu dữ liệu int
-                                    vals += GetInt(xmlData.Element(p.propName));
-                                    break;
-                                case "String": /// kiểu dữ liệu String
-                                    vals += $"'{ReplaceCData((string?)xmlData.Element(p.propName) ?? "")}'";
-                                    break;
-                                case "DateTime": /// kiểu dữ liệu DateTime
-                                    var temp = GetLong(xmlData.Element(p.propName)) != 0 ? ConvertCompactTimestampToDateTime(GetLong(xmlData.Element(p.propName))) : ConvertCompactTimestampToDateTime(180001010000);
-                                    vals += $"'{temp.ToString("yyyy-MM-dd HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture)}'";
-                                    //vals += temp;
-                                    break;
-                                default:
-                                    vals += "";
-                                    break;
-
-                            }
-                        }
+                        vals += $"@{p.propName}{j}";
                         if (i != props.Count() - 1)
                         {
                             if( first == 1)cols += ",";
@@ -372,12 +398,71 @@ namespace api.Controllers
                         }
                     }
                 }
+                j++;
                 first = 0;
                 vals += ",";
             }
             vals = vals.Remove(vals.Length - 1);
             sql = $"{sql} {cols} VALUES {vals}";
-            return sql;
+            var conn = _dbContext.Database.GetDbConnection();
+
+            if (conn.State != ConnectionState.Open)
+                await conn.OpenAsync();
+
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = sql;
+            j = 0;
+            foreach (var xmlData in xmlDataArr)
+            {
+                for (int i = 0; i < mappedProps.Count; i++)
+                {
+                    var p = mappedProps[i];
+
+                    if (!exceptProps.Contains(p.propName))
+                    {
+                        if (p.propName == "CSYTID")
+                        {
+                            cmd.Parameters.Add(new MySqlParameter($"{p.propName}{j}", csytid));
+                        }
+                        else
+                        {
+                            switch (p.propDataType)
+                            {
+                                case "Int32": /// kiểu dữ liệu int
+                                    cmd.Parameters.Add(new MySqlParameter($"{p.propName}{j}", GetInt(xmlData.Element(p.propName))));
+                                    break;
+                                case "String": /// kiểu dữ liệu String
+                                    cmd.Parameters.Add(new MySqlParameter($"{p.propName}{j}", $"{ReplaceCData((string?)xmlData.Element(p.propName) ?? "")}"));
+                                    break;
+                                case "DateTime": /// kiểu dữ liệu DateTime
+                                    var temp = GetLong(xmlData.Element(p.propName)) != 0 ? ConvertCompactTimestampToDateTime(GetLong(xmlData.Element(p.propName))) : ConvertCompactTimestampToDateTime(180001010000);
+                                    cmd.Parameters.Add(new MySqlParameter($"{p.propName}{j}", $"{temp.ToString("yyyy-MM-dd HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture)}"));
+                                    break;
+                                default:
+                                    cmd.Parameters.Add(new MySqlParameter($"{p.propName}{j}", ""));
+                                    break;
+                            }
+                        }
+                    }
+                }
+                j++;
+            }
+            ResultInfo result;
+            DbTransaction transaction = conn.BeginTransaction();
+            try
+            {
+                cmd.Transaction = transaction;
+                cmd.CommandText = sql;
+                cmd.ExecuteNonQuery();
+                transaction.Commit();
+                return new ResultInfo { message = "Ok", status_code = 200 };
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                transaction.Rollback();
+                return new ResultInfo { message = ex.Message, status_code = 500 };
+            }
         }
         
     }

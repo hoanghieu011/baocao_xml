@@ -20,6 +20,8 @@ namespace API.Data
         public DbSet<BcDoanhThuBscdDto> dto_bc_doanhthu_bscd { get; set; }
         public DbSet<Officer> org_officer { get; set; }
         public DbSet<BenhVien> dmc_benhvien { get; set; }
+        public DbSet<DiemKeHoach> diemkehoach { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
