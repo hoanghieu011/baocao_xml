@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace API.Models
 {
-    public class BC_DIEMKEHOACH
+    public class DiemKeHoach
     {
         public int DIEMKEHOACHID  { get; set; } 
         public int? BACSIID  { get; set; } 
@@ -13,5 +13,6 @@ namespace API.Models
         public int? DIEM_TRUC_CC  { get; set; } 
         public int? DIEM_LAYMAU  { get; set; } 
         public int? THANGNAM  { get; set; } 
+        public int? OFFICERTYPE  { get; set; } 
     }
 }

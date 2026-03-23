@@ -49,7 +49,7 @@ namespace API.Controllers
                 var pageSize = Math.Clamp(req.PageSize, 1, 1000);
                 var offset = (pageNumber - 1) * pageSize;
 
-                var whereBuilder = new System.Text.StringBuilder($" WHERE a.THANGNAM = {req.ThangNam}");
+                var whereBuilder = new System.Text.StringBuilder($" WHERE a.BACSIID = b.OFFICER_ID AND a.THANGNAM = {req.ThangNam}");
                 var paramList = new List<DbParameter>();
 
                 var conn = _context.Database.GetDbConnection();
@@ -70,7 +70,7 @@ namespace API.Controllers
                     whereBuilder.Append(" AND a.BACSI LIKE @search");
                 }
 
-                var sql = $"SELECT * FROM `{dbData}`.BC_DIEMKEHOACH a " 
+                var sql = $"SELECT a.*,b.OFFICER_TYPE FROM `{dbData}`.bc_diemkehoach a, org_officer b " 
                     + whereBuilder.ToString() + $" ORDER BY a.THANGNAM, a.KHOAID LIMIT {pageSize} OFFSET {offset}" ;
 
                 var dsDichVu = await _context.dto_dichvu
@@ -84,7 +84,7 @@ namespace API.Controllers
                 int totalRecords;
                 using (var cmd = conn.CreateCommand())
                 {
-                    cmd.CommandText = $"SELECT COUNT(1) FROM `{dbData}`.BC_DIEMKEHOACH a" + whereBuilder.ToString();
+                    cmd.CommandText = $"SELECT COUNT(1) FROM `{dbData}`.bc_diemkehoach a" + whereBuilder.ToString();
 
                     cmd.Parameters.Clear();
                     foreach (var p in paramList)
@@ -166,7 +166,7 @@ namespace API.Controllers
                 cmd.Parameters.Add(p3);
 
                 var DiemTruc = "";
-                if (req.LoaiBacSi == '4') {
+                if (req.OfficerType == '4') {
                     DiemTruc = req.SoBuoiTruc * 12;
                 } else {
                     DiemTruc = req.SoBuoiTruc * 8;
@@ -223,7 +223,7 @@ namespace API.Controllers
         public int? DiemKeHoach { get; set; }
         public int? SoBuoiTruc { get; set; }
         public int? SoBenhNhan { get; set; }
-        public int? LoaiBacSi { get; set; }
+        public int? OfficerType { get; set; }
         public int? DiemTrucCc { get; set; }
         public int? DiemLayMau { get; set; }
     }
