@@ -17,6 +17,8 @@ namespace API.Data
         public DbSet<DichVu> dmc_dichvu { get; set; }
         public DbSet<LoaiDichVu> dmc_nhom_mabhyt { get; set; }
         public DbSet<DichVuDto> dto_dichvu { get; set; }
+        public DbSet<DiemKeHoachDto> bc_diemkehoach { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
