@@ -20,12 +20,12 @@ export const navItems: INavDataExtended[] = [
         url: '/baocao-tracuu/ds_benhnhan',
         iconComponent: { name: 'cil-people' }
       },
-      // {
-      //   name: 'Báo cáo theo bác sĩ chỉ định',
-      //   roles: ['all'],
-      //   url: '/baocao-tracuu/ds_benhnhan',
-      //   iconComponent: { name: 'cil-chart' }
-      // }
+      {
+        name: 'Báo cáo doanh thu theo bác sĩ chỉ định',
+        roles: ['all'],
+        url: '/baocao-tracuu/doanhthu_bscd',
+        iconComponent: { name: 'cil-chart' }
+      }
     ]
   },
   {

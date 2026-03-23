@@ -17,10 +17,14 @@ namespace API.Data
         public DbSet<DichVu> dmc_dichvu { get; set; }
         public DbSet<LoaiDichVu> dmc_nhom_mabhyt { get; set; }
         public DbSet<DichVuDto> dto_dichvu { get; set; }
+        public DbSet<BcDoanhThuBscdDto> dto_bc_doanhthu_bscd { get; set; }
+        public DbSet<Officer> org_officer { get; set; }
+        public DbSet<BenhVien> dmc_benhvien { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<DichVuDto>().HasNoKey();
+            modelBuilder.Entity<BcDoanhThuBscdDto>().HasNoKey();
         }
     }
 
