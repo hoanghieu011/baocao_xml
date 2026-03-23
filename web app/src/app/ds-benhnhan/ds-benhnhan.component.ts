@@ -206,18 +206,26 @@ export class DsBenhnhanComponent implements OnInit {
   }
 
   // helper hiển thị ngày theo format dd/MM/yyyy
-  formatDate(value: any): string {
-    if (!value) return '-';
-    if (typeof value === 'string' && /^\d{12}$/.test(value)) {
-      const year = value.substring(0, 4);
-      const month = value.substring(4, 6);
-      const day = value.substring(6, 8);
-      return `${day}/${month}/${year}`;
-    }
-    const d = new Date(value);
-    if (isNaN(d.getTime())) return String(value);
-    return d.toLocaleDateString('vi-VN');
+formatDate(value: any): string {
+  if (!value) return '-';
+  if (typeof value === 'string' && /^\d{12}$/.test(value)) {
+    const year = value.substring(0, 4);
+    const month = value.substring(4, 6);
+    const day = value.substring(6, 8);
+    return `${day}/${month}/${year}`;
   }
+  if (typeof value === 'string' && /^\d{8}$/.test(value)) {
+    const year = value.substring(0, 4);
+    const month = value.substring(4, 6);
+    const day = value.substring(6, 8);
+    return `${day}/${month}/${year}`;
+  }
+
+  const d = new Date(value);
+  if (isNaN(d.getTime())) return String(value);
+
+  return d.toLocaleDateString('vi-VN');
+}
 
   rowIndex(i: number) {
     return (this.pageNumber - 1) * this.pageSize + i + 1;
@@ -284,7 +292,7 @@ export class DsBenhnhanComponent implements OnInit {
     { key: 'ma_khuvuc', label: 'Mã khu vực' },
     { key: 'can_nang', label: 'Cân nặng' },
     { key: 'can_nang_con', label: 'Cân nặng con' },
-    { key: 'nam_nam_lien_tuc', label: 'Năm liên tục' },
+    { key: 'nam_nam_lien_tuc', label: 'Năm năm liên tục' },
     { key: 'ngay_tai_kham', label: 'Ngày tái khám' },
     { key: 'ma_hsba', label: 'Mã HSBA' },
     { key: 'ma_ttdv', label: 'Mã TTDV' },
@@ -296,9 +304,18 @@ export class DsBenhnhanComponent implements OnInit {
   getValue(key: string): string {
    const val = (this.selectedBN as any)?.[key];
    if (val === null || val === undefined || val === '') return '-';
-   if (key.toLowerCase().includes('ngay') || key.toLowerCase().includes('gt_the') || key.toLowerCase().includes('gt_the')) {
+   if (key.toLowerCase().includes('ngay') || key.toLowerCase().includes('gt_the') || key.toLowerCase().includes('gt_the') || key.toLowerCase().includes('nam_nam_lien_tuc')) {
      return this.formatDate(val);
    }
+  if (key.toLowerCase().includes('t_')) {
+    const num = Number(val);
+    if (isNaN(num)) return '-';
+
+    return new Intl.NumberFormat('vi-VN', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(num);
+  }
    return String(val);
   }
 }

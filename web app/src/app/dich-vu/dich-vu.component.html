@@ -1,0 +1,253 @@
+<c-toaster placement="top-end" class="p-3">
+  <c-toast
+    *ngFor="let t of toasts"
+    [visible]="t.visible"
+    [color]="t.color"
+    class="text-white"
+  >
+    <c-toast-body>
+      {{ t.message }}
+    </c-toast-body>
+  </c-toast>
+</c-toaster>
+<div class="card">
+  <div class="card-body">
+
+    <div class="row g-2 align-items-end mb-3">
+      <div class="col-md-3">
+        <label class="form-label small">Loại dịch vụ</label>
+        <select2 class="form-control" [overlay]="false" placeholder=""
+            [data]="ds_loai_dichvu" (update)="update($event)" [styleMode]="'borderless'" [value]="cur_loai_dichvu"
+            id="loai_dich_vu" style="height: 38px; padding: 4px 0 0 0;">
+        </select2>
+      </div>
+
+      <div class="col">
+        <label class="form-label small">Tìm (Mã hoặc tên dịch vụ)</label>
+        <input class="form-control" type="text" placeholder="Nhập mã hoặc tên dịch vụ" [(ngModel)]="searchTerm" (keyup.enter)="loadData(true)"/>
+      </div>
+
+      <div class="col-auto">
+        <button class="btn btn-primary w-100" (click)="loadData(true)" [disabled]="loading">
+          <span *ngIf="!loading">Tìm kiếm</span>
+          <span *ngIf="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+        </button>
+      </div>
+    </div>
+
+    <div class="table-responsive">
+  <div class="table-wrapper">
+    <table [cBorder]="1" borderColor="primary" bordered cTable >
+    <!-- class="table table-hover table-striped table-fixed"> -->
+      <colgroup>
+        <col style="width:80px" />
+        <col style="width:250px" />
+        <col style="width:380px" />
+        <col style="width:120px" />
+        <col style="width:160px" />
+        <col style="width:140px" />
+        <col style="width:140px" />
+        <col style="width:260px" />
+        <col />
+      </colgroup>
+
+      <thead class="table-primary text-center align-middle">
+        <tr>
+          <th>#</th>
+          <th>Mã dịch vụ / vật tư</th>
+          <th>Tên dịch vụ / vật tư</th>
+          <th>Đơn vị</th>
+          <th>Giá</th>
+          <th>Chi phí</th>
+          <th>Hệ số</th>
+          <th>Loại dịch vụ</th>
+          <th></th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr *ngFor="let dv of dsDichVu; let i = index">
+            <td class="text-center">{{ rowIndex(i) }}</td>
+
+            <td>{{ dv.ma_dichvu || '-' }}</td>
+
+            <td>{{ dv.ten_dichvu || '-' }}</td>
+
+            <td class="text-center">{{ dv.donvi || '-' }}</td>
+
+            <td class="text-center">
+                {{ dv.gia_bhyt != null ? (dv.gia_bhyt | number:'1.0-0') : '-' }}
+            </td>
+
+            <td class="text-center">
+                {{ dv.chiphi != null ? (dv.chiphi | number:'1.0-2') : '-' }}
+            </td>
+
+            <td class="text-center">{{ dv.heso ?? '-' }}</td>
+
+            <td>{{ dv.tennhom || '-' }}</td>
+
+            <td class="text-center">
+                <button class="btn btn-sm btn-outline-primary"
+                        (click)="onRowClick(dv)">
+                <i class="bi bi-pencil"></i>
+                </button>
+            </td>
+            </tr>   
+
+        <tr *ngIf="!loading && (!dsDichVu || dsDichVu.length === 0)">
+          <td colspan="10" class="text-center">Không có dữ liệu</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+    <div class="d-flex justify-content-between align-items-center mt-2">
+      <div class="d-flex align-items-center gap-2">
+        <button class="btn btn-outline-secondary btn-sm" (click)="onPrev()" [disabled]="pageNumber <= 1">Prev</button>
+        <button class="btn btn-outline-secondary btn-sm" (click)="onNext()" [disabled]="pageNumber >= Math.ceil(totalRecords / pageSize) || totalRecords === 0">Next</button>
+        <div class="ms-3 small text-muted">
+          Trang {{pageNumber}} / {{ Math.max(1, Math.ceil(totalRecords / pageSize)) }} — Tổng: {{ totalRecords | number }}
+        </div>
+      </div>
+
+      <div class="d-flex align-items-center gap-2">
+        <label class="small mb-0">Bản ghi / trang</label>
+        <select class="form-select form-select-sm"
+                [(ngModel)]="pageSize"
+                (ngModelChange)="onPageSizeChange($event)">
+        <option *ngFor="let s of pageSizeOptions" [value]="s">{{ s }}</option>
+        </select>
+      </div>
+      </div>
+    </div>
+</div>
+
+<!-- <div class="modal-backdrop" *ngIf="showModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h5 class="modal-title">Cập nhật thông tin</h5>
+      <button type="button" class="btn-close" aria-label="Close" (click)="closeModal()"></button>
+    </div>
+
+    <div class="modal-body">
+      <div class="row">
+        <div class="col-12 col-md-4">
+          <table class="table table-sm mb-0 patient-modal-table">
+            <tbody>
+              <tr *ngFor="let f of fields | slice:0:colSize">
+                <th class="w-40">{{ f.label }}</th>
+                <td class="w-60">{{ getValue(f.key) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="col-12 col-md-4">
+          <table class="table table-sm mb-0 patient-modal-table">
+            <tbody>
+              <tr *ngFor="let f of fields | slice:colSize:colSize*2">
+                <th class="w-40">{{ f.label }}</th>
+                <td class="w-60">{{ getValue(f.key) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="col-12 col-md-4">
+          <table class="table table-sm mb-0 patient-modal-table">
+            <tbody>
+              <tr *ngFor="let f of fields | slice:colSize*2:colSize*3">
+                <th class="w-40">{{ f.label }}</th>
+                <td class="w-60">{{ getValue(f.key) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer" style="justify-content: flex-end;">
+      <button class="btn btn-secondary" (click)="closeModal()">Đóng</button>
+    </div>
+  </div>
+</div> -->
+
+<div class="modal-backdrop" *ngIf="showModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h5 class="modal-title">Cập nhật thông tin dịch vụ</h5>
+      <button type="button" class="btn-close" aria-label="Close" (click)="closeModal()"></button>
+    </div>
+
+    <div class="modal-body">
+      <table class="table table-sm mb-0 patient-modal-table">
+        <tbody>
+          <tr>
+            <th class="w-40">Mã dịch vụ / vật tư</th>
+            <td class="w-60">{{ selectedDV?.ma_dichvu || '-' }}</td>
+          </tr>
+
+          <tr>
+            <th class="w-40">Tên dịch vụ / vật tư</th>
+            <td class="w-60">{{ selectedDV?.ten_dichvu || '-' }}</td>
+          </tr>
+
+          <tr>
+            <th class="w-40">Đơn vị</th>
+            <td class="w-60">{{ selectedDV?.donvi || '-' }}</td>
+          </tr>
+
+          <tr>
+            <th class="w-40">Giá</th>
+            <td class="w-60">
+              {{ selectedDV?.gia_bhyt != null ? (selectedDV?.gia_bhyt | number:'1.0-0') : '-' }}
+            </td>
+          </tr>
+
+          <tr>
+            <th class="w-40">Loại dịch vụ</th>
+            <td class="w-60">{{ selectedDV?.tennhom || '-' }}</td>
+          </tr>
+
+          <tr>
+            <th class="w-40">Chi phí</th>
+            <td class="w-60">
+                <input
+                type="text"
+                class="form-control form-control-sm text-end"
+                [ngModel]="formatCurrency(editChiPhi)"
+                (ngModelChange)="onChiPhiChange($event)"
+                placeholder="Nhập chi phí"
+                />
+            </td>
+            </tr>
+
+          <tr>
+            <th class="w-40">Hệ số</th>
+            <td class="w-60">
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                class="form-control form-control-sm text-end"
+                [(ngModel)]="editHeSo"
+                name="editHeSo"
+                placeholder="Nhập hệ số"
+              />
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="modal-footer gap-2" style="justify-content: flex-end;">
+      <button class="btn btn-secondary" (click)="closeModal()" [disabled]="saving">Đóng</button>
+      <button class="btn btn-primary" (click)="saveDichVu()" [disabled]="saving">
+        <span *ngIf="!saving">Cập nhật</span>
+        <span *ngIf="saving" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+      </button>
+    </div>
+  </div>
+</div>

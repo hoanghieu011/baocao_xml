@@ -159,6 +159,20 @@ export const routes: Routes = [
           }
         ]
       },
+      {
+        path: 'danhmuc',
+        children: [
+          {
+            path: 'dich_vu',
+            canActivate: [AuthGuard],
+            loadChildren: () => import('../app/dich-vu/dich-vu.routes').then(m => m.DS_DICHVU),
+            data: {
+              title: 'Danh mục dịch vụ',
+              roles: ['']
+            }
+          }
+        ]
+      },
     ]
   },
   {

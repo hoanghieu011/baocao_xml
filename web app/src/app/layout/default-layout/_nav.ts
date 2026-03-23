@@ -19,6 +19,26 @@ export const navItems: INavDataExtended[] = [
         roles: ['all'],
         url: '/baocao-tracuu/ds_benhnhan',
         iconComponent: { name: 'cil-people' }
+      },
+      // {
+      //   name: 'Báo cáo theo bác sĩ chỉ định',
+      //   roles: ['all'],
+      //   url: '/baocao-tracuu/ds_benhnhan',
+      //   iconComponent: { name: 'cil-chart' }
+      // }
+    ]
+  },
+  {
+    name: 'Danh mục',
+    iconComponent: { name: 'cilFolder' },
+    url: '/danhmuc',
+    roles: ['all'],
+    children: [
+      {
+        name: 'Danh mục dịch vụ',
+        roles: ['all'],
+        url: '/danhmuc/dich_vu',
+        iconComponent: { name: 'cilMedicalCross' }
       }
     ]
   },
