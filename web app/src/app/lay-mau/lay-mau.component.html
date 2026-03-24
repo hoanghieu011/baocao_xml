@@ -1,0 +1,112 @@
+<c-toaster placement="top-end" class="p-3">
+  <c-toast
+    *ngFor="let t of toasts"
+    [visible]="t.visible"
+    [color]="t.color"
+    class="text-white"
+  >
+    <c-toast-body>
+      {{ t.message }}
+    </c-toast-body>
+  </c-toast>
+</c-toaster>
+<div class="card">
+    <div class="card-body">
+        <div class="row g-2 align-items-end justify-content-center">
+      <div class="col-md-3">
+      
+      </div>
+
+      <div class="col">
+      </div>
+
+      <div class="col-auto">
+        <button class="btn btn-primary w-100" (click)="onThemLayMauBtnClick()" [disabled]="loading">
+          <span *ngIf="!loading">Nhập dữ liệu</span>
+          <span *ngIf="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+        </button>
+      </div>
+    </div>
+    </div>
+</div>
+<p>Danh sách lấy mẫu....</p>
+
+<div class="modal-backdrop" *ngIf="isShowModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h5 class="modal-title">Nhập thông tin lấy mẫu</h5>
+      <button type="button" class="btn-close" aria-label="Close" (click)="onCloseModal()"></button>
+    </div>
+
+    <div class="modal-body">
+      <form [formGroup]="formData">
+        <table class="table table-sm mb-0 patient-modal-table">
+        <tbody>
+          <tr>
+            <th class="w-40">Khoa <span class="required-field"></span></th>
+            <td class="w-60">
+              <select2 formControlName="khoa" [data]="ds_khoa" class="form-control form-control-sm" [disabled]="loading">
+                <option value="">-- Chọn khoa --</option>
+                <option *ngFor="let item of ds_khoa" [value]="item.ORG_ID">{{ item.ORG_NAME }}</option>
+              </select2>
+            </td>
+          </tr>
+          <tr>
+            <th colspan="2" style="background: #d0d0d0;">Mẫu máu</th>
+          </tr>
+          <tr>
+            <th class="w-40">Số lượt:<span class="required-field"></span></th>
+            <td class="w-60" formControlName="maumau_soluot">
+              <input type="number" class="form-control form-control-sm" formControlName="maumau_soluot" />
+            </td>
+          </tr>
+          <tr>
+            <th class="w-40">Số điểm:<span class="required-field"></span></th>
+            <td class="w-60" >
+              <input type="number" class="form-control form-control-sm" formControlName="maumau_sodiem" />
+            </td>
+          </tr>
+          <tr>
+            <th colspan="2" style="background: #d0d0d0;">Mẫu nước tiểu</th>
+          </tr>
+          <tr>
+            <th class="w-40">Số lượt<span class="required-field"></span></th>
+            <td class="w-60">
+              <input type="number" class="form-control form-control-sm" formControlName="maunuoctieu_soluot" />
+            </td>
+          </tr>
+          <tr>
+            <th class="w-40">Số điểm<span class="required-field"></span></th>
+            <td class="w-60" >
+              <input type="number" class="form-control form-control-sm" formControlName="maunuoctieu_sodiem" />
+            </td>
+          </tr>
+          <tr>
+            <th colspan="2" style="background: #d0d0d0;"><hr></th>
+          </tr>
+          <tr>
+            <th class="w-40">Tổng điểm<span class="required-field"></span></th>
+            <td class="w-60">
+              <input type="number" class="form-control form-control-sm" formControlName="tongdiem" />
+            </td>
+          </tr>
+          <tr>
+            <th class="w-40">Ghi chú</th>
+            <td class="w-60">
+              <textarea type="text" class="form-control form-control-sm" formControlName="ghichu" rows="3"></textarea>
+            </td>
+          </tr>
+        </tbody>
+        </table>
+      </form>
+    </div>
+
+    <div class="modal-footer gap-2" style="justify-content: flex-end;">
+      <button class="btn btn-secondary" (click)="onCloseModal()">Đóng</button>
+      <button class="btn btn-primary" (click)="onSaveLayMau()" [disabled]="formData.invalid || loading">
+        <span>Lưu</span>
+        <!-- <span *ngIf="saving" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> -->
+      </button>
+    </div>
+  </div>
+</div>

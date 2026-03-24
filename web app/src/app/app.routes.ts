@@ -170,6 +170,15 @@ export const routes: Routes = [
               title: 'Danh mục dịch vụ',
               roles: ['']
             }
+          },
+          {
+            path: 'lay_mau',
+            canActivate: [AuthGuard],
+            loadChildren: () => import('../app/lay-mau/lay-mau.routes').then(m => m.DS_LAYMAU),
+            data: {
+              title: 'Danh mục lấy mẫu',
+              roles: ['']
+            }
           }
         ]
       },
