@@ -31,7 +31,7 @@
 </div>
 <p>Danh sách lấy mẫu....</p>
 
-<div class="modal-backdrop" *ngIf="isShowModal">
+<div class="modal-backdrop ng-star-inserted" *ngIf="isShowModal">
   <div class="modal-card">
     <div class="modal-header">
       <h5 class="modal-title">Nhập thông tin lấy mẫu</h5>
@@ -43,11 +43,21 @@
         <table class="table table-sm mb-0 patient-modal-table">
         <tbody>
           <tr>
+            <th colspan="2" style="background: #d0d0d0;">Thông tin chung</th>
+          </tr>
+          <tr>
+           <th class="w-40">Tháng-Năm <span class="required-field"></span></th>
+            <td class="w-60 month-year-input">
+              <input type="number" class="form-control form-control-sm" formControlName="thang" placeholder="Tháng" />
+              <input type="number" class="form-control form-control-sm" formControlName="nam" placeholder="Năm" />
+            </td>
+          </tr>
+          <tr>
             <th class="w-40">Khoa <span class="required-field"></span></th>
             <td class="w-60">
-              <select2 formControlName="khoa" [data]="ds_khoa" class="form-control form-control-sm" [disabled]="loading">
-                <option value="">-- Chọn khoa --</option>
-                <option *ngFor="let item of ds_khoa" [value]="item.ORG_ID">{{ item.ORG_NAME }}</option>
+              <select2 class="form-control" [overlay]="false" placeholder=""
+                [data]="ds_khoa" (update)="onKhoaChange($event)" [styleMode]="'borderless'" [value]="cur_khoa"
+                id="khoa" style="height: 38px; padding: 4px 0 0 0;" formControlName="khoa">
               </select2>
             </td>
           </tr>
@@ -56,7 +66,7 @@
           </tr>
           <tr>
             <th class="w-40">Số lượt:<span class="required-field"></span></th>
-            <td class="w-60" formControlName="maumau_soluot">
+            <td class="w-60">
               <input type="number" class="form-control form-control-sm" formControlName="maumau_soluot" />
             </td>
           </tr>
@@ -105,7 +115,7 @@
       <button class="btn btn-secondary" (click)="onCloseModal()">Đóng</button>
       <button class="btn btn-primary" (click)="onSaveLayMau()" [disabled]="formData.invalid || loading">
         <span>Lưu</span>
-        <!-- <span *ngIf="saving" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> -->
+        <span *ngIf="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
       </button>
     </div>
   </div>

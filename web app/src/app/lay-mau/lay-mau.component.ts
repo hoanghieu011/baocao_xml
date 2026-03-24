@@ -13,10 +13,10 @@ import { Select2Module, Select2UpdateEvent } from 'ng-select2-component';
 })
 export class LayMauComponent  {
   ds_khoa: any[] = [
-    {MA_KHOA: 'K01', ORG_NAME:'Khoa Khám bệnh', ORG_ID: 43360},
-    {MA_KHOA: 'K0203', ORG_NAME:'Khoa HSCC - Nội', ORG_ID: 43540},
-    {MA_KHOA: 'K1631', ORG_NAME:'Khoa YHCT và PHCN', ORG_ID: 43560},
-    {MA_KHOA: 'K1319282930', ORG_NAME:'Khoa Ngoại - Chuyên khoa', ORG_ID: 43580},
+    {MA_KHOA: 'K01', label:'Khoa Khám bệnh', value: 43360},
+    {MA_KHOA: 'K0203', label:'Khoa HSCC - Nội', value: 43540},
+    {MA_KHOA: 'K1631', label:'Khoa YHCT và PHCN', value: 43560},
+    {MA_KHOA: 'K1319282930', label:'Khoa Ngoại - Chuyên khoa', value: 43580},
   ];
   cur_khoa: number = 0;
   ds_bacsi_all: any[] = [
@@ -56,7 +56,9 @@ export class LayMauComponent  {
     maunuoctieu_soluot: new FormControl(0, [Validators.required]),
     maunuoctieu_sodiem: new FormControl(0, [Validators.required]),
     tongdiem: new FormControl(0, [Validators.required]),
-    ghichu: new FormControl('')
+    ghichu: new FormControl(''),
+    thang: new FormControl(new Date().getMonth() + 1),
+    nam: new FormControl(new Date().getFullYear()),
   });
   ngOnInit(): void {
   }
@@ -78,6 +80,7 @@ export class LayMauComponent  {
       this.addToast('Vui lòng điền đầy đủ thông tin', 'warning');
       return;
     }
+    console.log('Form Data:', this.formData.value);
     this.loading = true;
     setTimeout(() => {
       this.loading = false;
@@ -96,6 +99,19 @@ export class LayMauComponent  {
 
   onThemLayMauBtnClick(){
     this.isShowModal = true;
+    this.formData =  new FormGroup({
+     khoa: new FormControl(0, [Validators.required]),
+    // ds_bacsi_chon: [],
+    // ds_dieuduong_chon: [],
+    maumau_soluot: new FormControl(0, [Validators.required]),
+    maumau_sodiem: new FormControl(0, [Validators.required]),
+    maunuoctieu_soluot: new FormControl(0, [Validators.required]),
+    maunuoctieu_sodiem: new FormControl(0, [Validators.required]),
+    tongdiem: new FormControl(0, [Validators.required]),
+    ghichu: new FormControl(''),
+    thang: new FormControl(new Date().getMonth() + 1),
+    nam: new FormControl(new Date().getFullYear()),
+  });
   }
 
   addToast(message: string, color: string = 'danger') {
