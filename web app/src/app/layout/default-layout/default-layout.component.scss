@@ -8,6 +8,34 @@
   }
 }
 
+:host ::ng-deep .sidebar .nav-link,
+:host ::ng-deep .sidebar .nav-group-toggle {
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: unset !important;
+  line-height: 1.4;
+  height: auto !important;
+
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+:host ::ng-deep .sidebar .nav-icon {
+  flex-shrink: 0;
+}
+
+// :host ::ng-deep .sidebar {
+//   width: 280px;
+// }
+
+:host ::ng-deep .sidebar .nav-link span,
+:host ::ng-deep .sidebar .nav-group-toggle span {
+  display: inline-block;
+  white-space: normal;
+  word-break: break-word;
+}
+
 // ng-scrollbar css variables
 //.cui-scrollbar {
 //  --scrollbar-border-radius: 7px;

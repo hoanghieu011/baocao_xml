@@ -156,7 +156,16 @@ export const routes: Routes = [
               title: 'Danh sách bệnh nhân',
               roles: ['']
             }
-          }
+          }, 
+          {
+            path: 'doanhthu_bscd',
+            canActivate: [AuthGuard],
+            loadChildren: () => import('../app/bc-doanhthu-bscd/bc-doanhthu-bscd.routes').then(m => m.DOANHTHU_BSCD),
+            data: {
+              title: 'Báo cáo doanh thu theo bác sĩ chỉ định',
+              roles: ['']
+            }
+          }, 
         ]
       },
       {

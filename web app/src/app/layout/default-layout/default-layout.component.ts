@@ -90,23 +90,6 @@ export class DefaultLayoutComponent implements OnInit {
   ngOnInit() {
     
   }
-  updateBadge_CN(notificationCount: number) {
-    this.navItems = this.navItems.map(item => {
-      if (item.translationKey === 'MENU.LEAVE_LIST') {
-        return {
-          ...item,
-          badge: {
-            text: notificationCount > 0 ? `${notificationCount}` : '',
-            color: item.badge?.color ?? 'info',
-            size: item.badge?.size,
-            class: item.badge?.class
-          }
-        } as INavDataExtended;
-      }
-      return item;
-    });
-  }
-
 
   onScrollbarUpdate($event: any) {
   }

@@ -10,6 +10,47 @@ export class BaoCaoService {
   private apiUrl = this.httpConfig.getApiUrl('BaoCao')
   constructor(private http: HttpClient, private httpConfig: HttpConfigService) { }
 
+  getBcDoanhThuBscd(
+    maBacSy: string = '',
+    tuNgay?: Date,
+    denNgay?: Date
+  ): Observable<any> {
+
+    const body: any = {
+      tuNgay,
+      denNgay,
+      maBacSy
+    };
+
+    return this.http.post<any>(
+      `${this.apiUrl}/bc_doanhthu_bscd`,
+      body,
+      { headers: this.httpConfig.getHeaders() }
+    );
+  }
+
+  exportBcDoanhThuBscdExcel(
+    maBacSy: string = '',
+    tuNgay?: Date,
+    denNgay?: Date
+  ): Observable<Blob> {
+
+    const body: any = {
+      tuNgay,
+      denNgay,
+      maBacSy
+    };
+
+    return this.http.post(
+      `${this.apiUrl}/bc_doanhthu_bscd_excel`,
+      body,
+      {
+        headers: this.httpConfig.getHeaders(),
+        responseType: 'blob'
+      }
+    );
+  }
+
   xuatBaoCaoNghiPhep(request: { tuNgay: string; denNgay: string }): Observable<Blob> {
     return this.http.post(`${this.apiUrl}/xuat-bao-cao-nghi-phep`, request, {
       headers: this.httpConfig.getHeaders(),

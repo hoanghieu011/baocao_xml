@@ -67,7 +67,7 @@ namespace API.Controllers
                     var p1 = tempCmd.CreateParameter();
                     p1.ParameterName = "@search";
                     p1.Value = $"%{req.SearchTerm}%";
-                    paramList.Add(p);
+                    paramList.Add(p1);
 
                     whereBuilder.Append(" AND (MA_DICH_VU LIKE @search OR TEN_DICH_VU LIKE @search)");
                 }
