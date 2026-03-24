@@ -8,11 +8,17 @@
       <span class="app-title">{{ 'TITLE' | translate }}</span>
     </div>
     <!-- <img src="assets/images/logo-home-dark.png" alt="Logo" class="app-logo" /> -->
-    <div class="language-switcher">
-      <button (click)="switchLanguage('vi')">🇻🇳 VN</button>
+    <!-- <div> -->
+      <!-- <button (click)="switchLanguage('vi')">🇻🇳 VN</button> -->
       <!-- <button (click)="switchLanguage('en')">🇺🇸 EN</button> -->
       <!-- <button (click)="switchLanguage('ja')">🇯🇵 JP</button> -->
-    </div>    
+    <!-- </div>     -->
+    <div class="header-right">
+      <span class="hospital-name">
+        <svg cIcon name="cilHospital" class="hospital-icon me-2"></svg>
+        {{tenbenhvien}}
+      </span>
+    </div>
     <!-- end -->
   </c-container>
   <c-container [fluid]="true" class="px-4">

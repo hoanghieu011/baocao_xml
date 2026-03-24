@@ -28,7 +28,8 @@ import {
 
 import { IconDirective } from '@coreui/icons-angular';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
-import {BreadcrumbWrapperComponent} from 'src/app/breadcrumb-wrapper/breadcrumb-wrapper.component'
+import {BreadcrumbWrapperComponent} from 'src/app/breadcrumb-wrapper/breadcrumb-wrapper.component';
+import { BenhVienService} from '../../../services/benh-vien.service';
 
 @Component({
   selector: 'app-default-header',
@@ -42,12 +43,14 @@ import {BreadcrumbWrapperComponent} from 'src/app/breadcrumb-wrapper/breadcrumb-
     AvatarComponent, DropdownMenuDirective, DropdownHeaderDirective, DropdownItemDirective,
     BadgeComponent, DropdownDividerDirective, ProgressBarDirective, ProgressComponent,
     NgStyle, TranslateModule, BreadcrumbWrapperComponent]
-})
+}) 
 export class DefaultHeaderComponent extends HeaderComponent{
 
   readonly #colorModeService = inject(ColorModeService);
   readonly colorMode = this.#colorModeService.colorMode;
   pageTitle: string = '';
+
+  tenbenhvien: string = '';
 
   readonly colorModes = [
     { name: 'light', text: 'Light', icon: 'cilSun' },
@@ -60,16 +63,29 @@ export class DefaultHeaderComponent extends HeaderComponent{
     return this.colorModes.find(mode => mode.name === currentMode)?.icon ?? 'cilSun';
   });
 
-  constructor(private translate: TranslateService) {
+  constructor(private translate: TranslateService, private benhVienService: BenhVienService) {
     super();
     this.translate.setDefaultLang('vi');
     const savedLang = localStorage.getItem('language') || 'vi';
     this.translate.use(savedLang);
-    
+    this.loadTenBenhVien();
   }
   switchLanguage(lang: string) {
     this.translate.use(lang);
     localStorage.setItem('language', lang);
   }
   sidebarId = input('sidebar1');
+
+  private loadTenBenhVien() {
+    this.benhVienService.getTtBenhVien().subscribe({
+      next: (res) => {
+        const data = res?.data || [];
+
+        this.tenbenhvien = data[0].tenbenhvien;
+      },
+      error: (err) => {
+        console.error(err);
+      }
+    });
+  }
 }

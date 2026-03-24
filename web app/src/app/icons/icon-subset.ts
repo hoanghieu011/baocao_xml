@@ -1,4 +1,5 @@
 import {
+  cilHospital,
   cilMedicalCross,
   cibCcAmex,
   cilFolder,
@@ -106,6 +107,7 @@ import { signet } from './signet';
 import { logo } from './logo';
 
 export const iconSubset = {
+  cilHospital,
   cilMedicalCross,
   cilFolder,
   cilAddressBook,
@@ -212,6 +214,7 @@ export const iconSubset = {
 };
 
 export enum IconSubset {
+  cilHospital = 'cilHospital',
   cilFlagAlt = 'cilFlagAlt',
   cibAboutMe = 'cibAboutMe',
   cilSearch = 'cilSearch',

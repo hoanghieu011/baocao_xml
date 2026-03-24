@@ -70,5 +70,41 @@ namespace API.Controllers
                 return StatusCode(500, new { message = "Lỗi server", detail = ex.Message });
             }
         }
+
+        /// <summary>
+        /// Lấy thông tin Officer từ token.
+        /// </summary>
+        /// <returns></returns>
+        [Authorize]
+        [HttpGet("tt_officer")]
+        public async Task<ActionResult<object>> GetTtOfficer()
+        {
+            try
+            {
+                var csytid = User.FindFirst("CSYTID")?.Value;
+                if (string.IsNullOrEmpty(csytid))
+                    return Unauthorized();
+
+                var officer_id = User.FindFirst("OFFICER_ID")?.Value;
+
+                var sql = $@"
+                    SELECT * 
+                    FROM ORG_OFFICER 
+                    WHERE CSYTID = {csytid}
+                    AND OFFICER_ID = {officer_id}
+                ";
+
+                var data = await _context.org_officer
+                    .FromSqlRaw(sql)
+                    .AsNoTracking()
+                    .ToListAsync();
+
+                return Ok(new { data });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Lỗi server", detail = ex.Message });
+            }
+        }
     }
 }

@@ -29,4 +29,14 @@ export class OfficerService {
       headers: this.httpConfig.getHeaders(),
       });
   }
+
+  getTtOfficer(
+  ): Observable<any> {
+  
+    return this.http.get<any>(
+      `${this.apiUrl}/tt_officer`,
+      {
+      headers: this.httpConfig.getHeaders(),
+      });
+  }
 }
