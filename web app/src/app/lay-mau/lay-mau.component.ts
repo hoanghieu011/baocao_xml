@@ -100,18 +100,18 @@ export class LayMauComponent  {
   onThemLayMauBtnClick(){
     this.isShowModal = true;
     this.formData =  new FormGroup({
-     khoa: new FormControl(0, [Validators.required]),
-    // ds_bacsi_chon: [],
-    // ds_dieuduong_chon: [],
-    maumau_soluot: new FormControl(0, [Validators.required]),
-    maumau_sodiem: new FormControl(0, [Validators.required]),
-    maunuoctieu_soluot: new FormControl(0, [Validators.required]),
-    maunuoctieu_sodiem: new FormControl(0, [Validators.required]),
-    tongdiem: new FormControl(0, [Validators.required]),
-    ghichu: new FormControl(''),
-    thang: new FormControl(new Date().getMonth() + 1),
-    nam: new FormControl(new Date().getFullYear()),
-  });
+      khoa: new FormControl(0, [Validators.required]),
+      // ds_bacsi_chon: [],
+      // ds_dieuduong_chon: [],
+      maumau_soluot: new FormControl(0, [Validators.required]),
+      maumau_sodiem: new FormControl(0, [Validators.required]),
+      maunuoctieu_soluot: new FormControl(0, [Validators.required]),
+      maunuoctieu_sodiem: new FormControl(0, [Validators.required]),
+      tongdiem: new FormControl(0, [Validators.required]),
+      ghichu: new FormControl(''),
+      thang: new FormControl(new Date().getMonth() + 1),
+      nam: new FormControl(new Date().getFullYear()),
+    });
   }
 
   addToast(message: string, color: string = 'danger') {

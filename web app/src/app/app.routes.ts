@@ -166,6 +166,15 @@ export const routes: Routes = [
               roles: ['']
             }
           }, 
+          {
+            path: 'doanhthu_bsth',
+            canActivate: [AuthGuard],
+            loadChildren: () => import('../app/bc-doanhthu-bsth/bc-doanhthu-bsth.routes').then(m => m.DOANHTHU_BSTH),
+            data: {
+              title: 'Báo cáo doanh thu theo bác sĩ thực hiện',
+              roles: ['']
+            }
+          }, 
         ]
       },
       {
