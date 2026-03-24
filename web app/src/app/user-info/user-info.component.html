@@ -1,35 +1,66 @@
 <div class="user-info-container">
-    <h5 class="text-center">{{'THONG_TIN_NHAN_VIEN'|translate}}</h5>
-    <div *ngIf="userInfo; else noData">
-        <div class="row">
-            <div class="col-md-6">
-                <p><strong>{{'MA_NV'|translate}}:</strong> {{ userInfo.USER_NAME || 'N/A' }}</p>
-                <p><strong>{{'HO_TEN'|translate}}:</strong> {{ userInfo.FULL_NAME || 'N/A' }}</p>
-                <p><strong>Ngày sinh:</strong> {{ userInfo.FULL_NAME || 'N/A' }}</p>
-                <p><strong>Giới tính:</strong> {{ userInfo.FULL_NAME || 'N/A' }}</p>
-                <p><strong>Địa chỉ:</strong> {{ userInfo.FULL_NAME || 'N/A' }}</p>
-                <p><strong>SĐT:</strong> {{ userInfo.FULL_NAME || 'N/A' }}</p>
-                <p><strong>CCCD:</strong> {{ userInfo.FULL_NAME || 'N/A' }}</p>
+  <h5 class="title">{{ 'THONG_TIN_NHAN_VIEN' | translate }}</h5>
 
+  <div *ngIf="userInfo; else noData" class="card">
+    <div class="card-body">
 
-
-                <!-- <p><strong>{{'GIOI_TINH'|translate}}:</strong> {{ 'GT_' + removeVietnameseTones(userInfo.gioi_tinh.toUpperCase()) | translate }}</p> -->
-            </div>
-            <div class="col-md-6">
-                <p><strong>{{ 'VI_TRI' | translate }}:</strong> {{ userInfo.vi_tri ? (userInfo.vi_tri | translate) : 'N/A' }}</p>
-                <p><strong>{{'BO_PHAN'|translate}}:</strong> {{ userInfo.ten_bo_phan || 'N/A' }}</p>
-                <p><strong>{{'CONG_VIEC'|translate}}:</strong> {{ userInfo.cong_viec || 'N/A' }}</p>
-            </div>
+      <div class="row">
+        <div class="col-md-6 info-item">
+          <label>Mã nhân viên</label>
+          <span>{{ userInfo.officer_code || '-' }}</span>
         </div>
-        <div class="row">
-            <div class="col-md-4"></div>
-            <div class="col-md-4">
-                <p><strong>{{'EMAIL'|translate}}:</strong> {{ userInfo.email || 'N/A'}}</p>
-            </div>
-            <div class="col-md-4"></div>
+
+        <div class="col-md-6 info-item">
+          <label>Tên nhân viên</label>
+          <span class="name">{{ userInfo.officer_name || '-' }}</span>
         </div>
+
+        <div class="col-md-6 info-item">
+          <label>Ngày sinh</label>
+          <span>{{ formatDate(userInfo.ngaysinh) }}</span>
+        </div>
+
+        <div class="col-md-6 info-item">
+          <label>Giới tính</label>
+          <span>{{ getGioiTinh(userInfo.gioitinh) }}</span>
+        </div>
+
+        <div class="col-md-6 info-item">
+          <label>Số điện thoại</label>
+          <span>{{ userInfo.phone || '-' }}</span>
+        </div>
+
+        <div class="col-md-6 info-item">
+          <label>Email</label>
+          <span>{{ userInfo.email || '-' }}</span>
+        </div>
+
+        <div class="col-md-6 info-item">
+          <label>Địa chỉ</label>
+          <span>{{ userInfo.diachi || '-' }}</span>
+        </div>
+
+        <div class="col-md-6 info-item">
+          <label>CCCD</label>
+          <span>{{ userInfo.cccd || '-' }}</span>
+        </div>
+
+        <div class="col-md-6 info-item">
+          <label>Chức danh</label>
+          <span>{{ userInfo.chuc_danh || userInfo.chucdanh || '-' }}</span>
+        </div>
+
+        <div class="col-md-6 info-item">
+          <label>Mã bác sĩ</label>
+          <span>{{ userInfo.ma_bac_si || '-' }}</span>
+        </div>
+
+      </div>
+
     </div>
-    <ng-template #noData>
-        <p class="text-danger">{{'KHONG_CO_DL'|translate}}</p>
-    </ng-template>
+  </div>
+
+  <ng-template #noData>
+    <p class="no-data">{{ 'KHONG_CO_DL' | translate }}</p>
+  </ng-template>
 </div>

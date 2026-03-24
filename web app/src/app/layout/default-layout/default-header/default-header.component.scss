@@ -46,3 +46,49 @@
         }
     }
 }
+.header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  .app-title {
+    font-size: 18px;
+    font-weight: 600;
+  }
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+
+  .hospital-name {
+    font-size: 16px;
+    font-weight: 500;
+    color: #6c757d;
+    white-space: nowrap;
+
+    transition: color 0.2s;
+
+    &:hover {
+      color: #0d6efd;
+    }
+  }
+
+  .hospital-icon {
+    width: 26px;
+    height: 26px;
+  }
+}
+.hospital-name {
+  font-weight: 600;
+  color: #0d6efd;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}

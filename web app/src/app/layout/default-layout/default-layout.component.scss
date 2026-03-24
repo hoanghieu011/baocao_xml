@@ -25,10 +25,6 @@
   flex-shrink: 0;
 }
 
-// :host ::ng-deep .sidebar {
-//   width: 280px;
-// }
-
 :host ::ng-deep .sidebar .nav-link span,
 :host ::ng-deep .sidebar .nav-group-toggle span {
   display: inline-block;
@@ -36,17 +32,21 @@
   word-break: break-word;
 }
 
-// ng-scrollbar css variables
-//.cui-scrollbar {
-//  --scrollbar-border-radius: 7px;
-//  --scrollbar-padding: 1px;
-//  --scrollbar-viewport-margin: 0;
-//  --scrollbar-track-color: transparent;
-//  --scrollbar-wrapper-color: transparent;
-//  --scrollbar-thumb-color: rgba(0, 0, 0, 0.2);
-//  --scrollbar-thumb-hover-color: var(--scrollbar-thumb-color);
-//  --scrollbar-size: 5px;
-//  --scrollbar-hover-size: var(--scrollbar-size);
-//  --scrollbar-thumb-transition: height ease-out 150ms, width ease-out 150ms;
-//  --scrollbar-track-transition: height ease-out 150ms, width ease-out 150ms;
-//}
+// chỉnh kích thước slidebar
+.sidebar {
+  --cui-sidebar-width: 330px;
+}
+
+.wrapper {
+  padding-left: 330px;
+}
+
+.sidebar:not(.show) ~ .wrapper {
+  padding-left: 0;
+}
+
+@media (max-width: 991px) {
+  .wrapper {
+    padding-left: 0;
+  }
+}
