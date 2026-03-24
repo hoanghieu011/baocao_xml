@@ -44,10 +44,7 @@ namespace API.Controllers
 
                 if (string.IsNullOrEmpty(userName))
                     return Unauthorized();
-                // Lấy tên database động thông qua service dùng chung
-                var dbData = await _dbResolver.GetDatabaseByUserAsync(userName);
-                if (string.IsNullOrEmpty(dbData))
-                    return BadRequest("Không xác định được database dữ liệu cho user.");
+
                 var pageNumber = Math.Max(1, req.PageNumber);
                 var pageSize = Math.Clamp(req.PageSize, 1, 1000);
                 var offset = (pageNumber - 1) * pageSize;
@@ -108,7 +105,7 @@ namespace API.Controllers
                     PageIndex = pageNumber,
                     PageSize = pageSize,
                     DsDichVu = dsDichVu,
-                    //id = req.IdLoaiDV
+                    id = req.IdLoaiDV
                 });
             }
             catch (Exception ex)
@@ -138,10 +135,7 @@ namespace API.Controllers
 
                 var csytid = User.FindFirst(ClaimTypes.Name)?.Value
                 ?? User.FindFirst("CSYTID")?.Value;
-                // Lấy tên database động thông qua service dùng chung
-                var dbData = await _dbResolver.GetDatabaseByUserAsync(userName);
-                if (string.IsNullOrEmpty(dbData))
-                    return BadRequest("Không xác định được database dữ liệu cho user.");
+
                 if (string.IsNullOrEmpty(userName))
                     return Unauthorized();
 
@@ -173,9 +167,9 @@ namespace API.Controllers
 
                 var DiemTruc = "";
                 if (req.OfficerType == '4') {
-                    DiemTruc = req.SoBuoiTruc * 12 + "";
+                    DiemTruc = req.SoBuoiTruc * 12;
                 } else {
-                    DiemTruc = req.SoBuoiTruc * 8 + "";
+                    DiemTruc = req.SoBuoiTruc * 8;
                 }
                 var p4 = cmd.CreateParameter();
                 p4.ParameterName = "@DIEM_TRUC";
