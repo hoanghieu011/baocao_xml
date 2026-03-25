@@ -52,26 +52,25 @@
             <table [cBorder]="1" borderColor="primary" bordered cTable class="table table-hover table-striped table-fixed">
             <colgroup>
                 <col style="width:40px" />
-                <col style="width:150px"/>
                 <col />
                 <col style="width:100px" />
                 <col style="width:200px" />
                 <col style="width:200px" />
                 <col style="width:100px" />
+                <col style="width:100px" />
                 <col style="width:150px" />
-                <!-- <col style="width:90px" /> -->
+                <col style="width:90px" />
             </colgroup>
 
             <thead class="table-primary text-center align-middle">
                 <tr>
                     <th>STT</th>
-                    <th>Khoa</th>
                     <th>Nội dung</th>
                     <th>Số lượt</th>
                     <th>Giá theo quy định</th>
-                    <!-- <th>Thành tiền</th> -->
+                    <th>Thành tiền</th>
                     <th>Chi phí vật tư, hóa chất</th>
-                    <!-- <th>Số tiền còn lại</th> -->
+                    <th>Số tiền còn lại</th>
                     <th>Hệ số</th>
                     <th>Điểm thực hiện</th>
                 </tr>
@@ -79,6 +78,10 @@
 
             <tbody>
                 <ng-container *ngFor="let row of displayRows">
+                <tr *ngIf="row.type === 'organization'" class="table-header-org table-secondary fw-bold">
+                    <td class="text-center">{{ row.stt }}</td>
+                    <td [attr.colspan]="8">{{ row.ten_khoa }}</td>
+                </tr>
                 <tr *ngIf="row.type === 'group'" class="table-secondary fw-bold">
                     <td class="text-center">{{ row.stt }}</td>
                     <td [attr.colspan]="8">{{ row.tennhom }}</td>
@@ -86,26 +89,35 @@
 
                 <tr *ngIf="row.type === 'item'">
                     <td class="text-center">{{ row.stt }}</td>
-                    <td>{{ row.ten_khoa }} </td>
                     <td>{{ row.ten_dich_vu }}</td>
                     <td class="text-end">{{ row.soluong | number:'1.0-2' }}</td>
                     <td class="text-end">{{ row.don_gia_bh | number:'1.0-2' }}</td>
-                    <!-- <td class="text-end">{{ row.thanh_tien | number:'1.0-2' }}</td> -->
+                    <td class="text-end">{{ row.thanh_tien | number:'1.0-2' }}</td>
                     <td class="text-end">{{ row.chiphi_vattu | number:'1.0-2' }}</td>
-                    <!-- <td class="text-end">{{ row.sotien_conlai | number:'1.0-2' }}</td> -->
+                    <td class="text-end">{{ row.sotien_conlai | number:'1.0-2' }}</td>
                     <td class="text-end">{{ row.heso | number:'1.0-2' }}</td>
                     <td class="text-end">{{ row.diem_thuchien | number:'1.0-2' }}</td>
                 </tr>
 
-                <tr *ngIf="row.type === 'total'" class="fw-bold table-light">
+                <tr *ngIf="row.type === 'totalGroup'" class="fw-bold table-light">
                     <td></td>
-                    <td>Tổng</td>
+                    <td>Tổng theo nhóm</td>
                     <td></td>
                     <td></td>
-                    <td></td>
-                    <!-- <td class="text-end">{{ row.thanh_tien | number:'1.0-2' }}</td> -->
+                    <td class="text-end">{{ row.thanh_tien | number:'1.0-2' }}</td>
                     <td class="text-end">{{ row.chiphi_vattu | number:'1.0-2' }}</td>
-                    <!-- <td class="text-end">{{ row.sotien_conlai | number:'1.0-2' }}</td> -->
+                    <td class="text-end">{{ row.sotien_conlai | number:'1.0-2' }}</td>
+                    <td></td>
+                    <td class="text-end">{{ row.diem_thuchien | number:'1.0-2' }}</td>
+                </tr>
+                <tr *ngIf="row.type === 'totalKhoa'" class="fw-bold table-light">
+                    <td></td>
+                    <td>Tổng theo khoa</td>
+                    <td></td>
+                    <td></td>
+                    <td class="text-end">{{ row.thanh_tien | number:'1.0-2' }}</td>
+                    <td class="text-end">{{ row.chiphi_vattu | number:'1.0-2' }}</td>
+                    <td class="text-end">{{ row.sotien_conlai | number:'1.0-2' }}</td>
                     <td></td>
                     <td class="text-end">{{ row.diem_thuchien | number:'1.0-2' }}</td>
                 </tr>
@@ -115,10 +127,9 @@
                     <td>Tổng cộng</td>
                     <td></td>
                     <td></td>
-                    <td></td>
-                    <!-- <td class="text-end">{{ row.thanh_tien | number:'1.0-2' }}</td> -->
+                    <td class="text-end">{{ row.thanh_tien | number:'1.0-2' }}</td>
                     <td class="text-end">{{ row.chiphi_vattu | number:'1.0-2' }}</td>
-                    <!-- <td class="text-end">{{ row.sotien_conlai | number:'1.0-2' }}</td> -->
+                    <td class="text-end">{{ row.sotien_conlai | number:'1.0-2' }}</td>
                     <td></td>
                     <td class="text-end">{{ row.diem_thuchien | number:'1.0-2' }}</td>
                 </tr>

@@ -178,13 +178,11 @@ export class BcDoanhthuBsthComponent implements OnInit {
     ).subscribe({
       next: (blob) => {
         const fileName = `bao_cao_doanhthu_bsth_${this.tuNgay}_${this.denNgay}.xlsx`;
-
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
         a.download = fileName;
         a.click();
-
         window.URL.revokeObjectURL(url);
 
         this.loadingExcel = false;
@@ -209,7 +207,6 @@ export class BcDoanhthuBsthComponent implements OnInit {
     });
 
     const groups = new Map<string, any[]>();
-
     for (const item of sorted) {
       const key = item.tennhom ?? '';
       if (!groups.has(key)) groups.set(key, []);

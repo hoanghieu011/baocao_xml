@@ -7,8 +7,9 @@ import { Select2Module, Select2Data, Select2UpdateEvent, Select2SearchEvent } fr
 import { BaoCaoService } from '../services/bao-cao.service';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 import { OrganizationService } from '../services/org-organization.service';
+import { forEach } from 'lodash-es';
 
-type ReportRowType = 'group' | 'item' | 'total' | 'grandTotal';
+type ReportRowType = 'organization' | 'group' | 'item' | 'totalKhoa' | 'grandTotal' | 'totalGroup';
 
 interface ReportRow {
   type: ReportRowType;
@@ -21,6 +22,7 @@ interface ReportRow {
   chiphi_vattu?: number;
   sotien_conlai?: number;
   ten_khoa?: string;
+  ma_khoa?: string;
   heso?: number;
   diem_thuchien?: number;
 }
@@ -123,10 +125,10 @@ export class BcDoanhthuKhoaComponent implements OnInit {
       return;
     }
 
-    if (this.cur_org == '') {
-      this.addToast('Vui lòng chọn khoa!');
-      return;
-    }
+    // if (this.cur_org == '') {
+    //   this.addToast('Vui lòng chọn khoa!');
+    //   return;
+    // }
 
     this.loading = true;
 
@@ -162,10 +164,10 @@ export class BcDoanhthuKhoaComponent implements OnInit {
       return;
     }
 
-    if (this.cur_org == '') {
-      this.addToast('Vui lòng chọn khoa!');
-      return;
-    }
+    // if (this.cur_org == '') {
+    //   this.addToast('Vui lòng chọn khoa!');
+    //   return;
+    // }
 
     this.loadingExcel = true;
 
@@ -203,17 +205,17 @@ export class BcDoanhthuKhoaComponent implements OnInit {
   }
 
   buildDisplayRows() {
-    const sorted = [...(this.data ?? [])].sort((a, b) => {
-      const n1 = (a.nhom_mabhyt_id ?? 0) - (b.nhom_mabhyt_id ?? 0);
-      if (n1 !== 0) return n1;
-      return String(a.ma_dich_vu ?? '').localeCompare(String(b.ma_dich_vu ?? ''));
-    });
-    const groups = new Map<string, any[]>();
+    // const sorted = [...(this.data ?? [])].sort((a, b) => {
+    //   const n1 = (a.nhom_mabhyt_id ?? 0) - (b.nhom_mabhyt_id ?? 0);
+    //   if (n1 !== 0) return n1;
+    //   return String(a.ma_dich_vu ?? '').localeCompare(String(b.ma_dich_vu ?? ''));
+    // });
+    const orgs = new Map<string, any[]>();
 
-    for (const item of sorted) {
-      const key = item.tennhom ?? '';
-      if (!groups.has(key)) groups.set(key, []);
-      groups.get(key)!.push(item);
+    for (const item of this.data ?? []) {
+      const key = item.ma_khoa ?? '';
+      if (!orgs.has(key)) orgs.set(key, []);
+      orgs.get(key)!.push(item);
     }
 
     this.displayRows = [];
@@ -224,62 +226,97 @@ export class BcDoanhthuKhoaComponent implements OnInit {
     let grandConLai = 0;
     let grandDiem = 0;
 
-    groups.forEach((items, groupName) => {
+    orgs.forEach((items, groupCode) => {
+      // mỗi khoa là 1 nhóm
       groupIndex++;
 
       this.displayRows.push({
-        type: 'group',
+        type: 'organization',
         stt: String(groupIndex),
-        tennhom: groupName
+        ten_khoa: items[0].khoa // lấy tên khoa từ item đầu tiên trong nhóm
       });
 
-      let itemIndex = 0;
-      let tongThanhTien = 0;
-      let tongChiPhiVattu = 0;
-      let tongConLai = 0;
-      let tongDiem = 0;
+      let itemKhoaIndex = 0;
+      let tongThanhTienKhoa = 0;
+      let tongChiPhiVattuKhoa = 0;
+      let tongConLaiKhoa = 0;
+      let tongDiemKhoa = 0;
 
-      for (const item of items) {
-        itemIndex++;
-
-        const thanhTien = Number(item.thanh_tien ?? 0);
-        const chiPhi = Number(item.chiphi_vattu ?? 0);
-        const conLai = Number(item.sotien_conlai ?? 0);
-        const diem = Number(item.diem_thuchien ?? 0);
-
-        tongThanhTien += thanhTien;
-        tongChiPhiVattu += chiPhi;
-        tongConLai += conLai;
-        tongDiem += diem;
-
-        grandThanhTien += thanhTien;
-        grandChiPhiVattu += chiPhi;
-        grandConLai += conLai;
-        grandDiem += diem;
-
-        this.displayRows.push({
-          type: 'item',
-          stt: `${groupIndex}.${itemIndex}`,
-          ten_dich_vu: item.ten_dich_vu,
-          soluong: item.soluong,
-          ten_khoa: item.khoa,
-          don_gia_bh: item.don_gia_bh,
-          thanh_tien: thanhTien,
-          chiphi_vattu: chiPhi,
-          sotien_conlai: conLai,
-          heso: item.heso,
-          diem_thuchien: diem
+      const groups = new Map<string, any[]>();
+      items.forEach( (item)=> {
+        const key = item.tennhom ?? '';
+        if (!groups.has(key)) groups.set(key, []);
+          groups.get(key)!.push(item);
         });
-      }
 
-      this.displayRows.push({
-        type: 'total',
-        ten_dich_vu: 'Tổng',
-        thanh_tien: tongThanhTien,
-        chiphi_vattu: tongChiPhiVattu,
-        sotien_conlai: tongConLai,
-        diem_thuchien: tongDiem
+      groups.forEach((groupItems) => {
+        itemKhoaIndex++;
+        // mỗi nhóm là 1 nhóm con trong khoa
+        this.displayRows.push({
+          type: 'group',
+          stt: `${groupIndex}.${itemKhoaIndex}`,
+          tennhom: groupItems[0].tennhom
+        });
+
+        let itemServiceIndex = 0;
+        let tongThanhTienGroup = 0;
+        let tongChiPhiVattuGroup = 0;
+        let tongConLaiGroup = 0;
+        let tongDiemGroup = 0;
+
+        for (const groupItem of groupItems) {
+
+          itemServiceIndex++;
+
+          const thanhTien = Number(groupItem.thanh_tien ?? 0);
+          const chiPhi = Number(groupItem.chiphi_vattu ?? 0);
+          const conLai = Number(groupItem.sotien_conlai ?? 0);
+          const diem = Number(groupItem.diem_thuchien ?? 0);
+
+          tongThanhTienGroup += thanhTien;
+          tongChiPhiVattuGroup += chiPhi;
+          tongConLaiGroup += conLai;
+          tongDiemGroup += diem;
+
+          this.displayRows.push({
+            type: 'item',
+            stt: `${groupIndex}.${itemKhoaIndex}.${itemServiceIndex}`,
+            ten_dich_vu: groupItem.ten_dich_vu,
+            soluong: groupItem.soluong,
+            ten_khoa: groupItem.khoa,
+            don_gia_bh: groupItem.don_gia_bh,
+            thanh_tien: thanhTien,
+            chiphi_vattu: chiPhi,
+            sotien_conlai: conLai,
+            heso: groupItem.heso,
+            diem_thuchien: diem
+          });
+        }
+        this.displayRows.push({
+          type: 'totalGroup',
+          ten_dich_vu: 'Tổng theo nhóm',
+          thanh_tien: tongThanhTienGroup,
+          chiphi_vattu: tongChiPhiVattuGroup,
+          sotien_conlai: tongConLaiGroup,
+          diem_thuchien: tongDiemGroup
+        });
+        tongThanhTienKhoa += tongThanhTienGroup;
+        tongChiPhiVattuKhoa += tongChiPhiVattuGroup;
+        tongConLaiKhoa += tongConLaiGroup;
+        tongDiemKhoa += tongDiemGroup;
       });
+      this.displayRows.push({
+        type: 'totalKhoa',
+        ten_dich_vu: 'Tổng theo khoa',
+        thanh_tien: tongThanhTienKhoa,
+        chiphi_vattu: tongChiPhiVattuKhoa,
+        sotien_conlai: tongConLaiKhoa,
+        diem_thuchien: tongDiemKhoa
+      });
+      grandThanhTien += tongThanhTienKhoa;
+      grandChiPhiVattu += tongChiPhiVattuKhoa;
+      grandConLai += tongConLaiKhoa;
+      grandDiem += tongDiemKhoa;
     });
     this.displayRows.push({
       type: 'grandTotal',

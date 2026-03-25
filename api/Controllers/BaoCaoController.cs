@@ -864,28 +864,25 @@ namespace API.Controllers
                     ?? User.FindFirst("CSYTID")?.Value;
 
                 var sql = $@"
-                            SELECT NHOM_MABHYT_ID,MA_KHOA,KHOA,TEN_BACSI, MA_DICH_VU, TEN_DICH_VU, TENNHOM, DON_GIA_BH, HESO, CHIPHI, SOLUONG , CHIPHI * SOLUONG AS CHIPHI_VATTU, HESO * SOLUONG AS DIEM_THUCHIEN
-                            FROM (
-	                            SELECT NHOM_MABHYT_ID,MA_KHOA,KHOA,MA_DICH_VU, TEN_DICH_VU, TENNHOM, DON_GIA_BH, HESO, CHIPHI, TEN_BACSI, SUM(SO_LUONG) SOLUONG FROM (
-		                            SELECT 
-			                            nhom.NHOM_MABHYT_ID,b.MA_KHOA,khoa.ORG_NAME KHOA,dv.MA_DICHVU MA_DICH_VU,dv.TEN_DICHVU TEN_DICH_VU,nhom.TENNHOM,b.SO_LUONG,b.DON_GIA_BH ,dv.HESO, dv.CHIPHI, org.OFFICER_NAME TEN_BACSI
-		                            FROM  
-			                            his_data_binhluc.XML1 a, 
-			                            his_data_binhluc.xml3 b LEFT JOIN his_common.dmc_dichvu dv on IFNULL(b.MA_DICH_VU,b.MA_VAT_TU) = dv.MA_DICHVU,
-			                            his_common.dmc_nhom_mabhyt nhom,
-			                            his_common.org_officer org,
-                                        his_common.org_organization khoa
-		                            WHERE a.ma_lk = b.ma_lk
-		                            AND b.ma_nhom = nhom.MANHOM_BHYT
-		                            AND b.MA_BAC_SI = org.MA_BAC_SI
-                                    AND b.MA_KHOA = khoa.MA_KHOA
-		                            AND a.NGAY_RA >= @tungay
-                                    AND a.NGAY_RA <= @denngay
-                                    AND b.MA_KHOA = @maKhoa
-	                            ) th
-	                            group by NHOM_MABHYT_ID,MA_KHOA,KHOA,MA_DICH_VU, TEN_DICH_VU, TENNHOM, DON_GIA_BH, HESO, CHIPHI, TEN_BACSI
-                            ) th2
-                            ORDER BY MA_KHOA,TEN_BACSI,NHOM_MABHYT_ID, MA_DICH_VU;";
+                            SELECT NHOM_MABHYT_ID,MA_KHOA,KHOA, TENNHOM,MA_DICH_VU, TEN_DICH_VU, SOLUONG, DON_GIA_BH, HESO, CHIPHI, SOLUONG * DON_GIA_BH AS THANH_TIEN, CHIPHI * SOLUONG AS CHIPHI_VATTU, SOLUONG * (DON_GIA_BH - CHIPHI) AS SOTIEN_CONLAI , HESO * SOLUONG AS DIEM_THUCHIEN
+                    FROM (
+	                    SELECT NHOM_MABHYT_ID,MA_KHOA,KHOA,MA_DICH_VU, TEN_DICH_VU, TENNHOM, DON_GIA_BH, HESO, CHIPHI, SUM(SO_LUONG) SOLUONG FROM (
+		                    SELECT 
+			                    nhom.NHOM_MABHYT_ID,b.MA_KHOA,khoa.ORG_NAME KHOA,dv.MA_DICHVU MA_DICH_VU,dv.TEN_DICHVU TEN_DICH_VU,nhom.TENNHOM,b.SO_LUONG,b.DON_GIA_BH ,dv.HESO, dv.CHIPHI
+		                    FROM  
+			                    his_data_binhluc.XML1 a, 
+			                    his_data_binhluc.xml3 b LEFT JOIN his_common.dmc_dichvu dv on IFNULL(b.MA_DICH_VU,b.MA_VAT_TU) = dv.MA_DICHVU,
+			                    his_common.dmc_nhom_mabhyt nhom,
+                                his_common.org_organization khoa
+		                    WHERE a.ma_lk = b.ma_lk
+		                    AND b.ma_nhom = nhom.MANHOM_BHYT
+                            AND b.MA_KHOA = khoa.MA_KHOA
+		                    AND a.NGAY_RA BETWEEN @tungay AND @denngay
+                            AND (b.MA_KHOA = @maKhoa OR @maKhoa=@default)
+	                    ) th
+	                    group by NHOM_MABHYT_ID,MA_KHOA,KHOA,MA_DICH_VU, TEN_DICH_VU, TENNHOM, DON_GIA_BH, HESO, CHIPHI
+                    ) th2
+                    ORDER BY MA_KHOA,NHOM_MABHYT_ID, TEN_DICH_VU;";
 
                 var conn = _context.Database.GetDbConnection();
                 using var tempCmd = conn.CreateCommand();
@@ -904,8 +901,14 @@ namespace API.Controllers
 
                 var p3 = tempCmd.CreateParameter();
                 p3.ParameterName = "@maKhoa";
-                p3.Value = req.MaKhoa.ToString();
+                var mk = (req.MaKhoa==null|| req.MaKhoa.Equals("")) ? "-1" : req.MaKhoa.ToString();
+                p3.Value = mk;
                 paramList.Add(p3);
+
+                var p4 = tempCmd.CreateParameter();
+                p4.ParameterName = "@default";
+                p4.Value = "-1";
+                paramList.Add(p4);
 
                 var doanhthu_bscd = await _context.dto_bc_doanhthu_khoa
                     .FromSqlRaw(sql, paramList.ToArray())
@@ -956,28 +959,25 @@ namespace API.Controllers
                     .FirstOrDefaultAsync();
 
                 var sql = @"
-                    SELECT NHOM_MABHYT_ID,MA_KHOA,KHOA,TEN_BACSI, MA_DICH_VU, TEN_DICH_VU, TENNHOM, DON_GIA_BH, HESO, CHIPHI, SOLUONG , CHIPHI * SOLUONG AS CHIPHI_VATTU, HESO * SOLUONG AS DIEM_THUCHIEN
-                            FROM (
-	                            SELECT NHOM_MABHYT_ID,MA_KHOA,KHOA,MA_DICH_VU, TEN_DICH_VU, TENNHOM, DON_GIA_BH, HESO, CHIPHI, TEN_BACSI, SUM(SO_LUONG) SOLUONG FROM (
-		                            SELECT 
-			                            nhom.NHOM_MABHYT_ID,b.MA_KHOA,khoa.ORG_NAME KHOA,dv.MA_DICHVU MA_DICH_VU,dv.TEN_DICHVU TEN_DICH_VU,nhom.TENNHOM,b.SO_LUONG,b.DON_GIA_BH ,dv.HESO, dv.CHIPHI, org.OFFICER_NAME TEN_BACSI
-		                            FROM  
-			                            his_data_binhluc.XML1 a, 
-			                            his_data_binhluc.xml3 b LEFT JOIN his_common.dmc_dichvu dv on IFNULL(b.MA_DICH_VU,b.MA_VAT_TU) = dv.MA_DICHVU,
-			                            his_common.dmc_nhom_mabhyt nhom,
-			                            his_common.org_officer org,
-                                        his_common.org_organization khoa
-		                            WHERE a.ma_lk = b.ma_lk
-		                            AND b.ma_nhom = nhom.MANHOM_BHYT
-		                            AND b.MA_BAC_SI = org.MA_BAC_SI
-                                    AND b.MA_KHOA = khoa.MA_KHOA
-		                            AND a.NGAY_RA >= @tungay
-                                    AND a.NGAY_RA <= @denngay
-                                    AND b.MA_KHOA = @maKhoa
-	                            ) th
-	                            group by NHOM_MABHYT_ID,MA_KHOA,KHOA,MA_DICH_VU, TEN_DICH_VU, TENNHOM, DON_GIA_BH, HESO, CHIPHI, TEN_BACSI
-                            ) th2
-                            ORDER BY MA_KHOA,TEN_BACSI,NHOM_MABHYT_ID, MA_DICH_VU;";
+                    SELECT NHOM_MABHYT_ID,MA_KHOA,KHOA, TENNHOM,MA_DICH_VU, TEN_DICH_VU, SOLUONG, DON_GIA_BH, HESO, CHIPHI, SOLUONG * DON_GIA_BH AS THANH_TIEN, CHIPHI * SOLUONG AS CHIPHI_VATTU, SOLUONG * (DON_GIA_BH - CHIPHI) AS SOTIEN , HESO * SOLUONG AS DIEM_THUCHIEN
+                    FROM (
+	                    SELECT NHOM_MABHYT_ID,MA_KHOA,KHOA,MA_DICH_VU, TEN_DICH_VU, TENNHOM, DON_GIA_BH, HESO, CHIPHI, SUM(SO_LUONG) SOLUONG FROM (
+		                    SELECT 
+			                    nhom.NHOM_MABHYT_ID,b.MA_KHOA,khoa.ORG_NAME KHOA,dv.MA_DICHVU MA_DICH_VU,dv.TEN_DICHVU TEN_DICH_VU,nhom.TENNHOM,b.SO_LUONG,b.DON_GIA_BH ,dv.HESO, dv.CHIPHI
+		                    FROM  
+			                    his_data_binhluc.XML1 a, 
+			                    his_data_binhluc.xml3 b LEFT JOIN his_common.dmc_dichvu dv on IFNULL(b.MA_DICH_VU,b.MA_VAT_TU) = dv.MA_DICHVU,
+			                    his_common.dmc_nhom_mabhyt nhom,
+                                his_common.org_organization khoa
+		                    WHERE a.ma_lk = b.ma_lk
+		                    AND b.ma_nhom = nhom.MANHOM_BHYT
+                            AND b.MA_KHOA = khoa.MA_KHOA
+		                    AND a.NGAY_RA BETWEEN @tungay AND @denngay
+                            AND (b.MA_KHOA = @maKhoa OR @maKhoa='-1')
+	                    ) th
+	                    group by NHOM_MABHYT_ID,MA_KHOA,KHOA,MA_DICH_VU, TEN_DICH_VU, TENNHOM, DON_GIA_BH, HESO, CHIPHI
+                    ) th2
+                    ORDER BY MA_KHOA,NHOM_MABHYT_ID, TEN_DICH_VU;";
 
                 var conn = _context.Database.GetDbConnection();
                 using var tempCmd = conn.CreateCommand();
@@ -1250,7 +1250,7 @@ namespace API.Controllers
         {
             public DateTime TuNgay { get; set; }
             public DateTime DenNgay { get; set; }
-            public string MaKhoa { get; set; }
+            public string? MaKhoa { get; set; }
         }
 
     }
