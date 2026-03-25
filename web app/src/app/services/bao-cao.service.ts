@@ -92,6 +92,47 @@ export class BaoCaoService {
     );
   }
 
+  getBcDoanhThuKhoa(
+    maKhoa: string = '',
+    tuNgay?: Date,
+    denNgay?: Date
+  ): Observable<any> {
+
+    const body: any = {
+      tuNgay,
+      denNgay,
+      maKhoa
+    };
+
+    return this.http.post<any>(
+      `${this.apiUrl}/bc_doanhthu_khoa`,
+      body,
+      { headers: this.httpConfig.getHeaders() }
+    );
+  }
+
+  exportBcDoanhThuKhoaExcel(
+    maKhoa: string = '',
+    tuNgay?: Date,
+    denNgay?: Date
+  ): Observable<Blob> {
+
+    const body: any = {
+      tuNgay,
+      denNgay,
+      maKhoa
+    };
+
+    return this.http.post(
+      `${this.apiUrl}/bc_doanhthu_khoa_excel`,
+      body,
+      {
+        headers: this.httpConfig.getHeaders(),
+        responseType: 'blob'
+      }
+    );
+  }
+
   xuatBaoCaoNghiPhep(request: { tuNgay: string; denNgay: string }): Observable<Blob> {
     return this.http.post(`${this.apiUrl}/xuat-bao-cao-nghi-phep`, request, {
       headers: this.httpConfig.getHeaders(),

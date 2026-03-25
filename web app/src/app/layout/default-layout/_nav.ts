@@ -31,6 +31,12 @@ export const navItems: INavDataExtended[] = [
         roles: ['all'],
         url: '/baocao-tracuu/doanhthu_bsth',
         iconComponent: { name: 'cil-chart' }
+      },
+      {
+        name: 'Báo cáo doanh thu theo khoa',
+        roles: ['all'],
+        url: '/baocao-tracuu/doanhthu_khoa',
+        iconComponent: { name: 'cil-chart' }
       }
     ]
   },

@@ -175,6 +175,15 @@ export const routes: Routes = [
               roles: ['']
             }
           }, 
+          {
+            path: 'doanhthu_khoa',
+            canActivate: [AuthGuard],
+            loadChildren: () => import('../app/bc-doanhthu-khoa/bc-doanhthu-khoa.routes').then(m => m.DOANHTHU_KHOA),
+            data: {
+              title: 'Báo cáo doanh thu theo khoa',
+              roles: ['']
+            }
+          }, 
         ]
       },
       {
