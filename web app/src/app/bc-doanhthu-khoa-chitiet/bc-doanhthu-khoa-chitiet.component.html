@@ -82,6 +82,11 @@
                     <td class="text-center">{{ row.stt }}</td>
                     <td [attr.colspan]="8">{{ row.ten_khoa }}</td>
                 </tr>
+                <tr *ngIf="row.type === 'group'" class="table-secondary fw-bold">
+                    <td class="text-center">{{ row.stt }}</td>
+                    <td [attr.colspan]="8">{{ row.tennhom }}</td>
+                </tr>
+
                 <tr *ngIf="row.type === 'item'">
                     <td class="text-center">{{ row.stt }}</td>
                     <td>{{ row.ten_dich_vu }}</td>
@@ -91,6 +96,18 @@
                     <td class="text-end">{{ row.chiphi_vattu | number:'1.0-2' }}</td>
                     <td class="text-end">{{ row.sotien_conlai | number:'1.0-2' }}</td>
                     <td class="text-end">{{ row.heso | number:'1.0-2' }}</td>
+                    <td class="text-end">{{ row.diem_thuchien | number:'1.0-2' }}</td>
+                </tr>
+
+                <tr *ngIf="row.type === 'totalGroup'" class="fw-bold table-light">
+                    <td></td>
+                    <td>Tổng theo nhóm</td>
+                    <td></td>
+                    <td></td>
+                    <td class="text-end">{{ row.thanh_tien | number:'1.0-2' }}</td>
+                    <td class="text-end">{{ row.chiphi_vattu | number:'1.0-2' }}</td>
+                    <td class="text-end">{{ row.sotien_conlai | number:'1.0-2' }}</td>
+                    <td></td>
                     <td class="text-end">{{ row.diem_thuchien | number:'1.0-2' }}</td>
                 </tr>
                 <tr *ngIf="row.type === 'totalKhoa'" class="fw-bold table-light table-footer-org">

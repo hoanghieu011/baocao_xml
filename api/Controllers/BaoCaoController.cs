@@ -1009,6 +1009,7 @@ namespace API.Controllers
                     .AsNoTracking()
                     .ToListAsync();
 
+                var isShowGroupInOrg = req.isShowGroupInOrg;
                 using var wb = new XLWorkbook();
                 var ws = wb.Worksheets.Add("Khoa");
 
@@ -1116,28 +1117,32 @@ namespace API.Controllers
                     // trong 1 khoa, nhóm lại theo tên nhóm
                     var groups = org.GroupBy(g => g.tennhom).ToList();
                     var groupIndex = 0;
+                    var totalGrItemIndex = 0;
                     foreach (var group in groups)
                     {
                         groupIndex++;
-                        // group gồm nhiều dịch vụ
-                        // Dòng tên nhóm: cột STT + merge 9 cột còn lại
-                        ws.Cell(row, 1).Value = $"{orgIndex}.{groupIndex}";
-                        ws.Range(row, 2, row, 10).Merge();
-                        ws.Cell(row, 2).Value = group.Key ?? "";
-                        ws.Range(row, 1, row, 10).Style.Font.Bold = true;
-                        ws.Range(row, 1, row, 10).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
-                        ws.Range(row, 1, row, 10).Style.Alignment.WrapText = true;
+                        if (isShowGroupInOrg)
+                        {
+                            // group gồm nhiều dịch vụ
+                            // Dòng tên nhóm: cột STT + merge 9 cột còn lại
+                            ws.Cell(row, 1).Value = $"{orgIndex}.{groupIndex}";
+                            ws.Range(row, 2, row, 10).Merge();
+                            ws.Cell(row, 2).Value = group.Key ?? "";
+                            ws.Range(row, 1, row, 10).Style.Font.Bold = true;
+                            ws.Range(row, 1, row, 10).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+                            ws.Range(row, 1, row, 10).Style.Alignment.WrapText = true;
 
-                        ws.Cell(row, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-                        ws.Cell(row, 2).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+                            ws.Cell(row, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                            ws.Cell(row, 2).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
 
-                        ws.Range(row, 1, row, 10).Style.Fill.BackgroundColor = XLColor.FromArgb(242, 242, 242);
-                        ws.Range(row, 1, row, 10).Style.Border.TopBorder = XLBorderStyleValues.Thin;
-                        ws.Range(row, 1, row, 10).Style.Border.BottomBorder = XLBorderStyleValues.Thin;
-                        ws.Range(row, 1, row, 10).Style.Border.LeftBorder = XLBorderStyleValues.Thin;
-                        ws.Range(row, 1, row, 10).Style.Border.RightBorder = XLBorderStyleValues.Thin;
+                            ws.Range(row, 1, row, 10).Style.Fill.BackgroundColor = XLColor.FromArgb(242, 242, 242);
+                            ws.Range(row, 1, row, 10).Style.Border.TopBorder = XLBorderStyleValues.Thin;
+                            ws.Range(row, 1, row, 10).Style.Border.BottomBorder = XLBorderStyleValues.Thin;
+                            ws.Range(row, 1, row, 10).Style.Border.LeftBorder = XLBorderStyleValues.Thin;
+                            ws.Range(row, 1, row, 10).Style.Border.RightBorder = XLBorderStyleValues.Thin;
 
-                        row++;
+                            row++;
+                        }
                         decimal itemIndex = 0;
                         decimal tongThanhTienGroup = 0;
                         decimal tongChiPhiGroup = 0;
@@ -1147,7 +1152,8 @@ namespace API.Controllers
                         foreach(var item in group)
                         {
                             itemIndex++;
-                            ws.Cell(row, 1).Value = $"{orgIndex}.{groupIndex}.{itemIndex}";
+                            totalGrItemIndex++;
+                            ws.Cell(row, 1).Value = isShowGroupInOrg ? $"{orgIndex}.{groupIndex}.{itemIndex}" : $"{orgIndex}.{totalGrItemIndex}";
                             ws.Cell(row, 2).Value = item.ten_dich_vu ?? "";
                             ws.Cell(row, 3).Value = item.soluong ?? 0;
                             ws.Cell(row, 4).Value = item.don_gia_bh ?? 0;
@@ -1193,24 +1199,27 @@ namespace API.Controllers
 
                             row++;
                         }
-                        // ===== Dòng tổng theo nhóm =====
-                        ws.Cell(row, 2).Value = "Tổng theo nhóm";
-                        ws.Cell(row, 5).Value = tongThanhTienGroup;
-                        ws.Cell(row, 6).Value = tongChiPhiGroup;
-                        ws.Cell(row, 7).Value = tongSoTienConLaiGroup;
-                        ws.Cell(row, 9).Value = tongDiemGroup;
+                       if(isShowGroupInOrg)
+                        {
+                            // ===== Dòng tổng theo nhóm =====
+                            ws.Cell(row, 2).Value = "Tổng theo nhóm";
+                            ws.Cell(row, 5).Value = tongThanhTienGroup;
+                            ws.Cell(row, 6).Value = tongChiPhiGroup;
+                            ws.Cell(row, 7).Value = tongSoTienConLaiGroup;
+                            ws.Cell(row, 9).Value = tongDiemGroup;
 
-                        // format
-                        ws.Cell(row, 5).Style.NumberFormat.Format = "#,##0.##";
-                        ws.Cell(row, 6).Style.NumberFormat.Format = "#,##0.##";
-                        ws.Cell(row, 7).Style.NumberFormat.Format = "#,##0.##";
-                        ws.Cell(row, 9).Style.NumberFormat.Format = "#,##0.##";
+                            // format
+                            ws.Cell(row, 5).Style.NumberFormat.Format = "#,##0.##";
+                            ws.Cell(row, 6).Style.NumberFormat.Format = "#,##0.##";
+                            ws.Cell(row, 7).Style.NumberFormat.Format = "#,##0.##";
+                            ws.Cell(row, 9).Style.NumberFormat.Format = "#,##0.##";
 
-                        ws.Range(row, 1, row, 10).Style.Font.Bold = true;
-                        ws.Range(row, 1, row, 10).Style.Fill.BackgroundColor = XLColor.FromArgb(230, 230, 230);
-                        ws.Range(row, 1, row, 10).Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+                            ws.Range(row, 1, row, 10).Style.Font.Bold = true;
+                            ws.Range(row, 1, row, 10).Style.Fill.BackgroundColor = XLColor.FromArgb(230, 230, 230);
+                            ws.Range(row, 1, row, 10).Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
 
-                        row++;
+                            row++;
+                        }
 
                         tongThanhTienOrg += tongThanhTienGroup;
                         tongChiPhiVattuOrg += tongChiPhiGroup;
@@ -1335,6 +1344,7 @@ namespace API.Controllers
             public DateTime TuNgay { get; set; }
             public DateTime DenNgay { get; set; }
             public string? MaKhoa { get; set; }
+            public bool isShowGroupInOrg { get; set; }
         }
 
     }

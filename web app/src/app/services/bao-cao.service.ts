@@ -95,13 +95,16 @@ export class BaoCaoService {
   getBcDoanhThuKhoa(
     maKhoa: string = '',
     tuNgay?: Date,
-    denNgay?: Date
+    denNgay?: Date,
+    isShowGroupInOrg = true
+
   ): Observable<any> {
 
     const body: any = {
       tuNgay,
       denNgay,
-      maKhoa
+      maKhoa,
+      isShowGroupInOrg
     };
 
     return this.http.post<any>(
@@ -114,13 +117,15 @@ export class BaoCaoService {
   exportBcDoanhThuKhoaExcel(
     maKhoa: string = '',
     tuNgay?: Date,
-    denNgay?: Date
+    denNgay?: Date,
+    isShowGroupInOrg = true
   ): Observable<Blob> {
 
     const body: any = {
       tuNgay,
       denNgay,
-      maKhoa
+      maKhoa,
+      isShowGroupInOrg
     };
 
     return this.http.post(

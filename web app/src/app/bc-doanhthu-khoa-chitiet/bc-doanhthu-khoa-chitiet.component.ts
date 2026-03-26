@@ -31,12 +31,12 @@ interface ReportRow {
   selector: 'app-ds-benhnhan',
   standalone: true,
   imports: [CommonModule, FormsModule, TableDirective, BorderDirective, ToastModule, Select2Module],
-  templateUrl: './bc-doanhthu-khoa.component.html',
-  styleUrl: './bc-doanhthu-khoa.component.css'
+  templateUrl: './bc-doanhthu-khoa-chitiet.component.html',
+  styleUrl: './bc-doanhthu-khoa-chitiet.component.css'
 })
 
 
-export class BcDoanhthuKhoaComponent implements OnInit {
+export class BcDoanhthuKhoaChitietComponent implements OnInit {
   displayRows: ReportRow[] = [];
 
   Math = Math;
@@ -138,8 +138,7 @@ export class BcDoanhthuKhoaComponent implements OnInit {
     this.baoCaoService.getBcDoanhThuKhoa(
       this.cur_org,
       tu,
-      den,
-      false
+      den
     ).subscribe({
       next: (res) => {
         this.data = res?.data ?? [];
@@ -178,11 +177,10 @@ export class BcDoanhthuKhoaComponent implements OnInit {
     this.baoCaoService.exportBcDoanhThuKhoaExcel(
       this.cur_org,
       tu,
-      den,
-      false
+      den
     ).subscribe({
       next: (blob) => {
-        const fileName = `bao_cao_doanhthu_khoa_${this.tuNgay}_${this.denNgay}.xlsx`;
+        const fileName = `bao_cao_doanhthu_khoa_chitiet_${this.tuNgay}_${this.denNgay}.xlsx`;
 
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -243,7 +241,7 @@ export class BcDoanhthuKhoaComponent implements OnInit {
       let tongChiPhiVattuKhoa = 0;
       let tongConLaiKhoa = 0;
       let tongDiemKhoa = 0;
-      let totalItemInGroupIndex = 0;
+
       const groups = new Map<string, any[]>();
       items.forEach( (item)=> {
         const key = item.tennhom ?? '';
@@ -254,11 +252,11 @@ export class BcDoanhthuKhoaComponent implements OnInit {
       groups.forEach((groupItems) => {
         itemKhoaIndex++;
         // mỗi nhóm là 1 nhóm con trong khoa
-        // this.displayRows.push({
-        //   type: 'group',
-        //   stt: `${groupIndex}.${itemKhoaIndex}`,
-        //   tennhom: groupItems[0].tennhom
-        // });
+        this.displayRows.push({
+          type: 'group',
+          stt: `${groupIndex}.${itemKhoaIndex}`,
+          tennhom: groupItems[0].tennhom
+        });
 
         let itemServiceIndex = 0;
         let tongThanhTienGroup = 0;
@@ -269,7 +267,7 @@ export class BcDoanhthuKhoaComponent implements OnInit {
         for (const groupItem of groupItems) {
 
           itemServiceIndex++;
-          totalItemInGroupIndex++;
+
           const thanhTien = Number(groupItem.thanh_tien ?? 0);
           const chiPhi = Number(groupItem.chiphi_vattu ?? 0);
           const conLai = Number(groupItem.sotien_conlai ?? 0);
@@ -282,7 +280,7 @@ export class BcDoanhthuKhoaComponent implements OnInit {
 
           this.displayRows.push({
             type: 'item',
-            stt: `${groupIndex}.${totalItemInGroupIndex}`,
+            stt: `${groupIndex}.${itemKhoaIndex}.${itemServiceIndex}`,
             ten_dich_vu: groupItem.ten_dich_vu,
             soluong: groupItem.soluong,
             ten_khoa: groupItem.khoa,
@@ -294,14 +292,14 @@ export class BcDoanhthuKhoaComponent implements OnInit {
             diem_thuchien: diem
           });
         }
-        // this.displayRows.push({
-        //   type: 'totalGroup',
-        //   ten_dich_vu: 'Tổng theo nhóm',
-        //   thanh_tien: tongThanhTienGroup,
-        //   chiphi_vattu: tongChiPhiVattuGroup,
-        //   sotien_conlai: tongConLaiGroup,
-        //   diem_thuchien: tongDiemGroup
-        // });
+        this.displayRows.push({
+          type: 'totalGroup',
+          ten_dich_vu: 'Tổng theo nhóm',
+          thanh_tien: tongThanhTienGroup,
+          chiphi_vattu: tongChiPhiVattuGroup,
+          sotien_conlai: tongConLaiGroup,
+          diem_thuchien: tongDiemGroup
+        });
         tongThanhTienKhoa += tongThanhTienGroup;
         tongChiPhiVattuKhoa += tongChiPhiVattuGroup;
         tongConLaiKhoa += tongConLaiGroup;
