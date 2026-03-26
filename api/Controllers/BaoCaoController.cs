@@ -959,7 +959,7 @@ namespace API.Controllers
                     .FirstOrDefaultAsync();
 
                 var sql = @"
-                    SELECT NHOM_MABHYT_ID,MA_KHOA,KHOA, TENNHOM,MA_DICH_VU, TEN_DICH_VU, SOLUONG, DON_GIA_BH, HESO, CHIPHI, SOLUONG * DON_GIA_BH AS THANH_TIEN, CHIPHI * SOLUONG AS CHIPHI_VATTU, SOLUONG * (DON_GIA_BH - CHIPHI) AS SOTIEN , HESO * SOLUONG AS DIEM_THUCHIEN
+                    SELECT NHOM_MABHYT_ID,MA_KHOA,KHOA, TENNHOM,MA_DICH_VU, TEN_DICH_VU, SOLUONG, DON_GIA_BH, HESO, CHIPHI, SOLUONG * DON_GIA_BH AS THANH_TIEN, CHIPHI * SOLUONG AS CHIPHI_VATTU, SOLUONG * (DON_GIA_BH - CHIPHI) AS SOTIEN_CONLAI , HESO * SOLUONG AS DIEM_THUCHIEN
                     FROM (
 	                    SELECT NHOM_MABHYT_ID,MA_KHOA,KHOA,MA_DICH_VU, TEN_DICH_VU, TENNHOM, DON_GIA_BH, HESO, CHIPHI, SUM(SO_LUONG) SOLUONG FROM (
 		                    SELECT 
@@ -973,7 +973,7 @@ namespace API.Controllers
 		                    AND b.ma_nhom = nhom.MANHOM_BHYT
                             AND b.MA_KHOA = khoa.MA_KHOA
 		                    AND a.NGAY_RA BETWEEN @tungay AND @denngay
-                            AND (b.MA_KHOA = @maKhoa OR @maKhoa='-1')
+                            AND (b.MA_KHOA = @maKhoa OR @maKhoa=@default)
 	                    ) th
 	                    group by NHOM_MABHYT_ID,MA_KHOA,KHOA,MA_DICH_VU, TEN_DICH_VU, TENNHOM, DON_GIA_BH, HESO, CHIPHI
                     ) th2
@@ -995,8 +995,14 @@ namespace API.Controllers
 
                 var p3 = tempCmd.CreateParameter();
                 p3.ParameterName = "@maKhoa";
-                p3.Value = req.MaKhoa.ToString();
+                var mk = (req.MaKhoa == null || req.MaKhoa.Equals("")) ? "-1" : req.MaKhoa.ToString();
+                p3.Value = mk;
                 paramList.Add(p3);
+
+                var p4 = tempCmd.CreateParameter();
+                p4.ParameterName = "@default";
+                p4.Value = "-1";
+                paramList.Add(p4);
 
                 var data = await _context.dto_bc_doanhthu_khoa
                     .FromSqlRaw(sql, paramList.ToArray())
@@ -1007,25 +1013,26 @@ namespace API.Controllers
                 var ws = wb.Worksheets.Add("Khoa");
 
                 // ====== 4 dòng đầu ======
-                ws.Range("A1:I1").Merge();
+                ws.Range("A1:J1").Merge();
                 ws.Cell("A1").Value = benhVien?.tenbenhvien;
                 ws.Cell("A1").Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
                 ws.Cell("A1").Style.Font.Bold = true;
 
-                ws.Range("A2:I2").Merge();
+                ws.Range("A2:J2").Merge();
                 ws.Cell("A2").Value = "Phòng Tài chính - Kế toán";
                 ws.Cell("A2").Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
                 ws.Cell("A2").Style.Font.Bold = true;
 
-                ws.Range("A3:I3").Merge();
+                ws.Range("A3:J3").Merge();
                 ws.Cell("A3").Value = BuildTitle(req.TuNgay, req.DenNgay);
                 ws.Cell("A3").Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
                 ws.Cell("A3").Style.Font.Bold = true;
                 ws.Cell("A3").Style.Font.FontSize = 14;
                 ws.Cell("A3").Style.Font.FontColor = XLColor.Blue;
 
-                ws.Range("A4:I4").Merge();
-                ws.Cell("A4").Value = $"Khoa: {(data.FirstOrDefault()?.khoa ?? "")}";
+                ws.Range("A4:J4").Merge();
+                var orgName = (mk == "-1") ? "Tất cả" :data.FirstOrDefault()?.khoa;
+                ws.Cell("A4").Value = $"Khoa: {orgName}";
                 ws.Cell("A4").Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
                 ws.Cell("A4").Style.Font.Bold = true;
 
@@ -1036,11 +1043,12 @@ namespace API.Controllers
                 string[] headers =
                 {
                     "STT",
-                    "Khoa",
                     "Nội dung",
                     "Số lượt",
                     "Giá theo quy định",
+                    "Thành tiền",
                     "Chi phí vật tư, hóa chất",
+                    "Số tiền còn lại",
                     "Hệ số",
                     "Điểm thực hiện",
                     "Ghi chú"
@@ -1051,7 +1059,7 @@ namespace API.Controllers
                     ws.Cell(row, i + 1).Value = headers[i];
                 }
 
-                var headerRange = ws.Range(row, 1, row, 9);
+                var headerRange = ws.Range(row, 1, row, 10);
                 headerRange.Style.Font.Bold = true;
                 headerRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
                 headerRange.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
@@ -1063,123 +1071,198 @@ namespace API.Controllers
 
                 row++;
 
-                // ====== Dữ liệu theo nhóm TENNHOM ======
-                var groups = data
+                // ====== Dữ liệu theo nhóm KHOA ======
+                var orgs = data
                     .OrderBy(x => x.nhom_mabhyt_id)
                     .ThenBy(x => x.ma_dich_vu)
-                    .GroupBy(x => x.tennhom)
+                    .GroupBy(x => x.khoa)
                     .ToList();
 
-                int groupIndex = 0;
+                int orgIndex = 0;
 
                 decimal tongAllChiPhiVattu = 0;
+                decimal tongAllThanhTien = 0;
                 decimal tongAllDiem = 0;
+                decimal tongAllSoTienConLai = 0;
 
-                foreach (var group in groups)
+                foreach (var org in orgs)
                 {
-                    groupIndex++;
+                    orgIndex++;
 
-                    // Dòng tên nhóm: cột STT + merge 8 cột còn lại
-                    ws.Cell(row, 1).Value = groupIndex;
-                    ws.Range(row, 2, row, 9).Merge();
-                    ws.Cell(row, 2).Value = group.Key ?? "";
-                    ws.Range(row, 1, row, 9).Style.Font.Bold = true;
-                    ws.Range(row, 1, row, 9).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
-                    ws.Range(row, 1, row, 9).Style.Alignment.WrapText = true;
+                    // Dòng tên khoa: cột STT + merge 9 cột còn lại
+                    ws.Cell(row, 1).Value = orgIndex;
+                    ws.Range(row, 2, row, 10).Merge();
+                    ws.Cell(row, 2).Value = org.Key ?? "";
+                    ws.Range(row, 1, row, 10).Style.Font.Bold = true;
+                    ws.Range(row, 1, row, 10).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+                    ws.Range(row, 1, row, 10).Style.Alignment.WrapText = true;
 
                     ws.Cell(row, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
                     ws.Cell(row, 2).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
 
-                    ws.Range(row, 1, row, 9).Style.Fill.BackgroundColor = XLColor.FromArgb(242, 242, 242);
-                    ws.Range(row, 1, row, 9).Style.Border.TopBorder = XLBorderStyleValues.Thin;
-                    ws.Range(row, 1, row, 9).Style.Border.BottomBorder = XLBorderStyleValues.Thin;
-                    ws.Range(row, 1, row, 9).Style.Border.LeftBorder = XLBorderStyleValues.Thin;
-                    ws.Range(row, 1, row, 9).Style.Border.RightBorder = XLBorderStyleValues.Thin;
+                    ws.Range(row, 1, row, 10).Style.Fill.BackgroundColor = XLColor.FromArgb(242, 242, 242);
+                    ws.Range(row, 1, row, 10).Style.Border.TopBorder = XLBorderStyleValues.Thin;
+                    ws.Range(row, 1, row, 10).Style.Border.BottomBorder = XLBorderStyleValues.Thin;
+                    ws.Range(row, 1, row, 10).Style.Border.LeftBorder = XLBorderStyleValues.Thin;
+                    ws.Range(row, 1, row, 10).Style.Border.RightBorder = XLBorderStyleValues.Thin;
 
                     row++;
 
-                    int itemIndex = 0;
+                    decimal tongChiPhiVattuOrg = 0;
+                    decimal tongDiemOrg = 0;
+                    decimal tongThanhTienOrg = 0;
+                    decimal tongSoTienConLaiOrg = 0;
 
-                    decimal tongChiPhiVattu = 0;
-                    decimal tongDiem = 0;
-
-                    foreach (var item in group)
+                    // trong 1 khoa, nhóm lại theo tên nhóm
+                    var groups = org.GroupBy(g => g.tennhom).ToList();
+                    var groupIndex = 0;
+                    foreach (var group in groups)
                     {
-                        itemIndex++;
+                        groupIndex++;
+                        // group gồm nhiều dịch vụ
+                        // Dòng tên nhóm: cột STT + merge 9 cột còn lại
+                        ws.Cell(row, 1).Value = $"{orgIndex}.{groupIndex}";
+                        ws.Range(row, 2, row, 10).Merge();
+                        ws.Cell(row, 2).Value = group.Key ?? "";
+                        ws.Range(row, 1, row, 10).Style.Font.Bold = true;
+                        ws.Range(row, 1, row, 10).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+                        ws.Range(row, 1, row, 10).Style.Alignment.WrapText = true;
 
-                        ws.Cell(row, 1).Value = $"{groupIndex}.{itemIndex}";
-                        ws.Cell(row, 2).Value = item.khoa ?? "";
-                        ws.Cell(row, 3).Value = item.ten_dich_vu ?? "";
-                        ws.Cell(row, 4).Value = item.soluong ?? 0;
-                        ws.Cell(row, 5).Value = item.don_gia_bh ?? 0;
-                        ws.Cell(row, 6).Value = item.chiphi_vattu ?? 0;
-                        ws.Cell(row, 7).Value = item.heso ?? 0;
-                        ws.Cell(row, 8).Value = item.diem_thuchien ?? 0;
-                        ws.Cell(row, 9).Value = "";
-
-                        // Căn lề
                         ws.Cell(row, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
                         ws.Cell(row, 2).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
-                        ws.Cell(row, 3).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
-                        ws.Cell(row, 4).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
-                        ws.Cell(row, 5).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
-                        ws.Cell(row, 6).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
-                        ws.Cell(row, 7).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
-                        ws.Cell(row, 8).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
-                        ws.Cell(row, 9).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
 
-                        // Định dạng số
-                        ws.Cell(row, 4).Style.NumberFormat.Format = "#,##0.##";
+                        ws.Range(row, 1, row, 10).Style.Fill.BackgroundColor = XLColor.FromArgb(242, 242, 242);
+                        ws.Range(row, 1, row, 10).Style.Border.TopBorder = XLBorderStyleValues.Thin;
+                        ws.Range(row, 1, row, 10).Style.Border.BottomBorder = XLBorderStyleValues.Thin;
+                        ws.Range(row, 1, row, 10).Style.Border.LeftBorder = XLBorderStyleValues.Thin;
+                        ws.Range(row, 1, row, 10).Style.Border.RightBorder = XLBorderStyleValues.Thin;
+
+                        row++;
+                        decimal itemIndex = 0;
+                        decimal tongThanhTienGroup = 0;
+                        decimal tongChiPhiGroup = 0;
+                        decimal tongDiemGroup = 0;
+                        decimal tongSoTienConLaiGroup = 0;
+
+                        foreach(var item in group)
+                        {
+                            itemIndex++;
+                            ws.Cell(row, 1).Value = $"{orgIndex}.{groupIndex}.{itemIndex}";
+                            ws.Cell(row, 2).Value = item.ten_dich_vu ?? "";
+                            ws.Cell(row, 3).Value = item.soluong ?? 0;
+                            ws.Cell(row, 4).Value = item.don_gia_bh ?? 0;
+                            ws.Cell(row, 5).Value = item.thanh_tien ?? 0;
+                            ws.Cell(row, 6).Value = item.chiphi_vattu ?? 0;
+                            ws.Cell(row, 7).Value = item.sotien_conlai ?? 0;
+                            ws.Cell(row, 8).Value = item.heso ?? 0;
+                            ws.Cell(row, 9).Value = item.diem_thuchien ?? 0;
+                            ws.Cell(row, 10).Value = "";
+
+                            // Căn lề
+                            ws.Cell(row, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                            ws.Cell(row, 2).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+                            ws.Cell(row, 3).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                            ws.Cell(row, 4).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                            ws.Cell(row, 5).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                            ws.Cell(row, 6).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                            ws.Cell(row, 7).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                            ws.Cell(row, 8).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                            ws.Cell(row, 9).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                            ws.Cell(row, 10).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+
+                            // Định dạng số
+                            ws.Cell(row, 3).Style.NumberFormat.Format = "#,##0.##";
+                            ws.Cell(row, 4).Style.NumberFormat.Format = "#,##0.##";
+                            ws.Cell(row, 5).Style.NumberFormat.Format = "#,##0.##";
+                            ws.Cell(row, 6).Style.NumberFormat.Format = "#,##0.##";
+                            ws.Cell(row, 7).Style.NumberFormat.Format = "#,##0.##";
+                            ws.Cell(row, 8).Style.NumberFormat.Format = "#,##0.##";
+                            ws.Cell(row, 9).Style.NumberFormat.Format = "#,##0.##";
+
+                            ws.Range(row, 1, row, 10).Style.Border.TopBorder = XLBorderStyleValues.Thin;
+                            ws.Range(row, 1, row, 10).Style.Border.BottomBorder = XLBorderStyleValues.Thin;
+                            ws.Range(row, 1, row, 10).Style.Border.LeftBorder = XLBorderStyleValues.Thin;
+                            ws.Range(row, 1, row, 10).Style.Border.RightBorder = XLBorderStyleValues.Thin;
+                            ws.Range(row, 1, row, 10).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+
+                            tongChiPhiGroup += item.chiphi_vattu ?? 0;
+                            tongDiemGroup += item.diem_thuchien ?? 0;
+                            tongSoTienConLaiGroup += item.sotien_conlai ?? 0;
+                            tongThanhTienGroup += item.thanh_tien ?? 0;
+                            ws.Range(row, 1, row, 10).Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+
+                            row++;
+                        }
+                        // ===== Dòng tổng theo nhóm =====
+                        ws.Cell(row, 2).Value = "Tổng theo nhóm";
+                        ws.Cell(row, 5).Value = tongThanhTienGroup;
+                        ws.Cell(row, 6).Value = tongChiPhiGroup;
+                        ws.Cell(row, 7).Value = tongSoTienConLaiGroup;
+                        ws.Cell(row, 9).Value = tongDiemGroup;
+
+                        // format
                         ws.Cell(row, 5).Style.NumberFormat.Format = "#,##0.##";
                         ws.Cell(row, 6).Style.NumberFormat.Format = "#,##0.##";
                         ws.Cell(row, 7).Style.NumberFormat.Format = "#,##0.##";
-                        ws.Cell(row, 8).Style.NumberFormat.Format = "#,##0.##";
+                        ws.Cell(row, 9).Style.NumberFormat.Format = "#,##0.##";
 
-                        ws.Range(row, 1, row, 9).Style.Border.TopBorder = XLBorderStyleValues.Thin;
-                        ws.Range(row, 1, row, 9).Style.Border.BottomBorder = XLBorderStyleValues.Thin;
-                        ws.Range(row, 1, row, 9).Style.Border.LeftBorder = XLBorderStyleValues.Thin;
-                        ws.Range(row, 1, row, 9).Style.Border.RightBorder = XLBorderStyleValues.Thin;
-                        ws.Range(row, 1, row, 9).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
-
-                        tongChiPhiVattu += item.chiphi_vattu ?? 0;
-                        tongDiem += item.diem_thuchien ?? 0;
-
-                        tongAllChiPhiVattu += item.chiphi_vattu ?? 0;
-                        tongAllDiem += item.diem_thuchien ?? 0;
-
-                        ws.Range(row, 1, row, 9).Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+                        ws.Range(row, 1, row, 10).Style.Font.Bold = true;
+                        ws.Range(row, 1, row, 10).Style.Fill.BackgroundColor = XLColor.FromArgb(230, 230, 230);
+                        ws.Range(row, 1, row, 10).Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
 
                         row++;
-                    }
-                    // ===== Dòng tổng =====
-                    ws.Cell(row, 2).Value = "Tổng";
 
-                    ws.Cell(row, 6).Value = tongChiPhiVattu;
-                    ws.Cell(row, 8).Value = tongDiem;
+                        tongThanhTienOrg += tongThanhTienGroup;
+                        tongChiPhiVattuOrg += tongChiPhiGroup;
+                        tongDiemOrg += tongDiemGroup;
+                        tongSoTienConLaiOrg += tongSoTienConLaiGroup;
+                    }
+                    // ===== Dòng tổng theo khoa =====
+                    ws.Cell(row, 2).Value = "Tổng theo khoa";
+                    ws.Cell(row, 5).Value = tongThanhTienOrg;
+                    ws.Cell(row, 6).Value = tongChiPhiVattuOrg;
+                    ws.Cell(row, 7).Value = tongSoTienConLaiOrg;
+                    ws.Cell(row, 9).Value = tongDiemOrg;
 
                     // format
+                    ws.Cell(row, 5).Style.NumberFormat.Format = "#,##0.##";
                     ws.Cell(row, 6).Style.NumberFormat.Format = "#,##0.##";
-                    ws.Cell(row, 8).Style.NumberFormat.Format = "#,##0.##";
+                    ws.Cell(row, 7).Style.NumberFormat.Format = "#,##0.##";
+                    ws.Cell(row, 9).Style.NumberFormat.Format = "#,##0.##";
 
-                    ws.Range(row, 1, row, 9).Style.Font.Bold = true;
-                    ws.Range(row, 1, row, 9).Style.Fill.BackgroundColor = XLColor.FromArgb(230, 230, 230);
-                    ws.Range(row, 1, row, 9).Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+                    ws.Range(row, 1, row, 10).Style.Font.Bold = true;
+                    ws.Range(row, 1, row, 10).Style.Fill.BackgroundColor = XLColor.FromArgb(230, 230, 230);
+                    ws.Range(row, 1, row, 10).Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
 
                     row++;
+
+                    tongAllThanhTien += tongThanhTienOrg;
+                    tongAllChiPhiVattu += tongChiPhiVattuOrg;
+                    tongAllDiem += tongDiemOrg;
+                    tongAllSoTienConLai += tongSoTienConLaiOrg;
+
+                    ws.Range(row, 1, row, 10).Style.Font.Bold = true;
+                    ws.Range(row, 1, row, 10).Style.Fill.BackgroundColor = XLColor.FromArgb(230, 230, 230);
+                    ws.Range(row, 1, row, 10).Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
                 }
 
                 // ===== Dòng tổng cộng toàn bộ =====
-                ws.Cell(row, 2).Value = "Tổng cộng";
+                ws.Cell(row, 2).Value = "Tổng";
 
+                ws.Cell(row, 5).Value = tongAllThanhTien;
                 ws.Cell(row, 6).Value = tongAllChiPhiVattu;
-                ws.Cell(row, 8).Value = tongAllDiem;
+                ws.Cell(row, 7).Value = tongAllSoTienConLai;
+                ws.Cell(row, 9).Value = tongAllDiem;
 
+                // format
+                ws.Cell(row, 5).Style.NumberFormat.Format = "#,##0.##";
                 ws.Cell(row, 6).Style.NumberFormat.Format = "#,##0.##";
-                ws.Cell(row, 8).Style.NumberFormat.Format = "#,##0.##";
+                ws.Cell(row, 7).Style.NumberFormat.Format = "#,##0.##";
+                ws.Cell(row, 9).Style.NumberFormat.Format = "#,##0.##";
 
-                ws.Range(row, 1, row, 9).Style.Font.Bold = true;
-                ws.Range(row, 1, row, 9).Style.Fill.BackgroundColor = XLColor.FromArgb(200, 200, 200);
-                ws.Range(row, 1, row, 9).Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+                ws.Range(row, 1, row, 10).Style.Font.Bold = true;
+                ws.Range(row, 1, row, 10).Style.Fill.BackgroundColor = XLColor.FromArgb(200, 200, 200);
+                ws.Range(row, 1, row, 10).Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
 
                 row++;
 
@@ -1187,14 +1270,15 @@ namespace API.Controllers
                 ws.SheetView.FreezeRows(6);
 
                 ws.Column(1).Width = 5;//
-                ws.Column(2).Width = 20;//
-                ws.Column(3).Width = 60;//
-                ws.Column(4).Width = 10;//
-                ws.Column(5).Width = 15;//
-                ws.Column(6).Width = 15;//
-                ws.Column(7).Width = 8;//
-                ws.Column(8).Width = 15;
+                ws.Column(2).Width = 60;//
+                ws.Column(3).Width = 10;//
+                ws.Column(4).Width = 15;//
+                ws.Column(5).Width = 20;//
+                ws.Column(6).Width = 20;//
+                ws.Column(7).Width = 20;//
+                ws.Column(8).Width = 10;
                 ws.Column(9).Width = 10;//
+                ws.Column(10).Width = 10;//
 
                 ws.Row(1).Height = 22;
                 ws.Row(2).Height = 22;
