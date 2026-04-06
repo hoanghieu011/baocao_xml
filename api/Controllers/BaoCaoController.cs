@@ -127,7 +127,7 @@ namespace API.Controllers
                 if (string.IsNullOrEmpty(userName))
                     return Unauthorized();
 
-                var sql_tenbv = $@"SELECT * FROM DMC_BENHVIEN WHERE CSYTID = {csytid}";
+                var sql_tenbv = $@"SELECT * FROM dmc_benhvien WHERE CSYTID = {csytid}";
 
                 var benhVien = await _context.dmc_benhvien
                     .FromSqlRaw(sql_tenbv)
@@ -538,7 +538,7 @@ namespace API.Controllers
                 if (string.IsNullOrEmpty(userName))
                     return Unauthorized();
 
-                var sql_tenbv = $@"SELECT * FROM DMC_BENHVIEN WHERE CSYTID = {csytid}";
+                var sql_tenbv = $@"SELECT * FROM dmc_benhvien WHERE CSYTID = {csytid}";
 
                 var benhVien = await _context.dmc_benhvien
                     .FromSqlRaw(sql_tenbv)
@@ -951,7 +951,7 @@ namespace API.Controllers
                 if (string.IsNullOrEmpty(userName))
                     return Unauthorized();
 
-                var sql_tenbv = $@"SELECT * FROM DMC_BENHVIEN WHERE CSYTID = {csytid}";
+                var sql_tenbv = $@"SELECT * FROM dmc_benhvien WHERE CSYTID = {csytid}";
 
                 var benhVien = await _context.dmc_benhvien
                     .FromSqlRaw(sql_tenbv)
