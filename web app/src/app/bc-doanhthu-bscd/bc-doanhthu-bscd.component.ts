@@ -62,16 +62,18 @@ export class BcDoanhthuBscdComponent implements OnInit {
         const data = res?.ds_officer || [];
 
         this.ds_officer = [
+          { value: '', label: 'Tất cả' },
           ...data.map((x: any) => ({
             value: x.ma_bac_si,
             label: x.ma_bac_si + ' - ' + x.officer_name
           }))
         ];
-        this.cur_officer = ''
+
+        this.cur_officer = '';
       },
       error: (err) => {
         console.error(err);
-        this.ds_officer = [{ value: '', label: '' }];
+        this.ds_officer = [{ value: '', label: 'Tất cả' }];
         this.cur_officer = '';
       }
     });
@@ -123,8 +125,7 @@ export class BcDoanhthuBscdComponent implements OnInit {
     }
 
     if (this.cur_officer == '') {
-      this.addToast('Vui lòng chọn bác sĩ!');
-      return;
+      this.exportExcel();
     }
 
     this.loading = true;
@@ -157,11 +158,6 @@ export class BcDoanhthuBscdComponent implements OnInit {
 
     if (this.tuNgay > this.denNgay) {
       this.addToast('Từ ngày không được lớn hơn đến ngày');
-      return;
-    }
-
-    if (this.cur_officer == '') {
-      this.addToast('Vui lòng chọn bác sĩ!');
       return;
     }
 
