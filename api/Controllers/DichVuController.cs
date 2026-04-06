@@ -75,7 +75,7 @@ namespace API.Controllers
                 var sql = @"SELECT 
                                 a.MA_DICHVU,
                                 a.DICHVUID, a.TEN_DICHVU, b.TENNHOM, a.DONVI, a.CSYTID, a.GIA_BHYT, a.CHIPHI, a.HESO, a.nhom_mabhyt_id
-                                FROM DMC_DICHVU a, DMC_NHOM_MABHYT b"
+                                FROM dmc_dichvu a, dmc_nhom_mabhyt b"
                             + whereBuilder.ToString() + $" ORDER BY a.LOAIID, a.nhom_mabhyt_id LIMIT {pageSize} OFFSET {offset}" ;
 
                 var dsDichVu = await _context.dto_dichvu
@@ -91,7 +91,7 @@ namespace API.Controllers
                 {
                     cmd.CommandText = @"SELECT 
                                 count(1)
-                                FROM DMC_DICHVU a, DMC_NHOM_MABHYT b"
+                                FROM dmc_dichvu a, dmc_nhom_mabhyt b"
                             + whereBuilder.ToString();
 
                     cmd.Parameters.Clear();
@@ -154,7 +154,7 @@ namespace API.Controllers
 
                 using var cmd = conn.CreateCommand();
                 cmd.CommandText = @"
-                    UPDATE DMC_DICHVU
+                    UPDATE dmc_dichvu
                     SET CHIPHI = @chiphi,
                         HESO = @heso
                     WHERE DICHVUID = @dichvuid

@@ -32,7 +32,7 @@ namespace api.Controllers
 
                 var sql = @"
                     SELECT * 
-                    FROM ORG_ORGANIZATION
+                    FROM org_organization
                     WHERE CSYTID = @csytid
                     AND STATUS = 1
                     AND MA_KHOA IS NOT NULL

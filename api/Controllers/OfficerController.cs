@@ -41,7 +41,7 @@ namespace API.Controllers
 
                 var sql = @"
                     SELECT * 
-                    FROM ORG_OFFICER 
+                    FROM org_officer 
                     WHERE CSYTID = @csytid
                     AND STATUS = 1 
                     AND MA_BAC_SI IS NOT NULL
@@ -89,7 +89,7 @@ namespace API.Controllers
 
                 var sql = $@"
                     SELECT * 
-                    FROM ORG_OFFICER 
+                    FROM org_officer 
                     WHERE CSYTID = {csytid}
                     AND OFFICER_ID = {officer_id}
                 ";

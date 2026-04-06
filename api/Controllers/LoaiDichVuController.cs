@@ -39,7 +39,7 @@ namespace API.Controllers
                 if (string.IsNullOrEmpty(userName))
                     return Unauthorized();
 
-                var sql = @"SELECT * FROM DMC_NHOM_MABHYT" ;
+                var sql = @"SELECT * FROM dmc_nhom_mabhyt" ;
 
                 var dsLoaiDichVu = await _context.dmc_nhom_mabhyt
                     .FromSqlRaw(sql)

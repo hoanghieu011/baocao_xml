@@ -51,7 +51,7 @@ namespace API.Controllers
                                     SELECT 
                                         nhom.NHOM_MABHYT_ID,IFNULL(b.MA_DICH_VU,b.MA_VAT_TU) MA_DICH_VU,IFNULL(b.TEN_DICH_VU,b.TEN_VAT_TU) TEN_DICH_VU,nhom.TENNHOM,b.SO_LUONG,b.DON_GIA_BH ,dv.HESO, dv.CHIPHI, org.OFFICER_NAME TEN_BACSI
                                     FROM  
-                                        his_data_binhluc.XML1 a, 
+                                        his_data_binhluc.xml1 a, 
                                         his_data_binhluc.xml3 b LEFT JOIN dmc_dichvu dv on IFNULL(b.MA_DICH_VU,b.MA_VAT_TU) = dv.MA_DICHVU AND IFNULL(b.TEN_DICH_VU,b.TEN_VAT_TU) = dv.TEN_DICHVU,
                                         dmc_nhom_mabhyt nhom,
                                         org_officer org
@@ -154,7 +154,7 @@ namespace API.Controllers
                                 dv.CHIPHI,
                                 org.OFFICER_NAME TEN_BACSI
                             FROM  
-                                his_data_binhluc.XML1 a, 
+                                his_data_binhluc.xml1 a, 
                                 his_data_binhluc.xml3 b 
                                 LEFT JOIN dmc_dichvu dv 
                                     ON IFNULL(b.MA_DICH_VU, b.MA_VAT_TU) = dv.MA_DICHVU 
@@ -462,7 +462,7 @@ namespace API.Controllers
                                     SELECT 
                                         nhom.NHOM_MABHYT_ID,IFNULL(b.MA_DICH_VU,b.MA_VAT_TU) MA_DICH_VU,IFNULL(b.TEN_DICH_VU,b.TEN_VAT_TU) TEN_DICH_VU,nhom.TENNHOM,b.SO_LUONG,b.DON_GIA_BH ,dv.HESO, dv.CHIPHI, org.OFFICER_NAME TEN_BACSI
                                     FROM  
-                                        his_data_binhluc.XML1 a, 
+                                        his_data_binhluc.xml1 a, 
                                         his_data_binhluc.xml3 b LEFT JOIN dmc_dichvu dv on IFNULL(b.MA_DICH_VU,b.MA_VAT_TU) = dv.MA_DICHVU AND IFNULL(b.TEN_DICH_VU,b.TEN_VAT_TU) = dv.TEN_DICHVU,
                                         dmc_nhom_mabhyt nhom,
                                         org_officer org
@@ -565,7 +565,7 @@ namespace API.Controllers
                                 dv.CHIPHI,
                                 org.OFFICER_NAME TEN_BACSI
                             FROM  
-                                his_data_binhluc.XML1 a, 
+                                his_data_binhluc.xml1 a, 
                                 his_data_binhluc.xml3 b 
                                 LEFT JOIN dmc_dichvu dv 
                                     ON IFNULL(b.MA_DICH_VU, b.MA_VAT_TU) = dv.MA_DICHVU 
@@ -870,7 +870,7 @@ namespace API.Controllers
 		                    SELECT 
 			                    nhom.NHOM_MABHYT_ID,b.MA_KHOA,khoa.ORG_NAME KHOA,dv.MA_DICHVU MA_DICH_VU,dv.TEN_DICHVU TEN_DICH_VU,nhom.TENNHOM,b.SO_LUONG,b.DON_GIA_BH ,dv.HESO, dv.CHIPHI
 		                    FROM  
-			                    his_data_binhluc.XML1 a, 
+			                    his_data_binhluc.xml1 a, 
 			                    his_data_binhluc.xml3 b LEFT JOIN his_common.dmc_dichvu dv on IFNULL(b.MA_DICH_VU,b.MA_VAT_TU) = dv.MA_DICHVU,
 			                    his_common.dmc_nhom_mabhyt nhom,
                                 his_common.org_organization khoa
@@ -965,7 +965,7 @@ namespace API.Controllers
 		                    SELECT 
 			                    nhom.NHOM_MABHYT_ID,b.MA_KHOA,khoa.ORG_NAME KHOA,dv.MA_DICHVU MA_DICH_VU,dv.TEN_DICHVU TEN_DICH_VU,nhom.TENNHOM,b.SO_LUONG,b.DON_GIA_BH ,dv.HESO, dv.CHIPHI
 		                    FROM  
-			                    his_data_binhluc.XML1 a, 
+			                    his_data_binhluc.xml1 a, 
 			                    his_data_binhluc.xml3 b LEFT JOIN his_common.dmc_dichvu dv on IFNULL(b.MA_DICH_VU,b.MA_VAT_TU) = dv.MA_DICHVU,
 			                    his_common.dmc_nhom_mabhyt nhom,
                                 his_common.org_organization khoa

@@ -42,7 +42,7 @@ namespace API.Controllers
                 var csytid = User.FindFirst(ClaimTypes.Name)?.Value
                     ?? User.FindFirst("CSYTID")?.Value;
 
-                var sql = $@"SELECT * FROM DMC_BENHVIEN WHERE CSYTID = {csytid}" ;
+                var sql = $@"SELECT * FROM dmc_benhvien WHERE CSYTID = {csytid}" ;
 
                 var data = await _context.dmc_benhvien
                     .FromSqlRaw(sql)

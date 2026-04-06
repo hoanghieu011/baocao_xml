@@ -151,7 +151,7 @@ namespace API.Controllers
                     await conn.OpenAsync();
 
                 using var cmd = conn.CreateCommand();
-                cmd.CommandText = $"UPDATE `{dbData}`BC_DIEMKEHOACH " 
+                cmd.CommandText = $"UPDATE `{dbData}`bc_diemkehoach " 
                     + " SET DIEM_KEHOACH = @DIEM_KEHOACH, SO_BUOITRUC = @SO_BUOITRUC, SO_BENHNHAN = @SO_BENHNHAN, "
                     + " DIEM_TRUC = @DIEM_TRUC, DIEM_TRUC_CC = @DIEM_TRUC_CC, DIEM_LAYMAU = @DIEM_LAYMAU "
                     + " WHERE DIEMKEHOACHID = @DIEMKEHOACHID";
