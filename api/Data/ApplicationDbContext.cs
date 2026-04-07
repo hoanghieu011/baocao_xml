@@ -19,6 +19,7 @@ namespace API.Data
         public DbSet<DichVuDto> dto_dichvu { get; set; }
         public DbSet<BcDoanhThuBscdDto> dto_bc_doanhthu_bscd { get; set; }
         public DbSet<BcDoanhThuKhoaDto> dto_bc_doanhthu_khoa { get; set; }
+        public DbSet<BcDoanhThuToanVienDto> dto_bc_doanhthu_toanvien { get; set; }
         public DbSet<Officer> org_officer { get; set; }
         public DbSet<Organization> org_organization { get; set; }
         public DbSet<BenhVien> dmc_benhvien { get; set; }
@@ -30,6 +31,7 @@ namespace API.Data
             modelBuilder.Entity<DichVuDto>().HasNoKey();
             modelBuilder.Entity<BcDoanhThuBscdDto>().HasNoKey();
             modelBuilder.Entity<BcDoanhThuKhoaDto>().HasNoKey();
+            modelBuilder.Entity<BcDoanhThuToanVienDto>().HasNoKey();
         }
     }
 

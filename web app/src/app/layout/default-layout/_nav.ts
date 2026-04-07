@@ -43,6 +43,12 @@ export const navItems: INavDataExtended[] = [
         roles: ['all'],
         url: '/baocao-tracuu/doanhthu_khoa',
         iconComponent: { name: 'cil-chart' }
+      },
+      {
+        name: 'Báo cáo doanh thu toàn viện',
+        roles: ['all'],
+        url: '/baocao-tracuu/doanhthu_toanvien',
+        iconComponent: { name: 'cil-chart' }
       }
     ]
   },

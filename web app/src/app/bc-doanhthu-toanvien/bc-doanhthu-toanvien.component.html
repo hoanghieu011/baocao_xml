@@ -1,0 +1,107 @@
+<c-toaster placement="top-end" class="p-3">
+  <c-toast
+    *ngFor="let t of toasts"
+    [visible]="t.visible"
+    [color]="t.color"
+    class="text-white"
+  >
+    <c-toast-body>
+      {{ t.message }}
+    </c-toast-body>
+  </c-toast>
+</c-toaster>
+<div class="card">
+  <div class="card-body">
+
+    <div class="row g-2 align-items-end mb-3">
+      <div class="col-auto">
+        <label class="form-label small">Ra viện từ ngày</label>
+        <input class="form-control" type="date" [(ngModel)]="tuNgay" (keyup.enter)="loadData(true)"/>
+      </div>
+
+      <div class="col-auto">
+        <label class="form-label small">đến ngày</label>
+        <input class="form-control" type="date" [(ngModel)]="denNgay" (keyup.enter)="loadData(true)"/>
+      </div>
+
+      <div class="col-auto">
+        <button class="btn btn-primary w-100" (click)="loadData(true)" [disabled]="loading">
+          <span *ngIf="!loading">Xem báo cáo</span>
+          <span *ngIf="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+        </button>
+      </div>
+
+      <div class="col-auto">
+        <button class="btn btn-primary w-100" (click)="exportExcel()" [disabled]="loading">
+          <span *ngIf="!loadingExcel">Xuất Excel</span>
+          <span *ngIf="loadingExcel" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+        </button>
+      </div>
+    </div>
+
+    <div class="table-responsive">
+        <div class="table-wrapper">
+            <table [cBorder]="1" borderColor="primary" bordered cTable class="table table-hover table-striped table-fixed">
+            <colgroup>
+                <col style="width:40px" />
+                <col style="width:100px" />
+                <col />
+                <col style="width:200px" />
+                <col style="width:200px" />
+                <col style="width:200px" />
+            </colgroup>
+
+            <thead class="table-primary text-center align-middle">
+                <tr>
+                    <th>STT</th>
+                    <th>Mã khoa</th>
+                    <th>Khoa</th>
+                    <th>Thành tiền</th>
+                    <th>Chi phí vật tư, hóa chất</th>
+                    <th>Số tiền còn lại</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                <ng-container *ngFor="let row of displayRows">
+                <tr *ngIf="row.type === 'item'">
+                    <td class="text-center">{{ row.stt }}</td>
+                    <td>{{ row.ma_khoa }}</td>
+                    <td>{{ row.khoa }}</td>
+                    <td class="text-end">{{ row.thanh_tien | number:'1.0-2' }}</td>
+                    <td class="text-end">{{ row.chiphi_vattu | number:'1.0-2' }}</td>
+                    <td class="text-end">{{ row.sotien_conlai | number:'1.0-2' }}</td>
+                </tr>
+                <tr *ngIf="row.type === 'grandTotal'" class="fw-bold table-primary table-footer-grand">
+                    <td>Tổng</td>
+                    <td></td>
+                    <td></td>
+                    <td class="text-end">{{ row.thanh_tien | number:'1.0-2' }}</td>
+                    <td class="text-end">{{ row.chiphi_vattu | number:'1.0-2' }}</td>
+                    <td class="text-end">{{ row.sotien_conlai | number:'1.0-2' }}</td>
+                </tr>
+                </ng-container>
+
+                <tr *ngIf="!loading && (!displayRows || displayRows.length === 0)">
+                <td colspan="6" class="text-center">Không có dữ liệu</td>
+                </tr>
+            </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mt-2">
+      <div class="d-flex align-items-center gap-2">
+        <button class="btn btn-outline-secondary btn-sm" [disabled]="true">Prev</button>
+        <button class="btn btn-outline-secondary btn-sm" [disabled]="true">Next</button>
+        <div class="ms-3 small text-muted">
+          Trang 1/1
+        </div>
+      </div>
+
+      <div class="d-flex align-items-center gap-2">
+        <label class="small mb-0"></label>
+      </div>
+      </div>
+    </div>
+</div>

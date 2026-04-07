@@ -192,7 +192,16 @@ export const routes: Routes = [
               title: 'Báo cáo doanh thu theo khoa',
               roles: ['']
             }
-          }, 
+          },
+          {
+            path: 'doanhthu_toanvien',
+            canActivate: [AuthGuard],
+            loadChildren: () => import('../app/bc-doanhthu-toanvien/bc-doanhthu-toanvien.routes').then(m => m.DOANHTHU_TOANVIEN),
+            data: {
+              title: 'Báo cáo doanh thu toàn viện',
+              roles: ['']
+            }
+          },  
         ]
       },
       {
