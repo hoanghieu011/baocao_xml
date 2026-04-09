@@ -3,3 +3,4 @@ api/bin/
 api/obj
 api/wwwroot/images
 api/publish/
+api/Common/ConnectionStrings.cs
