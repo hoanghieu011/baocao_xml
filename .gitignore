@@ -2,3 +2,4 @@ api/.vs/
 api/bin/
 api/obj
 api/wwwroot/images
+api/publish/
