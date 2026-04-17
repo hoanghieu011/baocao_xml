@@ -1,0 +1,220 @@
+<c-toaster placement="top-end" class="p-3">
+  <c-toast
+    *ngFor="let t of toasts"
+    [visible]="t.visible"
+    [color]="t.color"
+    class="text-white"
+  >
+    <c-toast-body>
+      {{ t.message }}
+    </c-toast-body>
+  </c-toast>
+</c-toaster>
+<div class="card">
+  <div class="card-body">
+    <div class="row container g-2 mb-2">
+      <div class="fit-content">
+          <select2 class="form-control" [overlay]="false" placeholder=""
+            [data]="ds_thang" [styleMode]="'borderless'" [value]="cur_thang" (update)="onThangChange($event)"
+            id="thang" style="height: 38px; padding: 4px 0 0 0;">
+          </select2>
+      </div>
+      <div class="fit-content">
+          <select2 class="form-control" [overlay]="false" placeholder=""
+            [data]="ds_nam" [styleMode]="'borderless'" [value]="cur_nam" (update)="onNamChange($event)"
+            id="nam" style="height: 38px; padding: 4px 0 0 0;">
+          </select2>
+      </div>      
+      <div class="w-500">
+        <select2 class="form-control" [overlay]="false" placeholder=""
+          [data]="ds_khoa" (update)="onKhoaChange($event)" [styleMode]="'borderless'" [value]="cur_khoa"
+          id="khoa" style="height: 38px; padding: 4px 0 0 0;">
+        </select2>
+      </div>
+      <button class="btn btn-primary fit-content mr-2" (click)="submitFormSearch()">
+        <span *ngIf="!loading">Tìm kiếm</span>
+        <span *ngIf="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+      </button>
+      <button class="btn btn-primary fit-content"  >
+        <span *ngIf="!loading">Nhập điểm</span>
+        <span *ngIf="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+      </button>
+    </div>
+    <div class="row">
+            <div class="col-md-12">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th style="width: 250px;">{{'KHOA'|translate}}</th>
+                                <th style="width: 350px;">{{'BAC_SI'|translate}}</th>
+                                <th>{{'DIEM_KE_HOACH'|translate}}</th>
+                                <th>{{'TRUC'|translate}}</th>
+                                <th>{{'TANG_CUONG'|translate}}</th>
+                                <th>{{'LAY_MAU_XN'|translate}}</th>
+                                <th>{{'BN_NHAP_VIEN_NG' | translate}}</th>
+                                <th>#</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let item of ds_diemkehoach">
+                                <td>{{ item.khoa }}</td>
+                                <td>{{item.officerType==4? 'Bác sĩ' : item.officerType==6 ? 'Điều dưỡng' :'' }}: {{ item.officerName }}</td>
+                                <td>{{ item.diemKeHoach }}</td>
+                                <td>{{ item.diemTruc }}</td>
+                                <td>{{ item.tangCuong }}</td>
+                                <td>{{ item.diemLayMau }}</td>
+                                <td>{{ item.bn_nhap_vien_ng }}</td>
+                                <td class="text-center">
+                                  <button class="btn btn-sm btn-outline-primary"
+                                          (click)="onThemDiemKeHoachBtnClick(item)">
+                                  <i class="bi bi-pencil"></i>
+                                  </button>
+                              </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="no-data">
+                        <p *ngIf="!loading && ds_diemkehoach.length === 0" class="text-center">Không có dữ liệu</p>
+                        <div *ngIf="loading" class="d-flex justify-content-center align-items-center" style="height: 100px;">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                    </div>
+                </div>
+            </div>
+    </div>
+    <!-- <div class="row">
+            <div class="col-md-12 text-center">
+                <button class="pagination-button" (click)="prePage()" [disabled]="currentPage === 1"
+                    *ngIf="currentPage > 1">«</button>
+
+                <ng-container *ngFor="let page of getLimitedPageNumbers()">
+                    <button class="pagination-button" [ngClass]="{'active': currentPage === page}" (click)="goToPage(page)">
+                        {{ page }}
+                    </button>
+                </ng-container>
+
+                <button class="pagination-button" (click)="nextPage()" [disabled]="currentPage * pageSize >= totalRecords"
+                    *ngIf="currentPage * pageSize < totalRecords">»</button>
+            </div>
+    </div> -->
+    <div class="d-flex justify-content-between align-items-center mt-2">
+      <div class="d-flex align-items-center gap-2">
+        <button class="btn btn-outline-secondary btn-sm" (click)="prePage()" [disabled]="currentPage <= 1">Prev</button>
+        <button class="btn btn-outline-secondary btn-sm" (click)="nextPage()" [disabled]="currentPage >= Math.ceil(totalRecords / pageSize) || totalRecords === 0">Next</button>
+        <div class="ms-3 small text-muted">
+          Trang {{currentPage}} / {{ Math.max(1, Math.ceil(totalRecords / pageSize)) }} — Tổng: {{ totalRecords | number }}
+        </div>
+      </div>
+
+      <div class="d-flex align-items-center gap-2">
+        <label class="small mb-0">Bản ghi / trang</label>
+        <select class="form-select form-select-sm"
+                [(ngModel)]="pageSize"
+                (ngModelChange)="onPageSizeChange($event)">
+        <option *ngFor="let s of pageSizeOptions" [value]="s">{{ s }}</option>
+        </select>
+      </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop ng-star-inserted" *ngIf="isShowModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h6 class="modal-title">Cập nhật thông tin điểm kế hoạch tháng {{cur_thang}}/{{cur_nam}} </h6>
+      <button type="button" class="btn-close" aria-label="Close" (click)="onCloseModal()"></button>
+    </div>
+
+    <div class="modal-body">
+      <form [formGroup]="formDataDiemKeHoach">
+        <table class="table table-sm mb-0 patient-modal-table">
+        <tbody>
+          <tr>
+            <th colspan="2" style="background: #d0d0d0;">
+              <br> {{selectedDiemKeHoach?.officerType ==4 ? 'Bác sĩ' : 'Điều dưỡng'}}: {{selectedDiemKeHoach?.officerName}} 
+            </th>
+          </tr>
+          <tr>
+           <th class="w-40">Điểm kế hoạch <span class="required-field"></span></th>
+            <td class="w-60 month-year-input">
+              <input type="number" class="form-control form-control-sm" formControlName="diemKeHoach" placeholder="Điểm kế hoạch" />
+            </td>
+          </tr>
+          <tr>
+            <th class="w-40">Số buổi trực <span class="required-field"></span></th>
+            <td class="w-60">
+              <input type="number" class="form-control form-control-sm" formControlName="soBuoiTruc" placeholder="Số buổi trực"
+                (change)="onSoBuoiTrucChange($event)"
+              />
+            </td>
+          </tr>
+          <tr>
+            <th class="w-40">Điểm trực (Số buổi trực x {{(selectedDiemKeHoach?.officerType && selectedDiemKeHoach?.officerType < hesoTruc.length) ? hesoTruc[selectedDiemKeHoach?.officerType] : 1 }}) <span class="required-field"></span></th>
+            <td class="w-60">
+              <span> {{formDataDiemKeHoach.value.diemTruc}}</span>
+            </td>
+          </tr>
+          <tr>
+            <th class="w-40">Điểm lấy mẫu XN <span class="required-field"></span></th>
+            <td class="w-60">
+              <input type="number" class="form-control form-control-sm" formControlName="diemLayMauXN" placeholder="Điểm lấy mẫu XN" />
+            </td>
+          </tr>
+        </tbody>
+        </table>
+      </form>
+      <br><br>
+      <div class="row">
+        <div class="col-md-6">
+          <b>Điểm tăng cường</b>
+        </div>
+        <div class="col-md-6 text-end">
+          <button class="btn btn-sm btn-outline-primary" (click)="onThemTangCuong()">
+            <i class="bi bi-plus"></i> Thêm điểm tăng cường
+          </button>
+        </div>
+      </div>
+      <br>
+      <table id="tbl-tangcuong" class="table table-sm mb-0 patient-modal-table">
+        <tr>
+          <th>Khoa</th>
+          <th>Số ngày</th>
+          <th>Điểm</th>
+          <th>#</th>
+        </tr>
+        <tr class="row-data-tangcuong" *ngFor="let tangCuong of dataTangCuong; let i = index">
+          <td>
+            <select2 class="form-control" [overlay]="false" placeholder=""
+              [data]="ds_khoa_tang_cuong" (update)="onKhoaTangCuongChange($event, i)" [styleMode]="'borderless'" [value]="tangCuong.khoaId"
+              id="khoa" style="height: 38px; padding: 4px 0 0 0;">
+            </select2>
+          </td>
+          <td>
+            <input type="number" class="form-control form-control-sm" [(ngModel)]="tangCuong.soNgay" placeholder="Số ngày" />
+          </td>
+          <td>
+            <input type="number" class="form-control form-control-sm" [(ngModel)]="tangCuong.diem" placeholder="Điểm" />
+          </td>
+          <td>
+            <button class="btn btn-sm btn-danger" (click)="onDeleteTangCuong(i)">
+              <i class="bi bi-trash"></i>
+            </button>
+          </td>
+
+        </tr>
+        
+      </table>
+    </div>
+
+    <div class="modal-footer gap-2" style="justify-content: flex-end;">
+      <button class="btn btn-secondary" (click)="onCloseModal()">Đóng</button>
+      <button class="btn btn-primary" (click)="onSaveDiemKeHoach()" [disabled]="formDataDiemKeHoach.invalid || loading">
+        <span>Lưu</span>
+        <span *ngIf="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+      </button>
+    </div>
+  </div>
+</div>

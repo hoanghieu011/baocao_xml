@@ -24,6 +24,7 @@ namespace API.Data
         public DbSet<Organization> org_organization { get; set; }
         public DbSet<BenhVien> dmc_benhvien { get; set; }
         public DbSet<DiemKeHoach> diemkehoach { get; set; }
+        public DbSet<TangCuong> tangcuong { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

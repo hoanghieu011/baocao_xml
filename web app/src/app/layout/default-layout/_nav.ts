@@ -69,6 +69,12 @@ export const navItems: INavDataExtended[] = [
         roles: ['all'],
         url: '/danhmuc/lay_mau',
         iconComponent: { name: 'cilMedicalCross' }
+      },
+      {
+        name: 'Danh mục điểm kế hoạch',
+        roles: ['all'],
+        url: '/danhmuc/diem_ke_hoach',
+        iconComponent: { name: 'cilMedicalCross' }
       }
     ]
   },

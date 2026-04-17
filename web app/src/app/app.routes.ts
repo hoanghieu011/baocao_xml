@@ -224,6 +224,15 @@ export const routes: Routes = [
               title: 'Danh mục lấy mẫu',
               roles: ['']
             }
+          },
+          {
+            path: 'diem_ke_hoach',
+            canActivate: [AuthGuard],
+            loadChildren: () => import('../app/diem-ke-hoach/diem-ke-hoach.routes').then(m => m.DS_DIEMKEHOACH),
+            data: {
+              title: 'Danh mục điểm kế hoạch',
+              roles: ['']
+            }
           }
         ]
       },
