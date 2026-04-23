@@ -49,6 +49,12 @@ export const navItems: INavDataExtended[] = [
         roles: ['all'],
         url: '/baocao-tracuu/doanhthu_toanvien',
         iconComponent: { name: 'cil-chart' }
+      },
+      {
+        name: 'Báo cáo điểm ctkh',
+        roles: ['all'],
+        url: '/baocao-tracuu/diem_ctkh',
+        iconComponent: { name: 'cil-chart' }
       }
     ]
   },
@@ -68,6 +74,12 @@ export const navItems: INavDataExtended[] = [
         name: 'Danh mục lấy mẫu',
         roles: ['all'],
         url: '/danhmuc/lay_mau',
+        iconComponent: { name: 'cilMedicalCross' }
+      },
+      {
+        name: 'Danh mục điểm kế hoạch',
+        roles: ['all'],
+        url: '/danhmuc/diem_ke_hoach',
         iconComponent: { name: 'cilMedicalCross' }
       }
     ]

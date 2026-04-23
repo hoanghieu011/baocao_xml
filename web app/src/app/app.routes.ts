@@ -201,7 +201,16 @@ export const routes: Routes = [
               title: 'Báo cáo doanh thu toàn viện',
               roles: ['']
             }
-          },  
+          },
+          {
+            path: 'diem_ctkh',
+            canActivate: [AuthGuard],
+            loadChildren: () => import('../app/bao-cao-diem-ctkh/bao-cao-diem-ctkh.routes').then(m => m.BAOCAO_DIEM_CTKH),
+            data: {
+              title: 'Báo cáo điểm ctkh',
+              roles: ['']
+            }
+          },    
         ]
       },
       {
@@ -222,6 +231,15 @@ export const routes: Routes = [
             loadChildren: () => import('../app/lay-mau/lay-mau.routes').then(m => m.DS_LAYMAU),
             data: {
               title: 'Danh mục lấy mẫu',
+              roles: ['']
+            }
+          },
+          {
+            path: 'diem_ke_hoach',
+            canActivate: [AuthGuard],
+            loadChildren: () => import('../app/diem-ke-hoach/diem-ke-hoach.routes').then(m => m.DS_DIEMKEHOACH),
+            data: {
+              title: 'Danh mục điểm kế hoạch',
               roles: ['']
             }
           }
