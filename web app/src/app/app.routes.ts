@@ -201,7 +201,16 @@ export const routes: Routes = [
               title: 'Báo cáo doanh thu toàn viện',
               roles: ['']
             }
-          },  
+          },
+          {
+            path: 'diem_ctkh',
+            canActivate: [AuthGuard],
+            loadChildren: () => import('../app/bao-cao-diem-ctkh/bao-cao-diem-ctkh.routes').then(m => m.BAOCAO_DIEM_CTKH),
+            data: {
+              title: 'Báo cáo điểm ctkh',
+              roles: ['']
+            }
+          },    
         ]
       },
       {

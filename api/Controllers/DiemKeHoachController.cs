@@ -55,29 +55,22 @@ namespace API.Controllers
 
                 var conn = _context.Database.GetDbConnection();
                 using var tempCmd = conn.CreateCommand();
-                var sql1 = "SELECT b.*, org.ORG_NAME FROM his_common.org_officer b LEFT JOIN his_common.org_organization org ON org.ORG_ID = b.KHOAID ";
-                var flag = 0;
+                var sql1 = "SELECT b.*, org.ORG_NAME FROM his_common.org_officer b LEFT JOIN his_common.org_organization org ON org.ORG_ID = b.KHOAID WHERE b.STATUS=1 ";
                 if(req.KhoaId!= null)
                 {
-                    sql1 += $"WHERE b.KHOAID = {req.KhoaId}";
-                    flag = 1;
+                    sql1 += $"AND b.KHOAID = {req.KhoaId}";
                 }
                 if (req.SearchTerm != null && !req.SearchTerm.Equals("") ){
-                    if (flag == 1) {
-                        sql1 += $" AND b.OFFICER_NAME LIKE '%{req.SearchTerm}%' ";
-                    }else
-                    {
-                        sql1 += $" WHERE b.OFFICER_NAME LIKE '%{req.SearchTerm}%' ";
-                    }
+                    sql1 += $" AND b.OFFICER_NAME LIKE '%{req.SearchTerm}%' ";
                 }
                 var sql2 = $"SELECT * FROM  `{dbData}`.bc_diemkehoach a ";
                 if(req.ThangNam != null)
                 {
                     sql2 += $" WHERE a.THANGNAM = {req.ThangNam}";
                 }
-                var sql = $"SELECT ifnull(t2.DIEMKEHOACHID, 0) DIEMKEHOACHID, ifnull(t2.DIEM_KEHOACH, 0) DIEM_KEHOACH, ifnull(t2.SO_BUOITRUC, 0) SO_BUOITRUC, ifnull(t2.SO_BENHNHAN, 0) SO_BENHNHAN, ifnull(t2.DIEM_TRUC, 0) DIEM_TRUC, ifnull(t2.DIEM_TRUC_CC, 0) DIEM_TRUC_CC, ifnull(t2.DIEM_LAYMAU, 0) DIEM_LAYMAU, ifnull(t2.THANGNAM, 0) THANGNAM, t1.OFFICER_TYPE, t1.ORG_NAME KHOA, t1.OFFICER_NAME, t1.OFFICER_ID BACSIID, t1.KHOAID FROM " +
+                var sql = $"SELECT ifnull(t2.DIEMKEHOACHID, 0) DIEMKEHOACHID, ifnull(t2.DIEM_KEHOACH, 0) DIEM_KEHOACH, ifnull(t2.SO_BUOITRUC, 0) SO_BUOITRUC, ifnull(t2.SO_BENHNHAN, 0) SO_BENHNHAN, ifnull(t2.DIEM_TRUC, 0) DIEM_TRUC, ifnull(t2.DIEM_TRUC_CC, 0) DIEM_TRUC_CC, ifnull(t2.DIEM_LAYMAU, 0) DIEM_LAYMAU, ifnull(t2.THANGNAM, 0) THANGNAM, t1.OFFICER_TYPE, t1.ORG_NAME KHOA, t1.OFFICER_NAME, t1.BACSIID, t1.KHOAID FROM " +
                     " ("+ sql1+ ") t1 "+
-                    $" LEFT JOIN (" + sql2 + ") t2 ON t2.BACSIID = t1.OFFICER_ID "+
+                    $" LEFT JOIN (" + sql2 + ") t2 ON t2.BACSIID = t1.BACSIID "+
                     $"LIMIT {pageSize} OFFSET {offset}";
                 
 

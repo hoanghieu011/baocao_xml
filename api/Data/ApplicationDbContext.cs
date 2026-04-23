@@ -25,6 +25,7 @@ namespace API.Data
         public DbSet<BenhVien> dmc_benhvien { get; set; }
         public DbSet<DiemKeHoach> diemkehoach { get; set; }
         public DbSet<TangCuong> tangcuong { get; set; }
+        public DbSet<DiemCtkh> diemCtkhs { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -33,6 +34,7 @@ namespace API.Data
             modelBuilder.Entity<BcDoanhThuBscdDto>().HasNoKey();
             modelBuilder.Entity<BcDoanhThuKhoaDto>().HasNoKey();
             modelBuilder.Entity<BcDoanhThuToanVienDto>().HasNoKey();
+            modelBuilder.Entity<DiemCtkh>().HasNoKey();
         }
     }
 

@@ -2,13 +2,17 @@ using API.Common;
 using API.Data;
 using API.DTO;
 using API.Models;
+using ClosedXML.Excel;
+using DocumentFormat.OpenXml.Bibliography;
+using DocumentFormat.OpenXml.Drawing;
+using DocumentFormat.OpenXml.Office.Word;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Org.BouncyCastle.Ocsp;
 using System.Data.Common;
 using System.Security.Claims;
 using System.Text.RegularExpressions;
-using ClosedXML.Excel;
 
 namespace API.Controllers
 {
@@ -44,65 +48,12 @@ namespace API.Controllers
 
                 var csytid = User.FindFirst(ClaimTypes.Name)?.Value
                     ?? User.FindFirst("CSYTID")?.Value;
+                // Lấy tên database động thông qua service dùng chung
+                var dbData = await _dbResolver.GetDatabaseByUserAsync(userName);
+                if (string.IsNullOrEmpty(dbData))
+                    return BadRequest("Không xác định được database dữ liệu cho user.");
 
-                var sql = $@"
-                            SELECT NHOM_MABHYT_ID,MA_DICH_VU, TEN_DICH_VU, TENNHOM, TEN_BACSI, DON_GIA_BH, HESO, CHIPHI, SOLUONG , CHIPHI * SOLUONG AS CHIPHI_VATTU, DON_GIA_BH * SOLUONG AS THANH_TIEN, ((DON_GIA_BH - CHIPHI) * SOLUONG) AS SOTIEN_CONLAI, HESO * SOLUONG AS DIEM_THUCHIEN
-                            FROM (
-                                SELECT NHOM_MABHYT_ID,MA_DICH_VU, TEN_DICH_VU, TENNHOM, DON_GIA_BH, HESO, CHIPHI, TEN_BACSI, SUM(SO_LUONG) SOLUONG FROM (
-                                    SELECT 
-                                        nhom.NHOM_MABHYT_ID,IFNULL(b.MA_DICH_VU,b.MA_VAT_TU) MA_DICH_VU,IFNULL(b.TEN_DICH_VU,b.TEN_VAT_TU) TEN_DICH_VU,nhom.TENNHOM,IFNULL(b.SO_LUONG,0) SO_LUONG,IFNULL(b.DON_GIA_BH, 0) DON_GIA_BH ,IFNULL(dv.HESO,0) HESO, IFNULL(dv.CHIPHI,0) CHIPHI, org.OFFICER_NAME TEN_BACSI
-                                    FROM  
-                                        his_data_binhluc.xml1 a, 
-                                        his_data_binhluc.xml3 b LEFT JOIN dmc_dichvu dv on IFNULL(b.MA_DICH_VU,b.MA_VAT_TU) = dv.MA_DICHVU AND IFNULL(b.TEN_DICH_VU,b.TEN_VAT_TU) = dv.TEN_DICHVU,
-                                        dmc_nhom_mabhyt nhom,
-                                        org_officer org
-                                    WHERE a.ma_lk = b.ma_lk
-                                    AND b.ma_nhom = nhom.MANHOM_BHYT
-                                    AND b.MA_BAC_SI = org.MA_BAC_SI
-                                    AND a.NGAY_RA >= @tungay 
-                                    AND a.NGAY_RA <= @dengay 
-                                    AND b.ma_bac_si = @maBacSi
-                                ) th
-                                group by NHOM_MABHYT_ID,MA_DICH_VU, TEN_DICH_VU, TENNHOM, DON_GIA_BH, HESO, CHIPHI, TEN_BACSI
-                            ) th2
-                            ORDER BY NHOM_MABHYT_ID, MA_DICH_VU;";
-
-                var conn = _context.Database.GetDbConnection();
-                using var tempCmd = conn.CreateCommand();
-
-                var paramList = new List<DbParameter>();
-
-                var p1 = tempCmd.CreateParameter();
-                    p1.ParameterName = "@tungay";
-                    p1.Value = req.TuNgay.Date;
-                    paramList.Add(p1);
-
-                var p2 = tempCmd.CreateParameter();
-                    p2.ParameterName = "@dengay";
-                    p2.Value = req.DenNgay.Date;
-                    paramList.Add(p2);
-
-                var p3 = tempCmd.CreateParameter();
-                    p3.ParameterName = "@maBacSi";
-                    p3.Value = req.MaBacSy.ToString();
-                    paramList.Add(p3);
-
-                var doanhthu_bscd = await _context.dto_bc_doanhthu_bscd
-                    .FromSqlRaw(sql, paramList.ToArray())
-                    .AsNoTracking()
-                    .ToListAsync();
-
-                // using var cmd = _context.Database.GetDbConnection().CreateCommand();
-                // cmd.CommandText = @"cmd";
-                // await _context.Database.OpenConnectionAsync();
-
-                // using var reader = await cmd.ExecuteReaderAsync();
-
-                // for (int i = 0; i < reader.FieldCount; i++)
-                // {
-                //     Console.WriteLine($"{reader.GetName(i)} - {reader.GetFieldType(i)}");
-                // }
-
+                var doanhthu_bscd = await GetDoanhThuBSCDFunc(req.TuNgay, req.DenNgay, req.MaBacSy, dbData);
                 return Ok(new
                 {
                     data = doanhthu_bscd,
@@ -129,6 +80,9 @@ namespace API.Controllers
 
                 if (string.IsNullOrEmpty(csytid))
                     return Unauthorized();
+                var dbData = await _dbResolver.GetDatabaseByUserAsync(userName);
+                if (string.IsNullOrEmpty(dbData))
+                    return BadRequest("Không xác định được database dữ liệu cho user.");
 
                 // Lấy bệnh viện
                 var pCsyTid = new List<DbParameter>();
@@ -146,70 +100,7 @@ namespace API.Controllers
                     .AsNoTracking()
                     .FirstOrDefaultAsync();
 
-                var sql = @"
-                    SELECT NHOM_MABHYT_ID, MA_DICH_VU, TEN_DICH_VU, TENNHOM, TEN_BACSI, DON_GIA_BH, HESO, CHIPHI, SOLUONG,
-                        CHIPHI * SOLUONG AS CHIPHI_VATTU,
-                        DON_GIA_BH * SOLUONG AS THANH_TIEN,
-                        ((DON_GIA_BH - CHIPHI) * SOLUONG) AS SOTIEN_CONLAI,
-                        HESO * SOLUONG AS DIEM_THUCHIEN
-                    FROM (
-                        SELECT NHOM_MABHYT_ID, MA_DICH_VU, TEN_DICH_VU, TENNHOM, DON_GIA_BH, HESO, CHIPHI, TEN_BACSI, SUM(SO_LUONG) SOLUONG
-                        FROM (
-                            SELECT 
-                                nhom.NHOM_MABHYT_ID,
-                                IFNULL(b.MA_DICH_VU, b.MA_VAT_TU) MA_DICH_VU,
-                                IFNULL(b.TEN_DICH_VU, b.TEN_VAT_TU) TEN_DICH_VU,
-                                nhom.TENNHOM,
-                                IFNULL(b.SO_LUONG,0 ) SO_LUONG,
-                                IFNULL(b.DON_GIA_BH,0) DON_GIA_BH,
-                                IFNULL(dv.HESO,0) HESO,
-                                IFNULL(dv.CHIPHI,0) CHIPHI,
-                                org.OFFICER_NAME TEN_BACSI
-                            FROM  
-                                his_data_binhluc.xml1 a, 
-                                his_data_binhluc.xml3 b 
-                                LEFT JOIN dmc_dichvu dv 
-                                    ON IFNULL(b.MA_DICH_VU, b.MA_VAT_TU) = dv.MA_DICHVU 
-                                AND IFNULL(b.TEN_DICH_VU, b.TEN_VAT_TU) = dv.TEN_DICHVU,
-                                dmc_nhom_mabhyt nhom,
-                                org_officer org
-                            WHERE a.ma_lk = b.ma_lk
-                            AND b.ma_nhom = nhom.MANHOM_BHYT
-                            AND b.MA_BAC_SI = org.MA_BAC_SI
-                            AND a.NGAY_RA >= @tungay 
-                            AND a.NGAY_RA <= @dengay 
-                            AND (@maBacSi IS NULL OR b.ma_bac_si = @maBacSi)
-                        ) th
-                        GROUP BY NHOM_MABHYT_ID, MA_DICH_VU, TEN_DICH_VU, TENNHOM, DON_GIA_BH, HESO, CHIPHI, TEN_BACSI
-                    ) th2
-                    ORDER BY TEN_BACSI, NHOM_MABHYT_ID, MA_DICH_VU;";
-
-                var paramList = new List<DbParameter>();
-
-                using (var tempCmd = conn.CreateCommand())
-                {
-                    var p1 = tempCmd.CreateParameter();
-                    p1.ParameterName = "@tungay";
-                    p1.Value = req.TuNgay.Date;
-                    paramList.Add(p1);
-
-                    var p2 = tempCmd.CreateParameter();
-                    p2.ParameterName = "@dengay";
-                    p2.Value = req.DenNgay.Date;
-                    paramList.Add(p2);
-
-                    var p3 = tempCmd.CreateParameter();
-                    p3.ParameterName = "@maBacSi";
-                    p3.Value = string.IsNullOrWhiteSpace(req.MaBacSy)
-                        ? DBNull.Value
-                        : req.MaBacSy.Trim();
-                    paramList.Add(p3);
-                }
-
-                var data = await _context.dto_bc_doanhthu_bscd
-                    .FromSqlRaw(sql, paramList.ToArray())
-                    .AsNoTracking()
-                    .ToListAsync();
+                var data = await GetDoanhThuBSCDFunc(req.TuNgay, req.DenNgay, req.MaBacSy, dbData);
 
                 using var wb = new XLWorkbook();
 
@@ -499,6 +390,60 @@ namespace API.Controllers
             usedNames.Add(name);
             return name;
         }
+        
+        private async Task<List<BcDoanhThuBscdDto>> GetDoanhThuBSCDFunc(DateTime tuNgay, DateTime denNgay, string? maBacSi, string dbName )
+        {
+            var sql = $@"
+                            SELECT NHOM_MABHYT_ID,MA_DICH_VU, TEN_DICH_VU, TENNHOM, TEN_BACSI, DON_GIA_BH, HESO, CHIPHI, SOLUONG , CHIPHI * SOLUONG AS CHIPHI_VATTU, DON_GIA_BH * SOLUONG AS THANH_TIEN, ((DON_GIA_BH - CHIPHI) * SOLUONG) AS SOTIEN_CONLAI, HESO * SOLUONG AS DIEM_THUCHIEN
+                            FROM (
+                                SELECT NHOM_MABHYT_ID,MA_DICH_VU, TEN_DICH_VU, TENNHOM, DON_GIA_BH, HESO, CHIPHI, TEN_BACSI, SUM(SO_LUONG) SOLUONG FROM (
+                                    SELECT 
+                                        nhom.NHOM_MABHYT_ID,IFNULL(b.MA_DICH_VU,b.MA_VAT_TU) MA_DICH_VU,IFNULL(b.TEN_DICH_VU,b.TEN_VAT_TU) TEN_DICH_VU,nhom.TENNHOM,IFNULL(b.SO_LUONG,0) SO_LUONG,IFNULL(b.DON_GIA_BH, 0) DON_GIA_BH ,IFNULL(dv.HESO,0) HESO, IFNULL(dv.CHIPHI,0) CHIPHI, org.OFFICER_NAME TEN_BACSI
+                                    FROM  
+                                        `{dbName}`.xml1 a, 
+                                        `{dbName}`.xml3 b LEFT JOIN dmc_dichvu dv on IFNULL(b.MA_DICH_VU,b.MA_VAT_TU) = dv.MA_DICHVU AND IFNULL(b.TEN_DICH_VU,b.TEN_VAT_TU) = dv.TEN_DICHVU,
+                                        dmc_nhom_mabhyt nhom,
+                                        org_officer org
+                                    WHERE a.ma_lk = b.ma_lk
+                                    AND b.ma_nhom = nhom.MANHOM_BHYT
+                                    AND b.MA_BAC_SI = org.MA_BAC_SI
+                                    AND a.NGAY_RA >= @tungay 
+                                    AND a.NGAY_RA <= @dengay 
+                                    AND b.ma_bac_si = @maBacSi
+                                ) th
+                                group by NHOM_MABHYT_ID,MA_DICH_VU, TEN_DICH_VU, TENNHOM, DON_GIA_BH, HESO, CHIPHI, TEN_BACSI
+                            ) th2
+                            ORDER BY NHOM_MABHYT_ID, MA_DICH_VU;";
+
+                var conn = _context.Database.GetDbConnection();
+                using var tempCmd = conn.CreateCommand();
+
+                var paramList = new List<DbParameter>();
+
+                var p1 = tempCmd.CreateParameter();
+                p1.ParameterName = "@tungay";
+                p1.Value = tuNgay.Date;
+                paramList.Add(p1);
+
+                var p2 = tempCmd.CreateParameter();
+                p2.ParameterName = "@dengay";
+                p2.Value = denNgay.Date;
+                paramList.Add(p2);
+
+                var p3 = tempCmd.CreateParameter();
+                p3.ParameterName = "@maBacSi";
+                p3.Value = string.IsNullOrWhiteSpace(maBacSi)
+                    ? DBNull.Value
+                    : maBacSi.Trim();
+                paramList.Add(p3);
+
+            var doanhthu_bscd = await _context.dto_bc_doanhthu_bscd
+                    .FromSqlRaw(sql, paramList.ToArray())
+                    .AsNoTracking()
+                    .ToListAsync();
+            return doanhthu_bscd;
+        }
+        
         /// <summary>
         /// Báo cáo doanh thu theo bác sĩ thực hiện.
         /// </summary>
@@ -1705,6 +1650,98 @@ namespace API.Controllers
             }
         }
 
+        [Authorize]
+        [HttpPost("bc_diem_ctkh")]
+        public async Task<IActionResult> GetBcDiemCtkh([FromBody] BaoCaoDiemCtkhRequest req)
+        {
+            try
+            {
+                var userName = User.FindFirst(ClaimTypes.Name)?.Value
+                    ?? User.FindFirst("USER_NAME")?.Value;
+
+                if (string.IsNullOrEmpty(userName))
+                    return Unauthorized();
+
+                var csytid = User.FindFirst(ClaimTypes.Name)?.Value
+                    ?? User.FindFirst("CSYTID")?.Value;
+                // Lấy tên database động thông qua service dùng chung
+                var dbData = await _dbResolver.GetDatabaseByUserAsync(userName);
+                if (string.IsNullOrEmpty(dbData))
+                    return BadRequest("Không xác định được database dữ liệu cho user.");
+
+                // khơi tạo arrThangNam để thêm vào điều kiện lọc theo trường ThangNam
+                var endPointMonth =Math.Max((req.DenNam - req.TuNam) * 12, req.DenThang);
+                var arrThangNam = new List<string>();
+                for (var year = req.TuNam; year <= req.DenNam; year++)
+                {
+                    for (var month = req.TuThang; month <= endPointMonth; month++)
+                    {
+                        var tempM = month % 12 == 0 ? 12 : month % 12;
+                        arrThangNam.Add($"{tempM}{year}");
+                    }
+                }
+                // tạo fromDate, toDate để thêm vào điều kiện lọc Điểm CĐ
+                var fromDate = new DateTime(req.TuNam, req.TuThang, 1);
+                var endDate = new DateTime(req.DenNam, req.DenThang, DateTime.DaysInMonth(req.DenNam, req.DenThang));
+                var sql = $"SELECT  t1.*, t2.DIEMKEHOACHID, t2.DIEM_KEHOACH, t2.DIEM_TRUC, t2.DIEMTANGCUONG, t3.DIEMCDNHAPVIEN, t1.DIEMTHUCHIEN*0.2 DIEMPTTCHIDINH, t1.DIEMTHUCHIEN*0.8 DIEMPTTTHUCHIEN FROM (SELECT activeUsers.OFFICER_TYPE, activeUsers.OFFICER_NAME, activeUsers.BACSIID, activeUsers.KHOAID, org.ORG_NAME KHOA, t.DIEMTHUCHIEN " +
+                    $"FROM (SELECT * from his_common.org_officer WHERE STATUS = 1 AND MA_BAC_SI IS NOT NULL AND MA_BAC_SI <> '' ) activeUsers " +
+                    $"LEFT JOIN (SELECT  MA_BAC_SI, SUM(HESO) as DIEMTHUCHIEN " +
+                    $"FROM (SELECT " +
+                    $"nhom.NHOM_MABHYT_ID,IFNULL(b.MA_DICH_VU,b.MA_VAT_TU) MA_DICH_VU,IFNULL(b.TEN_DICH_VU,b.TEN_VAT_TU) TEN_DICH_VU,nhom.TENNHOM,IFNULL(b.SO_LUONG,0) SO_LUONG,IFNULL(b.DON_GIA_BH, 0) DON_GIA_BH ,IFNULL(dv.HESO,0) HESO, IFNULL(dv.CHIPHI,0) CHIPHI, b.MA_BAC_SI" +
+                    $" FROM " +
+                    $"`{dbData}`.xml1 a, " +
+                    $"`{dbData}`.xml3 b LEFT JOIN his_common.dmc_dichvu dv on IFNULL(b.MA_DICH_VU,b.MA_VAT_TU) = dv.MA_DICHVU AND IFNULL(b.TEN_DICH_VU,b.TEN_VAT_TU) = dv.TEN_DICHVU, " +
+                    $"his_common.dmc_nhom_mabhyt nhom " +
+                    $"WHERE a.ma_lk = b.ma_lk " +
+                    $"AND b.ma_nhom = nhom.MANHOM_BHYT " +
+                    $"AND a.NGAY_RA >= @tuNgay " +
+                    $"AND a.NGAY_RA <= @denNgay) x " +
+                    $"group by MA_BAC_SI) t " +
+                    $"ON t.MA_BAC_SI = activeUsers.MA_BAC_SI " +
+                    $"LEFT JOIN his_common.org_organization org " +
+                    $"ON org.ORG_ID = activeUsers.KHOAID) t1 " +
+                    $"LEFT JOIN (select dkh.DIEMKEHOACHID, dkh.DIEM_KEHOACH, dkh.BACSIID, dkh.DIEM_TRUC, IFNULL(sum(tc.DIEM),0) as DIEMTANGCUONG from `{dbData}`.bc_diemkehoach dkh " +
+                    $"LEFT JOIN `{dbData}`.bc_tangcuong tc " +
+                    $"ON  tc.DIEMKEHOACHID= dkh.DIEMKEHOACHID " +
+                    $"WHERE THANGNAM in (@arrThangNam) " +
+                    $"GROUP BY DIEMKEHOACHID, DIEM_KEHOACH, BACSIID, DIEM_TRUC) t2 " +
+                    $"ON t1.BACSIID = t2.BACSIID " +
+                    $"LEFT JOIN ( SELECT BACSIID, SUM(SOLUONG) DIEMCDNHAPVIEN FROM `{dbData}`.bc_benhnhan_nhapvien WHERE THANGNAM IN (@arrThangNam) AND BHYT = 1 " +
+                    $"GROUP BY BACSIID " +
+                    $") t3 " +
+                    $"ON t1.BACSIID = t3.BACSIID " +
+                    $"order by KHOAID";
+                    var conn = _context.Database.GetDbConnection();
+                    using var cmd = conn.CreateCommand();
+                    var paramList = new List<DbParameter>();
+                    var p1 = cmd.CreateParameter();
+                    p1.ParameterName = "@tuNgay";
+                    p1.Value = fromDate;
+                    paramList.Add(p1);
+
+                    var p2 = cmd.CreateParameter();
+                    p2.ParameterName = "@denNgay";
+                    p2.Value = endDate;
+                    paramList.Add(p2);
+
+                    var p3 = cmd.CreateParameter();
+                    p3.ParameterName = "@arrThangNam";
+                    p3.Value = string.Join(',', arrThangNam);
+                    paramList.Add(p3);
+
+                    var dsDiemCtkh = await _context.diemCtkhs.FromSqlRaw(sql, paramList.ToArray())
+                    .AsNoTracking()
+                    .ToListAsync();
+                return Ok(new {
+                    data = dsDiemCtkh,
+                    message="Lấy ds điểm CTKH Thành công!"
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest("Lỗi server: " + ex.Message);
+            }
+        }
         private static string BuildTitle(DateTime tuNgay, DateTime denNgay)
         {
             var months = new List<int>();
@@ -1734,6 +1771,14 @@ namespace API.Controllers
             public DateTime DenNgay { get; set; }
             public string? MaKhoa { get; set; }
             public bool isShowGroupInOrg { get; set; }
+        }
+
+        public class BaoCaoDiemCtkhRequest
+        {
+            public int TuThang { get; set; }
+            public int TuNam { get; set; }
+            public int DenThang { get; set; }
+            public int DenNam { get; set; }
         }
 
     }

@@ -82,6 +82,7 @@ export class DefaultHeaderComponent extends HeaderComponent{
         const data = res?.data || [];
 
         this.tenbenhvien = data[0].tenbenhvien;
+        localStorage.setItem('TenBenhVien', this.tenbenhvien);
       },
       error: (err) => {
         console.error(err);
