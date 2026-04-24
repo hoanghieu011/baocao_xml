@@ -47,12 +47,12 @@
                         <thead>
                             <tr>
                                 <th style="width: 250px;">{{'KHOA'|translate}}</th>
-                                <th style="width: 350px;">{{'BAC_SI'|translate}}</th>
-                                <th>{{'DIEM_KE_HOACH'|translate}}</th>
-                                <th>{{'TRUC'|translate}}</th>
-                                <th>{{'TANG_CUONG'|translate}}</th>
-                                <th>{{'LAY_MAU_XN'|translate}}</th>
-                                <th>{{'BN_NHAP_VIEN_NG' | translate}}</th>
+                                <th style="width: 350px;">{{'BAC_SY'|translate}}</th>
+                                <th>{{'BC_DIEM_CTKH.DIEM_KE_HOACH'|translate}}</th>
+                                <th>{{'BC_DIEM_CTKH.DIEM_TRUC'|translate}}</th>
+                                <th>{{'DIEM_KE_HOACH.DIEM_TANG_CUONG'|translate}}</th>
+                                <th>{{'DIEM_KE_HOACH.LAY_MAU_XN'|translate}}</th>
+                                <th>{{'DIEM_KE_HOACH.BN_NHAP_VIEN_NG' | translate}}</th>
                                 <th>#</th>
                             </tr>
                         </thead>
@@ -65,12 +65,6 @@
                                 <td>{{ item.tangCuong }}</td>
                                 <td>{{ item.diemLayMau }}</td>
                                 <td>{{ item.bn_nhap_vien_ng }}</td>
-                                <td class="text-center">
-                                  <button class="btn btn-sm btn-outline-primary"
-                                          (click)="onThemDiemKeHoachBtnClick(item)">
-                                  <i class="bi bi-pencil"></i>
-                                  </button>
-                              </td>
                             </tr>
                         </tbody>
                     </table>

@@ -234,5 +234,34 @@
   "KHONG": "Không",
   "BO_SUNG_SAU": "Bổ sung chứng từ sau",
   "CAP_NHAT_CV": "Cập nhật công việc",
-  "CN_HOAN_TAT": "Cập nhật hoàn tất, xem kết quả ở file tải xuống!"
+  "CN_HOAN_TAT": "Cập nhật hoàn tất, xem kết quả ở file tải xuống!",
+  "KHOA": "Khoa",
+  "BAC_SY": "Bác sỹ",
+  "DIEM_KE_HOACH" : {
+    "LAY_MAU_XN": "Lấy mẫu xét nghiệm",
+    "BN_NHAP_VIEN_NG": "Bệnh nhân nhập viện NG",
+    "DIEM_TANG_CUONG": "Tăng cường"
+  },
+  "BC_DIEM_CTKH": {
+    "KHOA_BAC_SY": "Khoa, bác sỹ",
+    "DIEM_KE_HOACH": "Điểm kế hoạch",
+    "DIEM_CD_KHAM": "Điểm CĐ Khám, điều trị, phát thuốc (Dược)",
+    "DIEM_CD_NHAPVIEN": "Điểm CĐ nhập viện, Dược(hc)",
+    "PTT": "Phẫu, thủ thuật",
+    "DIEM_TANGCUONG": "Điểm BH/ĐT; Tăng cường", 
+    "DIEM_TRUC": "Trực",
+    "DIEM_CONG_BANT": "Điểm cộng BA ngoại trú; TH siêu âm, Dược",
+    "DIEM_PTT_THEO_DIEU_DUONG": "Điểm TH PTT theo Điều dưỡng",
+    "DIEM_BNND": "Điểm BNND",
+    "DIEM_TONG": "Tổng điểm",
+    "KHOA_CHIA_LAI_DIEM": "Khoa chia lại điểm",
+    "DAT_CTKH_BS": "Đạt CTKH Bác sỹ",
+    "TONG_CONG_CHUNG_CA_KHOA": "Tổng cộng chung cả khoa",
+    "CHI_DINH": "Chỉ định",
+    "THUC_HIEN": "Thực hiện",
+    "CD_NHAP_VIEN": "CĐ nhập viện",
+    "DIEM_KH": "Điểm K.H",
+    "TONG_DIEM_TH": "Tổng điểm T.H",
+    "DAT_CTKH": "Đạt CTKH"
+  }
 }

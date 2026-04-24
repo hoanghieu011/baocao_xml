@@ -55,6 +55,7 @@ namespace api.Controllers
         }
         
         [Authorize]
+        [RequestSizeLimit(50_000_000)]
         [HttpPost("ImportHospitalData")]
         public async Task<IActionResult> ImportHospitalData(IFormFile file)
         {
