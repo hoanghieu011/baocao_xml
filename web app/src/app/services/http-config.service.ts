@@ -5,8 +5,8 @@ import { HttpHeaders } from '@angular/common/http';
   providedIn: 'root',
 })
 export class HttpConfigService {
-  // private readonly baseUrl = '/api';
-  private readonly baseUrl = 'https://localhost:7037/api';
+  private readonly baseUrl = '/api';
+  // private readonly baseUrl = 'https://localhost:7037/api';
 
   getHeaders(): HttpHeaders {
     const token = localStorage.getItem('token');
