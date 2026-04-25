@@ -13,18 +13,20 @@ namespace API.Models
         public string officerName { get; set; }
         [Column("BACSIID")]
         public int? bacSiId  { get; set; }
+        [Column("DIEMTANGCUONG")]
+        public decimal? diemTangCuong { get; set; }
         [Column("DIEM_KEHOACH")]
-        public int? diemKeHoach  { get; set; }
+        public decimal? diemKeHoach  { get; set; }
         [Column("SO_BUOITRUC")]
-        public int? soBuoiTruc  { get; set; }
+        public decimal? soBuoiTruc  { get; set; }
         [Column("SO_BENHNHAN")]
         public int? soBenhNhan  { get; set; }
         [Column("DIEM_TRUC")]
-        public int? diemTruc  { get; set; }
+        public decimal? diemTruc  { get; set; }
         [Column("DIEM_TRUC_CC")]
-        public int? diemTrucCC  { get; set; }
+        public decimal? diemTrucCC  { get; set; }
         [Column("DIEM_LAYMAU")]
-        public int? diemLayMau  { get; set; }
+        public decimal? diemLayMau  { get; set; }
         [Column("THANGNAM")]
         public int? thangNam  { get; set; }
         [Column("OFFICER_TYPE")]

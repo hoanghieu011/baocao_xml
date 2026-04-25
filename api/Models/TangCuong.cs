@@ -8,7 +8,7 @@ namespace API.Models
         public int? Id { get; set; }
         public int diemKeHoachId { get; set; }
         public int khoaId { get; set; }
-        public int? soNgay {  get; set; }
-        public int? diem {  get; set; }
+        public decimal? soNgay {  get; set; }
+        public decimal? diem {  get; set; }
     }
 }

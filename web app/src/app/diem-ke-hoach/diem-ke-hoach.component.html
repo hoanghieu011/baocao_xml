@@ -35,10 +35,10 @@
         <span *ngIf="!loading">Tìm kiếm</span>
         <span *ngIf="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
       </button>
-      <button class="btn btn-primary fit-content"  >
+      <!-- <button class="btn btn-primary fit-content"  >
         <span *ngIf="!loading">Nhập điểm</span>
         <span *ngIf="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-      </button>
+      </button> -->
     </div>
     <div class="row">
             <div class="col-md-12">
@@ -48,23 +48,29 @@
                             <tr>
                                 <th style="width: 250px;">{{'KHOA'|translate}}</th>
                                 <th style="width: 350px;">{{'BAC_SY'|translate}}</th>
-                                <th>{{'BC_DIEM_CTKH.DIEM_KE_HOACH'|translate}}</th>
-                                <th>{{'BC_DIEM_CTKH.DIEM_TRUC'|translate}}</th>
-                                <th>{{'DIEM_KE_HOACH.DIEM_TANG_CUONG'|translate}}</th>
-                                <th>{{'DIEM_KE_HOACH.LAY_MAU_XN'|translate}}</th>
-                                <th>{{'DIEM_KE_HOACH.BN_NHAP_VIEN_NG' | translate}}</th>
-                                <th>#</th>
+                                <th class="text-center">{{'BC_DIEM_CTKH.DIEM_KE_HOACH'|translate}}</th>
+                                <th class="text-center">{{'BC_DIEM_CTKH.SO_BUOI_TRUC'|translate}}</th>
+                                <th class="text-center">{{'BC_DIEM_CTKH.DIEM_TRUC'|translate}}</th>
+                                <th class="text-center">{{'DIEM_KE_HOACH.DIEM_TANG_CUONG'|translate}}</th>
+                                <th class="text-center">{{'DIEM_KE_HOACH.LAY_MAU_XN'|translate}}</th>
+                                <th class="text-center">{{'DIEM_KE_HOACH.BN_NHAP_VIEN_NG' | translate}}</th>
+                                <th class="text-center">#</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr *ngFor="let item of ds_diemkehoach">
                                 <td>{{ item.khoa }}</td>
                                 <td>{{item.officerType==4? 'Bs' : item.officerType==6 ? 'ĐD' :'' }}: {{ item.officerName }}</td>
-                                <td>{{ item.diemKeHoach }}</td>
-                                <td>{{ item.diemTruc }}</td>
-                                <td>{{ item.tangCuong }}</td>
-                                <td>{{ item.diemLayMau }}</td>
-                                <td>{{ item.bn_nhap_vien_ng }}</td>
+                                <td class="text-end">{{ item.diemKeHoach | number }}</td>
+                                <td class="text-end">{{ item.soBuoiTruc | number }}</td>
+                                <td class="text-end">{{ item.diemTruc | number }}</td>
+                                <td class="text-end">{{ item.diemTangCuong | number }}</td>
+                                <td class="text-end">{{ item.diemLayMau | number }}</td>
+                                <td class="text-end">{{ item.bn_nhap_vien_ng | number }}</td>
+                                <td>
+                                  <button class="btn btn-sm btn-outline-primary" (click)="onThemDiemKeHoachBtnClick(item)">
+                                    <i class="bi bi-pencil"></i> Sửa
+                                  </button>
                             </tr>
                         </tbody>
                     </table>

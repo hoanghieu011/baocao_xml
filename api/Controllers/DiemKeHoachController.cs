@@ -55,7 +55,7 @@ namespace API.Controllers
 
                 var conn = _context.Database.GetDbConnection();
                 using var tempCmd = conn.CreateCommand();
-                var sql1 = "SELECT b.*, org.ORG_NAME FROM his_common.org_officer b LEFT JOIN his_common.org_organization org ON org.ORG_ID = b.KHOAID WHERE b.STATUS=1 ";
+                var sql1 = "SELECT b.*, org.ORG_NAME FROM his_common.org_officer b LEFT JOIN his_common.org_organization org ON org.ORG_ID = b.KHOAID WHERE b.STATUS=1 AND b.MA_BAC_SI IS NOT NULL AND b.MA_BAC_SI <>'' ";
                 if(req.KhoaId!= null)
                 {
                     sql1 += $"AND b.KHOAID = {req.KhoaId}";
@@ -63,14 +63,17 @@ namespace API.Controllers
                 if (req.SearchTerm != null && !req.SearchTerm.Equals("") ){
                     sql1 += $" AND b.OFFICER_NAME LIKE '%{req.SearchTerm}%' ";
                 }
-                var sql2 = $"SELECT * FROM  `{dbData}`.bc_diemkehoach a ";
-                if(req.ThangNam != null)
-                {
-                    sql2 += $" WHERE a.THANGNAM = {req.ThangNam}";
-                }
-                var sql = $"SELECT ifnull(t2.DIEMKEHOACHID, 0) DIEMKEHOACHID, ifnull(t2.DIEM_KEHOACH, 0) DIEM_KEHOACH, ifnull(t2.SO_BUOITRUC, 0) SO_BUOITRUC, ifnull(t2.SO_BENHNHAN, 0) SO_BENHNHAN, ifnull(t2.DIEM_TRUC, 0) DIEM_TRUC, ifnull(t2.DIEM_TRUC_CC, 0) DIEM_TRUC_CC, ifnull(t2.DIEM_LAYMAU, 0) DIEM_LAYMAU, ifnull(t2.THANGNAM, 0) THANGNAM, t1.OFFICER_TYPE, t1.ORG_NAME KHOA, t1.OFFICER_NAME, t1.BACSIID, t1.KHOAID FROM " +
+                var sql2 = $"SELECT dkh.*, tc.DIEMTANGCUONG FROM `{dbData}`.bc_diemkehoach dkh " +
+                    $"LEFT JOIN (SELECT DIEMKEHOACHID, SUM(DIEM) DIEMTANGCUONG FROM `{dbData}`.bc_tangcuong " +
+                    $"WHERE DIEMKEHOACHID IN (SELECT DIEMKEHOACHID FROM `{dbData}`.bc_diemkehoach " +
+                    (req.ThangNam != null ? $"WHERE THANGNAM = {req.ThangNam} " : "") +
+                    $") GROUP BY DIEMKEHOACHID) tc " +
+                    $"ON dkh.DIEMKEHOACHID = tc.DIEMKEHOACHID " +
+                    (req.ThangNam != null ? $"WHERE THANGNAM = {req.ThangNam} ": "");
+
+                var sql = $"SELECT ifnull(t2.DIEMKEHOACHID, 0) DIEMKEHOACHID, ifnull(t2.DIEM_KEHOACH, 0) DIEM_KEHOACH, ifnull(t2.SO_BUOITRUC, 0) SO_BUOITRUC, ifnull(t2.SO_BENHNHAN, 0) SO_BENHNHAN, ifnull(t2.DIEM_TRUC, 0) DIEM_TRUC, ifnull(t2.DIEM_TRUC_CC, 0) DIEM_TRUC_CC, ifnull(t2.DIEM_LAYMAU, 0) DIEM_LAYMAU, ifnull(t2.THANGNAM, 0) THANGNAM, ifnull(t2.DIEMTANGCUONG, 0) DIEMTANGCUONG ,t1.OFFICER_TYPE, t1.ORG_NAME KHOA, t1.OFFICER_NAME, `t1`.`BACSIID`, t1.KHOAID FROM " +
                     " ("+ sql1+ ") t1 "+
-                    $" LEFT JOIN (" + sql2 + ") t2 ON t2.BACSIID = t1.BACSIID "+
+                    $" LEFT JOIN (" + sql2 + ") t2 ON `t2`.`BACSIID` = `t1`.`BACSIID` "+
                     $"LIMIT {pageSize} OFFSET {offset}";
                 
 
@@ -314,12 +317,12 @@ namespace API.Controllers
     public class CapNhatDiemKeHoachRequest
     {
         public int DiemKeHoachId { get; set; }
-        public int? DiemKeHoach { get; set; }
-        public int? SoBuoiTruc { get; set; }
+        public decimal? DiemKeHoach { get; set; }
+        public decimal? SoBuoiTruc { get; set; }
         public int? SoBenhNhan { get; set; }
         public int? OfficerType { get; set; }
-        public int? DiemTrucCc { get; set; }
-        public int? DiemLayMau { get; set; }
+        public decimal? DiemTrucCc { get; set; }
+        public decimal? DiemLayMau { get; set; }
     }
 
     public class ThemDiemKeHoachRequest
@@ -331,12 +334,12 @@ namespace API.Controllers
         public int BacSiId { get; set; }
         [Required]
         public string BacSi { get; set; }
-        public int? DiemKeHoach { get; set; }
-        public int? SoBuoiTruc { get; set; }
+        public decimal? DiemKeHoach { get; set; }
+        public decimal? SoBuoiTruc { get; set; }
         public int? SoBenhNhan { get; set; }
-        public int? DiemTruc { get; set; }
-        public int? DiemTrucCc { get; set; }
-        public int? DiemLayMau { get; set; }
+        public decimal? DiemTruc { get; set; }
+        public decimal? DiemTrucCc { get; set; }
+        public decimal? DiemLayMau { get; set; }
         [Required]
         public string ThangNam { get; set; }
     }
