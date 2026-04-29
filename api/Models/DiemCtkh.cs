@@ -41,6 +41,8 @@ namespace API.Models
         /// </summary>
         [Column("DIEMTANGCUONG")]
         public decimal? DiemTangCuong { get; set; } = 0;
+        [Column("SONGAYTANGCUONG")]
+        public decimal? SoNgayTangCuong { get; set; } = 0;
         /// <summary>
         /// Điểm trực
         /// </summary>
@@ -49,7 +51,8 @@ namespace API.Models
         /// <summary>
         ///  Điểm cộng BA ngoại trú; TH siêu âm, Dược (tổng số lượt khám có đơn thuốc > 15 ngày)
         /// </summary>
-        //public decimal DiemCongBANT { get; set; } = 0;
+        [Column("DIEMBANT")]
+        public decimal? DiemCongBANT { get; set; } = 0;
         /// <summary>
         /// Điểm TH PTT theo điều dưỡng
         /// </summary>

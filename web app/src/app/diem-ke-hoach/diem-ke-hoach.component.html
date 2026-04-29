@@ -27,12 +27,16 @@
       </div>      
       <div class="w-500">
         <select2 class="form-control" [overlay]="false" placeholder=""
-          [data]="ds_khoa" (update)="onKhoaChange($event)" [styleMode]="'borderless'" [value]="cur_khoa"
+          [data]="ds_khoa" (update)="onKhoaFilterChange($event)" [styleMode]="'borderless'" [value]="cur_khoa"
           id="khoa" style="height: 38px; padding: 4px 0 0 0;">
         </select2>
       </div>
       <button class="btn btn-primary fit-content mr-2" (click)="submitFormSearch()">
         <span *ngIf="!loading">Tìm kiếm</span>
+        <span *ngIf="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+      </button>
+      <button class="btn btn-primary fit-content mr-2" (click)="themDiemKeHoachClick()">
+        <span *ngIf="!loading">Thêm điểm kế hoạch</span>
         <span *ngIf="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
       </button>
       <!-- <button class="btn btn-primary fit-content"  >
@@ -68,7 +72,7 @@
                                 <td class="text-end">{{ item.diemLayMau | number }}</td>
                                 <td class="text-end">{{ item.bn_nhap_vien_ng | number }}</td>
                                 <td>
-                                  <button class="btn btn-sm btn-outline-primary" (click)="onThemDiemKeHoachBtnClick(item)">
+                                  <button class="btn btn-sm btn-outline-primary" (click)="onSuaDiemKeHoachBtnClick(item)">
                                     <i class="bi bi-pencil"></i> Sửa
                                   </button>
                             </tr>
@@ -124,18 +128,35 @@
 <div class="modal-backdrop ng-star-inserted" *ngIf="isShowModal">
   <div class="modal-card">
     <div class="modal-header">
-      <h6 class="modal-title">Cập nhật thông tin điểm kế hoạch tháng {{cur_thang}}/{{cur_nam}} </h6>
+      <h6 class="modal-title">{{isThemMoi ? "Thêm" : "Cập nhật"}} thông tin điểm kế hoạch tháng {{cur_thang}}/{{cur_nam}} </h6>
       <button type="button" class="btn-close" aria-label="Close" (click)="onCloseModal()"></button>
     </div>
 
     <div class="modal-body">
       <form [formGroup]="formDataDiemKeHoach">
+        <div class="row">
+          <div *ngIf="isThemMoi">
+                <label for="">Chọn bác sĩ/điều dưỡng:</label>
+                <select2 class="form-control" [overlay]="false" placeholder=""
+                [data]="ds_officer" (update)="onSelectAddOfficer($event)" [styleMode]="'borderless'" [value]="selected_bs_id"
+                id="khoa" style="height: 38px; padding: 4px 0 0 0;">
+              </select2>
+            </div>
+            <div *ngIf="isThemMoi">
+              <label for="">Chọn khoa:</label>
+                <select2 class="form-control" [overlay]="false" placeholder=""
+                [data]="ds_khoa" (update)="onKhoaSelectThemChange($event)" [styleMode]="'borderless'" [value]="selected_khoa_id"
+                id="khoa" style="height: 38px; padding: 4px 0 0 0;">
+              </select2>
+            </div>
+        </div>
         <table class="table table-sm mb-0 patient-modal-table">
         <tbody>
           <tr>
-            <th colspan="2" style="background: #d0d0d0;">
+            <th *ngIf="!isThemMoi" colspan="2" style="background: #d0d0d0;">
               <br> {{selectedDiemKeHoach?.officerType ==4 ? 'Bác sĩ' : 'Điều dưỡng'}}: {{selectedDiemKeHoach?.officerName}} 
             </th>
+            
           </tr>
           <tr>
            <th class="w-40">Điểm kế hoạch <span class="required-field"></span></th>
@@ -152,7 +173,8 @@
             </td>
           </tr>
           <tr>
-            <th class="w-40">Điểm trực (Số buổi trực x {{(selectedDiemKeHoach?.officerType && selectedDiemKeHoach?.officerType < hesoTruc.length) ? hesoTruc[selectedDiemKeHoach?.officerType] : 1 }}) <span class="required-field"></span></th>
+            <th *ngIf="!isThemMoi" class="w-40">Điểm trực (Số buổi trực x {{(selectedDiemKeHoach?.officerType && selectedDiemKeHoach?.officerType < hesoTruc.length) ? hesoTruc[selectedDiemKeHoach?.officerType] : 1 }}) <span class="required-field"></span></th>
+            <th *ngIf="isThemMoi" class="w-40">Điểm trực (Số buổi trực x {{(selected_bs?.officer_type && selected_bs?.officer_type < hesoTruc.length) ? hesoTruc[selected_bs?.officer_type] : 1 }}) <span class="required-field"></span></th>
             <td class="w-60">
               <span> {{formDataDiemKeHoach.value.diemTruc}}</span>
             </td>
@@ -188,7 +210,7 @@
         <tr class="row-data-tangcuong" *ngFor="let tangCuong of dataTangCuong; let i = index">
           <td>
             <select2 class="form-control" [overlay]="false" placeholder=""
-              [data]="ds_khoa_tang_cuong" (update)="onKhoaTangCuongChange($event, i)" [styleMode]="'borderless'" [value]="tangCuong.khoaId"
+              [data]="ds_khoa" (update)="onKhoaTangCuongChange($event, i)" [styleMode]="'borderless'" [value]="tangCuong.khoaId"
               id="khoa" style="height: 38px; padding: 4px 0 0 0;">
             </select2>
           </td>

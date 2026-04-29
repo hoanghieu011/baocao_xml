@@ -42,6 +42,13 @@
         </select2>
       </div>
       <div class="col-auto">
+        <label for="">Loại báo cáo</label>
+        <select2 class="form-control" [overlay]="false" placeholder=""
+          [data]="officerTypeOptions" [styleMode]="'borderless'" [value]="loaiBaoCao" (update)="onLoaiBaoCaoChange($event)"
+          id="loaiBaoCao" style="height: 38px; padding: 4px 0 0 0;">
+        </select2>
+      </div>
+      <div class="col-auto">
         <button class="btn btn-primary w-100" (click)="loadData()" [disabled]="loading">
           <span *ngIf="!loading">Xem báo cáo</span>
           <span *ngIf="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
@@ -59,12 +66,12 @@
       <h6>{{tenBenhVien}}</h6>
     </div>
     <div class="text-center">
-      <h5><b>BẢNG TỔNG HỢP BÁC SỸ - DƯỢC SỸ THỰC HIỆN CHỈ TIÊU KẾ HOẠCH KCB <br> {{tieuDeMoRong}}</b></h5>
+      <h5><b>BẢNG TỔNG HỢP {{loaiBaoCao=='BAC_SI' ? 'BÁC SỸ' : 'ĐIỀU DƯỠNG'}} - DƯỢC SỸ THỰC HIỆN CHỈ TIÊU KẾ HOẠCH KCB <br> {{tieuDeMoRong}}</b></h5>
     </div>
     <div class="row">
             <div class="col-md-12">
                 <div class="table-responsive">
-                    <table class="table">
+                    <table class="table" *ngIf="loaiBaoCao=='BAC_SI'">
                         <thead>
                             <tr>
                                 <th class="text-center" rowspan="2" style="width: 80px;">{{'STT'|translate}}</th>
@@ -110,7 +117,7 @@
                               <td class="italic text-center">12</td>
                               <td class="italic text-center">13 = 2+...+12</td>
                               <td class="italic text-center">14</td>
-                              <td class="italic text-center">15=12/1</td>
+                              <td class="italic text-center">15=13/1</td>
                               <td class="italic text-center">31=1+16</td>
                               <td class="italic text-center">32=13+28</td>
                               <td class="italic text-center">33=32/31</td>
@@ -177,12 +184,120 @@
                                   <td class="text-end"></td>
                                   <td class="text-end"></td>
                                   <td class="text-end"></td>
-                                  <td class="text-end"></td>
+                                  <td class="text-end">{{ item.tongCong.toFixed(2) }}</td>
                                   <td class="text-end"></td>
                                   <td class="text-end">{{ item.datCtkh.toFixed(2) }}%</td>
                                   <td class="text-end"></td>
                                   <td class="text-end"></td>
                                   <td class="text-end"></td>
+                                </tr>
+                          </ng-container>
+                        </tbody>
+                    </table>
+                    <table class="table" *ngIf="loaiBaoCao=='DIEU_DUONG'">
+                        <thead>
+                            <tr>
+                                <th class="text-center" rowspan="2" style="width: 80px;">{{'STT'|translate}}</th>
+                                <th class="text-center" rowspan="2" style="width: 200px;">{{'BC_DIEM_CTKH.DIEU_DUONG'|translate}}</th>
+                                <th class="text-center" rowspan="2" style="width: 100px;">{{'BC_DIEM_CTKH.DIEM_KE_HOACH'|translate}}</th>
+                                <th class="text-center" rowspan="2" style="width: 120px;">{{'BC_DIEM_CTKH.DIEM_TH_THEO_BS'|translate}}</th>
+                                <th class="text-center" colspan="2" style="width: 120px;">{{'BC_DIEM_CTKH.DI_TANG_CUONG'|translate}}</th>
+                                <th class="text-center" colspan="2" style="width: 200px;">{{'BC_DIEM_CTKH.KHOA_DUOC_TC'|translate}}</th>
+                                <th class="text-center" rowspan="2" style="width: 100px;">{{'BC_DIEM_CTKH.DIEM_LAYMAU'|translate}}</th>
+                                <th class="text-center" rowspan="2" style="width: 100px;">{{'BC_DIEM_CTKH.DIEM_CONG_THEO_BS_DIENTIM_CLS'|translate}}</th>
+                                <th class="text-center" rowspan="2" style="width: 120px;">{{'BC_DIEM_CTKH.DIEM_TRUC'|translate}}</th>
+                                <th class="text-center" rowspan="2" style="width: 120px;">{{'BC_DIEM_CTKH.DIEM_TH_TT1_DD'|translate}}</th>
+                                <th class="text-center" colspan="2" style="width: 160px;">{{'BC_DIEM_CTKH.DIEM_BNND'|translate}}</th>
+                                <th class="text-center" rowspan="2" style="width: 120px;">{{'BC_DIEM_CTKH.DIEM_TONG'|translate}}</th>
+                                <th class="text-center" rowspan="2" style="width: 100px;">{{'BC_DIEM_CTKH.KHOA_CHIA_LAI_DIEM'|translate}}</th>
+                                <th class="text-center" rowspan="2" style="width: 100px;">{{'BC_DIEM_CTKH.DAT_CTKH_DD'|translate}}</th>
+                            </tr>
+                            <tr>
+                              <th class="text-center">{{'BC_DIEM_CTKH.SO_NGAY' | translate}}</th>
+                              <th class="text-center">{{'BC_DIEM_CTKH.TONG_DIEM' | translate}}</th>
+                              <th class="text-center">{{'BC_DIEM_CTKH.SO_NGAY_DUOC_TC' | translate}}</th>
+                              <th class="text-center">{{'BC_DIEM_CTKH.DIEM_TRU' | translate}}</th>
+                              <th class="text-center">{{'BC_DIEM_CTKH.THEO_BS' | translate}}</th>
+                              <th class="text-center">{{'BC_DIEM_CTKH.THEO_BN_NHAPVIEN' | translate}}</th>
+                            </tr>
+                            <tr>
+                              <td class="italic text-center" >C</td>
+                              <td class="italic text-center" >D</td>
+                              <td class="italic text-center">16</td>
+                              <td class="italic text-center">17=2+...+6<br>=2+...+5(TN)</td>
+                              <td class="italic text-center">18</td>
+                              <td class="italic text-center">19</td>
+                              <td class="italic text-center">20</td>
+                              <td class="italic text-center">21</td>
+                              <td class="italic text-center">22</td>
+                              <td class="italic text-center">23</td>
+                              <td class="italic text-center">24</td>
+                              <td class="italic text-center">25</td>
+                              <td class="italic text-center">26</td>
+                              <td class="italic text-center">27</td>
+                              <td class="italic text-center">28=17+...+27</td>
+                              <td class="italic text-center">29</td>
+                              <td class="italic text-center">30=28/16</td>
+                            </tr>
+                        </thead>
+                        <tbody>
+                          <ng-container *ngFor="let item of dsDiemCtkh; let i = index">
+                             <tr *ngIf="item.type === 'group'" class="table-secondary fw-bold">
+                                  <td class="text-center bold">{{ item.stt }}</td>
+                                  <td class="bold">{{ item.khoa }}</td>
+                                  <td class="text-end bold">{{ item.diemKeHoach.toFixed(2) }}</td>
+                                  <td class="text-end bold">{{ item.diemTHTheoBS?.toFixed(2) }}</td>
+                                  <td class="text-end bold"></td>
+                                  <td class="text-end bold"></td>
+                                  <td class="text-end bold"></td>
+                                  <td class="text-end bold"></td>
+                                  <td class="text-end bold"></td>
+                                  <td class="text-end bold"></td>
+                                  <td class="text-end bold">{{item.diemTruc.toFixed(2)}}</td>
+                                  <td class="text-end bold"></td>
+                                  <td class="text-end bold"></td>
+                                  <td class="text-end bold"></td>
+                                  <td class="text-end bold">{{ item.tongCong.toFixed(2) }}</td>
+                                  <td class="text-end bold"></td>
+                                  <td class="text-end bold">{{ item.datCtkh.toFixed(2) }}%</td>
+                                </tr>
+                                <tr *ngIf="item.type === 'grandTotal'" class="table-primary fw-bold">
+                                  <td class="text-center bold"></td>
+                                  <td class="bold">Tổng cộng</td>
+                                  <td class="text-end bold">{{ item.diemKeHoach.toFixed(2) }}</td>
+                                  <td class="text-end bold">{{ item.diemTHTheoBS?.toFixed(2) }}</td>
+                                  <td class="text-end bold"></td>
+                                  <td class="text-end bold"></td>
+                                  <td class="text-end bold"></td>
+                                  <td class="text-end bold"></td>
+                                  <td class="text-end bold"></td>
+                                  <td class="text-end bold"></td>
+                                  <td class="text-end bold">{{item.diemTruc.toFixed(2)}}</td>
+                                  <td class="text-end bold"></td>
+                                  <td class="text-end bold"></td>
+                                  <td class="text-end bold"></td>
+                                  <td class="text-end bold">{{ item.tongCong.toFixed(2) }}</td>
+                                  <td class="text-end bold"></td>
+                                  <td class="text-end bold">{{ item.datCtkh.toFixed(2) }}%</td>
+                                </tr>
+                                <tr *ngIf="item.type === 'item'">
+                                  <td class="text-center">{{ item.stt }}</td>
+                                  <td>{{ item.officerType == 4 ? 'BS:' : 'ĐD:' }}{{ item.officerName }}</td>
+                                  <td class="text-end">{{ item.diemKeHoach.toFixed(2) }}</td>
+                                  <td class="text-end">{{ item.diemTHTheoBS?.toFixed(2) }}</td>
+                                  <td class="text-end"></td>
+                                  <td class="text-end"></td>
+                                  <td class="text-end"></td>
+                                  <td class="text-end"></td>
+                                  <td class="text-end"></td>
+                                  <td class="text-end"></td>
+                                  <td class="text-end">{{ item.diemTruc.toFixed(2) }}</td>
+                                  <td class="text-end"></td>
+                                  <td class="text-end"></td>
+                                  <td class="text-end"></td>
+                                  <td class="text-end">{{ item.tongCong.toFixed(2) }}</td>
+                                  <td class="text-end"></td>
+                                  <td class="text-end">{{ item.datCtkh.toFixed(2) }}%</td>
                                 </tr>
                           </ng-container>
                         </tbody>

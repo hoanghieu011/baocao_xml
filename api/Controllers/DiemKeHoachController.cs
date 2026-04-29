@@ -23,7 +23,6 @@ namespace API.Controllers
             _context = context;
             _dbResolver = dbResolver;
         }
-
         /// <summary>
         /// Tra cứu danh sách dịch vụ.
         /// </summary>
@@ -31,6 +30,93 @@ namespace API.Controllers
         [Authorize]
         [HttpPost("ds_diemkehoach")]
         public async Task<ActionResult<object>> GetDsDiemKeHoach([FromBody] DsDiemKeHoachRequest req)
+        {
+            try
+            {
+                if (req == null)
+                    return BadRequest("Yêu cầu không hợp lệ.");
+
+                var userName = User.FindFirst(ClaimTypes.Name)?.Value
+                    ?? User.FindFirst("USER_NAME")?.Value;
+
+                var csytid = User.FindFirst(ClaimTypes.Name)?.Value
+                    ?? User.FindFirst("CSYTID")?.Value;
+
+                if (string.IsNullOrEmpty(userName))
+                    return Unauthorized();
+                // Lấy tên database động thông qua service dùng chung
+                var dbData = await _dbResolver.GetDatabaseByUserAsync(userName);
+                if (string.IsNullOrEmpty(dbData))
+                    return BadRequest("Không xác định được database dữ liệu cho user.");
+                var pageNumber = Math.Max(1, req.PageNumber);
+                var pageSize = Math.Clamp(req.PageSize, 1, 1000);
+                var offset = (pageNumber - 1) * pageSize;
+
+                var conn = _context.Database.GetDbConnection();
+                using var tempCmd = conn.CreateCommand();
+                var sql1 = "SELECT b.*, org.ORG_NAME FROM his_common.org_officer b LEFT JOIN his_common.org_organization org ON org.ORG_ID = b.KHOAID WHERE b.STATUS=1 AND b.MA_BAC_SI IS NOT NULL AND b.MA_BAC_SI <>'' ";
+
+                var sql2 = $"SELECT dkh.*, tc.DIEMTANGCUONG FROM `{dbData}`.bc_diemkehoach dkh " +
+                    $"LEFT JOIN (SELECT DIEMKEHOACHID, SUM(DIEM) DIEMTANGCUONG FROM `{dbData}`.bc_tangcuong " +
+                    $"WHERE DIEMKEHOACHID IN (SELECT DIEMKEHOACHID FROM `{dbData}`.bc_diemkehoach " +
+                    (req.ThangNam != null ? $"WHERE THANGNAM = {req.ThangNam} " : "") +
+                    $") GROUP BY DIEMKEHOACHID) tc " +
+                    $"ON dkh.DIEMKEHOACHID = tc.DIEMKEHOACHID WHERE 1=1 " +
+                    (req.ThangNam != null ? $" AND THANGNAM = {req.ThangNam} " : "") +
+                    (req.KhoaId != null ? $" AND KHOAID={req.KhoaId} " : "");
+
+                var sql = $"SELECT ifnull(t2.DIEMKEHOACHID, 0) DIEMKEHOACHID, ifnull(t2.DIEM_KEHOACH, 0) DIEM_KEHOACH, ifnull(t2.SO_BUOITRUC, 0) SO_BUOITRUC, ifnull(t2.SO_BENHNHAN, 0) SO_BENHNHAN, ifnull(t2.DIEM_TRUC, 0) DIEM_TRUC, ifnull(t2.DIEM_TRUC_CC, 0) DIEM_TRUC_CC, ifnull(t2.DIEM_LAYMAU, 0) DIEM_LAYMAU, ifnull(t2.THANGNAM, 0) THANGNAM, ifnull(t2.DIEMTANGCUONG, 0) DIEMTANGCUONG ,b.OFFICER_TYPE, org.ORG_NAME KHOA, b.OFFICER_NAME, `b`.`BACSIID`, t2.KHOAID FROM " +
+                    " (" + sql2 + ") t2 " +
+                    $"LEFT JOIN his_common.org_officer b ON b.BACSIID = t2.BACSIID " +
+                    $"LEFT JOIN his_common.org_organization org ON org.ORG_ID = t2.KHOAID WHERE 1=1 ";
+                   
+                    if (req.KhoaId != null)
+                    {
+                        sql1 += $" AND t2.KHOAID = {req.KhoaId} ";
+                    }
+                    if (req.SearchTerm != null && !req.SearchTerm.Equals(""))
+                    {
+                        sql1 += $" AND b.OFFICER_NAME LIKE '%{req.SearchTerm}%' ";
+                    }
+                    sql += $"LIMIT {pageSize} OFFSET {offset}";
+                var dsDiemKeHoach = await _context.diemkehoach
+                    .FromSqlRaw(sql)
+                    .AsNoTracking()
+                    .ToListAsync();
+
+                if (conn.State != System.Data.ConnectionState.Open)
+                    await conn.OpenAsync();
+
+                int totalRecords;
+                using (var cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = $"SELECT COUNT(1) FROM his_common.org_officer a WHERE a.KhoaId = {req.KhoaId}";
+
+                    var scalar = await cmd.ExecuteScalarAsync();
+                    totalRecords = Convert.ToInt32(scalar ?? 0);
+                }
+
+                return Ok(new
+                {
+                    TotalRecords = totalRecords,
+                    PageIndex = pageNumber,
+                    PageSize = pageSize,
+                    DsDiemKeHoach = dsDiemKeHoach,
+                    //id = req.IdLoaiDV
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Lỗi server", detail = ex.Message });
+            }
+        }
+        /// <summary>
+        /// Tra cứu danh sách dịch vụ v1: lấy ds tất cả bs của khoa, chưa có điểm thì mặc định = 0
+        /// </summary>
+        /// <returns>Trả về danh sách dịch vụ.</returns>
+        [Authorize]
+        [HttpPost("ds_diemkehoach_default_0")]
+        public async Task<ActionResult<object>> GetDsDiemKeHoachDefault0([FromBody] DsDiemKeHoachRequest req)
         {
             try
             {

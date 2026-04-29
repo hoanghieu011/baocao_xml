@@ -23,6 +23,7 @@ namespace API.Models
         public int? csytid { get; set; }
         public DateTime? created_datetime { get; set; }
         public int? officer_type { get; set; }
+        public int? bacsiid { get; set; }
         //public string? hoc_ham { get; set; }
         //public string? hoc_vi { get; set; }
         //public string? chuc_danh { get; set; }

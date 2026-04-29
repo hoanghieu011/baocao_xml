@@ -8,6 +8,7 @@ import { DiemKeHoachService, ThemDiemKeHoach, UpdateDiemKeHoach } from '../servi
 import { TranslateModule } from '@ngx-translate/core';
 import { TangCuongService } from '../services/tang-cuong.service';
 import { forkJoin } from 'rxjs';
+import { OfficerService } from '../services/officer.service';
 
 type TangCuong = {
   diemKeHoachId: number;
@@ -29,8 +30,9 @@ export class DiemKeHoachComponent  {
   Math = Math;
   ds_khoa: any[] = [
   ];
-  ds_khoa_tang_cuong: any[] = [
-  ];
+  ds_officer: any[] = [];
+  // ds_khoa_tang_cuong: any[] = [
+  // ];
   toasts: any[] = [];
   ds_thang = Array.from({ length: 12 }, (_, i) => ({ value: i + 1, label: `Tháng ${i + 1}` }));
   ds_nam: any[] =  [];
@@ -56,19 +58,47 @@ export class DiemKeHoachComponent  {
   hesoTruc = [
     1, 1, 1, 1, 12, 1, 8, 1, 1, 1, 1, 1
   ]
-
+  isThemMoi = false;
+  // thông tin điểm kế hoạch đang thêm
+  selected_khoa: any = null;
+  selected_khoa_id: number = 0;
+  selected_bs: any = null;
+  selected_bs_id: number = 0;
+  // thông tin bộ lọc danh sách
   cur_khoa: number = 0;
   cur_thang: number = new Date().getMonth() + 1;
   cur_nam: number = new Date().getFullYear();
-  constructor(private organizationService: OrganizationService, private diemKeHoachService: DiemKeHoachService, private tangCuongService: TangCuongService, private cd: ChangeDetectorRef) { }
+  constructor(private organizationService: OrganizationService, private diemKeHoachService: DiemKeHoachService, private tangCuongService: TangCuongService, private officerService: OfficerService ,private cd: ChangeDetectorRef) { }
   ngOnInit(): void {
     let currentYear = new Date().getFullYear();
     for (let year = currentYear - 2; year <= currentYear + 2; year++) {
       this.ds_nam.push({ value: year, label: `Năm ${year}` });
     }
+    this.loadDsOfficer();
     this.loadDsOrganization();
   }
 
+  loadDsOfficer() {
+    this.officerService.getDsOfficer().subscribe({
+      next: (res) => {
+        let data: any[] = res.ds_officer ? res.ds_officer  : [];
+        data = data.filter(d => ([4,6].includes(d.officer_type) && d.ma_bac_si!=='' && d.ma_bac_si != null))
+        this.ds_officer = [
+          ...data.map((x: any) => ({
+            value: x.bacsiid,
+            label: x.ma_bac_si + ' - ' + x.officer_name,
+            ...x
+          }))
+        ];
+        this.selected_bs_id = 0;
+      },
+      error: (err) => {
+        console.error(err);
+        this.ds_officer = [{ value: '', label: '' }];
+        this.selected_bs_id = 0;
+      }
+    });
+  }
   loadDsOrganization() {
     this.organizationService.getDsOrganization().subscribe({
       next: (res) => {
@@ -77,7 +107,8 @@ export class DiemKeHoachComponent  {
         this.ds_khoa = [
           ...data.map((x: any) => ({
             value: x.org_id,
-            label: x.ma_khoa + ' - ' + x.org_name
+            label: x.ma_khoa + ' - ' + x.org_name,
+            ...x
           }))
         ];
         this.cur_khoa = 0;
@@ -122,11 +153,20 @@ export class DiemKeHoachComponent  {
       }
     });
   }
-
-
-  onKhoaChange(event: Select2UpdateEvent<any>) {
+  onSelectAddOfficer(event: Select2UpdateEvent<any>){
+    this.selected_bs_id = event.value;
+    this.selected_bs = this.ds_officer.find(b=> b.bacsiid == this.selected_bs_id)
+    this.formDataDiemKeHoach.get('bacSiId')?.setValue(this.selected_bs_id);
+    
+  }
+  onKhoaSelectThemChange(event: Select2UpdateEvent<any>){
+    this.selected_khoa_id = event.value;
+    this.selected_khoa = this.ds_khoa.find(k => k.value == this.selected_khoa_id)
+    this.formDataDiemKeHoach.get('khoa')?.setValue(this.selected_khoa_id);
+  }
+  onKhoaFilterChange(event: Select2UpdateEvent<any>) {
     this.cur_khoa = event.value;
-    this.ds_khoa_tang_cuong = this.ds_khoa.filter(k => k.value !== this.cur_khoa);
+    // this.ds_khoa_tang_cuong = this.ds_khoa.filter(k => k.value !== this.cur_khoa);
     this.loadDiemKeHoach();
   }
 
@@ -140,6 +180,13 @@ export class DiemKeHoachComponent  {
   onCloseModal() {
     this.isShowModal = false;
     this.formDataDiemKeHoach.reset();
+    this.selectedDiemKeHoach = null;
+    this.isThemMoi = false;
+    this.selected_bs_id = 0;
+    this.selected_khoa_id = 0;
+    this.selected_bs = null;
+    this.selected_khoa = null;
+    this.dataTangCuong = [];
   }
 
   onSaveDiemKeHoach() {
@@ -173,10 +220,10 @@ export class DiemKeHoachComponent  {
         diemTruc: this.formDataDiemKeHoach.get('diemTruc')?.value || 0,
         diemTrucCC: this.formDataDiemKeHoach.get('diemTrucCC')?.value || 0,
         diemLayMau: this.formDataDiemKeHoach.get('diemLayMauXN')?.value || 0,
-        bacSiId: parseInt(this.selectedDiemKeHoach?.bacSiId+ '') || 0,
-        bacSi: this.selectedDiemKeHoach?.officerName  || '',
+        bacSiId: this.isThemMoi ? this.selected_bs_id : parseInt(this.selectedDiemKeHoach?.bacSiId+ '') || 0,
+        bacSi: this.isThemMoi? this.selected_bs.officer_name : this.selectedDiemKeHoach?.officerName  || '',
         thangNam: `${this.cur_thang}${this.cur_nam}`,
-        khoaId: this.cur_khoa
+        khoaId: this.isThemMoi? this.selected_khoa_id : this.cur_khoa
       } as ThemDiemKeHoach;
       diemKeHoachReq = this.diemKeHoachService.themDiemKeHoach(diemKeHoach);
     }
@@ -219,7 +266,7 @@ export class DiemKeHoachComponent  {
       return;
     }
     if (!this.cur_khoa) {
-      this.addToast('Vui lòng chọn khoa', 'warning');
+      this.addToast('Vui lòng chọn khoa để tải ds điểm kế hoạch', 'warning');
       return;
     }
     let thangNam = `${this.cur_thang}${this.cur_nam}`;
@@ -281,7 +328,28 @@ export class DiemKeHoachComponent  {
 
     return pageNumbers.slice(start - 1, end);
   }
-  onThemDiemKeHoachBtnClick(diemKeHoach: any) {
+  themDiemKeHoachClick(){
+    this.isThemMoi = true;
+    this.isShowModal = true;
+    const newTangCuong: TangCuong = {
+        diemKeHoachId: 0,
+        khoaId: 0,
+        soNgay: 0,
+        diem: 0
+      };
+    // this.ds_khoa_tang_cuong = this.ds_khoa;
+    this.dataTangCuong.push(newTangCuong);
+    this.formDataDiemKeHoach =  new FormGroup({
+      khoa: new FormControl(0, [Validators.required]),
+      bacSiId: new FormControl(0, [Validators.required]),
+      diemKeHoach: new FormControl(0, [Validators.required]),
+      soBuoiTruc: new FormControl(0, [Validators.required]),
+      diemTruc: new FormControl(0, [Validators.required]),
+      diemLayMauXN: new FormControl(0, [Validators.required]),
+      thangNam: new FormControl(`${this.cur_thang}${this.cur_nam}`, [Validators.required]),
+    });
+  }
+  onSuaDiemKeHoachBtnClick(diemKeHoach: any) {
     this.selectedDiemKeHoach = diemKeHoach;
     this.isShowModal = true;
     this.getDsTangCuongByDiemKeHoachId();
@@ -297,7 +365,8 @@ export class DiemKeHoachComponent  {
   }
   onSoBuoiTrucChange($event: any) {
     const soBuoiTruc = $event.target.value || 0;
-    const diemTruc = soBuoiTruc * this.hesoTruc[this.selectedDiemKeHoach.officerType] || 0;
+    const diemTruc = this.isThemMoi ? soBuoiTruc * this.hesoTruc[this.selected_bs.officer_type] || 0
+    : soBuoiTruc * this.hesoTruc[this.selectedDiemKeHoach.officerType] || 0;
     this.formDataDiemKeHoach.get('diemTruc')?.setValue(diemTruc);
     this.cd.detectChanges();
   }
@@ -314,8 +383,8 @@ export class DiemKeHoachComponent  {
     var tblTangCuong = document.getElementById('tbl-tangcuong') as HTMLDivElement;
     if (tblTangCuong) {
       const newTangCuong: TangCuong = {
-        diemKeHoachId: this.selectedDiemKeHoach.diemKeHoachId,
-        khoaId: this.selectedDiemKeHoach.khoaId,
+        diemKeHoachId: this.isThemMoi ? 0 : this.selectedDiemKeHoach.diemKeHoachId,
+        khoaId: this.isThemMoi ? 0 : this.selectedDiemKeHoach.khoaId,
         soNgay: 0,
         diem: 0
       };
