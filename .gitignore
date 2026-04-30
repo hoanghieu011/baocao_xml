@@ -4,3 +4,5 @@ api/obj
 api/wwwroot/images
 api/publish/
 api/Common/ConnectionStrings.cs
+api/global.json
+api/global.json
