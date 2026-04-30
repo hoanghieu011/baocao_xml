@@ -6,6 +6,8 @@ using ClosedXML.Excel;
 using DocumentFormat.OpenXml.Bibliography;
 using DocumentFormat.OpenXml.Drawing;
 using DocumentFormat.OpenXml.Office.Word;
+using DocumentFormat.OpenXml.Spreadsheet;
+using DocumentFormat.OpenXml.Wordprocessing;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -390,8 +392,8 @@ namespace API.Controllers
             usedNames.Add(name);
             return name;
         }
-        
-        private async Task<List<BcDoanhThuBscdDto>> GetDoanhThuBSCDFunc(DateTime tuNgay, DateTime denNgay, string? maBacSi, string dbName )
+
+        private async Task<List<BcDoanhThuBscdDto>> GetDoanhThuBSCDFunc(DateTime tuNgay, DateTime denNgay, string? maBacSi, string dbName)
         {
             var sql = $@"
                             SELECT NHOM_MABHYT_ID,MA_DICH_VU, TEN_DICH_VU, TENNHOM, TEN_BACSI, DON_GIA_BH, HESO, CHIPHI, SOLUONG , CHIPHI * SOLUONG AS CHIPHI_VATTU, DON_GIA_BH * SOLUONG AS THANH_TIEN, ((DON_GIA_BH - CHIPHI) * SOLUONG) AS SOTIEN_CONLAI, HESO * SOLUONG AS DIEM_THUCHIEN
@@ -415,27 +417,27 @@ namespace API.Controllers
                             ) th2
                             ORDER BY NHOM_MABHYT_ID, MA_DICH_VU;";
 
-                var conn = _context.Database.GetDbConnection();
-                using var tempCmd = conn.CreateCommand();
+            var conn = _context.Database.GetDbConnection();
+            using var tempCmd = conn.CreateCommand();
 
-                var paramList = new List<DbParameter>();
+            var paramList = new List<DbParameter>();
 
-                var p1 = tempCmd.CreateParameter();
-                p1.ParameterName = "@tungay";
-                p1.Value = tuNgay.Date;
-                paramList.Add(p1);
+            var p1 = tempCmd.CreateParameter();
+            p1.ParameterName = "@tungay";
+            p1.Value = tuNgay.Date;
+            paramList.Add(p1);
 
-                var p2 = tempCmd.CreateParameter();
-                p2.ParameterName = "@dengay";
-                p2.Value = denNgay.Date;
-                paramList.Add(p2);
+            var p2 = tempCmd.CreateParameter();
+            p2.ParameterName = "@dengay";
+            p2.Value = denNgay.Date;
+            paramList.Add(p2);
 
-                var p3 = tempCmd.CreateParameter();
-                p3.ParameterName = "@maBacSi";
-                p3.Value = string.IsNullOrWhiteSpace(maBacSi)
-                    ? DBNull.Value
-                    : maBacSi.Trim();
-                paramList.Add(p3);
+            var p3 = tempCmd.CreateParameter();
+            p3.ParameterName = "@maBacSi";
+            p3.Value = string.IsNullOrWhiteSpace(maBacSi)
+                ? DBNull.Value
+                : maBacSi.Trim();
+            paramList.Add(p3);
 
             var doanhthu_bscd = await _context.dto_bc_doanhthu_bscd
                     .FromSqlRaw(sql, paramList.ToArray())
@@ -443,7 +445,7 @@ namespace API.Controllers
                     .ToListAsync();
             return doanhthu_bscd;
         }
-        
+
         /// <summary>
         /// Báo cáo doanh thu theo bác sĩ thực hiện.
         /// </summary>
@@ -909,7 +911,7 @@ namespace API.Controllers
 
                 var p3 = tempCmd.CreateParameter();
                 p3.ParameterName = "@maKhoa";
-                var mk = (req.MaKhoa==null|| req.MaKhoa.Equals("")) ? "-1" : req.MaKhoa.ToString();
+                var mk = (req.MaKhoa == null || req.MaKhoa.Equals("")) ? "-1" : req.MaKhoa.ToString();
                 p3.Value = mk;
                 paramList.Add(p3);
 
@@ -1040,7 +1042,7 @@ namespace API.Controllers
                 ws.Cell("A3").Style.Font.FontColor = XLColor.Blue;
 
                 ws.Range("A4:J4").Merge();
-                var orgName = (mk == "-1") ? "Tất cả" :data.FirstOrDefault()?.khoa;
+                var orgName = (mk == "-1") ? "Tất cả" : data.FirstOrDefault()?.khoa;
                 ws.Cell("A4").Value = $"Khoa: {orgName}";
                 ws.Cell("A4").Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
                 ws.Cell("A4").Style.Font.Bold = true;
@@ -1157,7 +1159,7 @@ namespace API.Controllers
                         decimal tongDiemGroup = 0;
                         decimal tongSoTienConLaiGroup = 0;
 
-                        foreach(var item in group)
+                        foreach (var item in group)
                         {
                             itemIndex++;
                             totalGrItemIndex++;
@@ -1207,7 +1209,7 @@ namespace API.Controllers
 
                             row++;
                         }
-                       if(isShowGroupInOrg)
+                        if (isShowGroupInOrg)
                         {
                             // ===== Dòng tổng theo nhóm =====
                             ws.Cell(row, 2).Value = "Tổng theo nhóm";
@@ -1550,49 +1552,49 @@ namespace API.Controllers
                 decimal tongAllChiPhiVattu = 0;
                 decimal tongAllThanhTien = 0;
                 decimal tongAllSoTienConLai = 0;
-                foreach(var item in data)
+                foreach (var item in data)
                 {
-                    
-                        idx++;
-                        ws.Cell(row, 1).Value = $"{idx}";
-                        ws.Cell(row, 2).Value = item.ma_khoa ?? "";
-                        ws.Cell(row, 3).Value = item.khoa ?? "";
-                        ws.Cell(row, 4).Value = item.thanh_tien ?? 0;
-                        ws.Cell(row, 5).Value = item.chiphi_vattu ?? 0;
-                        ws.Cell(row, 6).Value = item.sotien_conlai ?? 0;
-                        ws.Cell(row, 7).Value = "";
 
-                        // Căn lề
-                        ws.Cell(row, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-                        ws.Cell(row, 2).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
-                        ws.Cell(row, 3).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
-                        ws.Cell(row, 4).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
-                        ws.Cell(row, 5).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
-                        ws.Cell(row, 6).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
-                        ws.Cell(row, 7).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+                    idx++;
+                    ws.Cell(row, 1).Value = $"{idx}";
+                    ws.Cell(row, 2).Value = item.ma_khoa ?? "";
+                    ws.Cell(row, 3).Value = item.khoa ?? "";
+                    ws.Cell(row, 4).Value = item.thanh_tien ?? 0;
+                    ws.Cell(row, 5).Value = item.chiphi_vattu ?? 0;
+                    ws.Cell(row, 6).Value = item.sotien_conlai ?? 0;
+                    ws.Cell(row, 7).Value = "";
 
-                        // Định dạng số
-                        ws.Cell(row, 3).Style.NumberFormat.Format = "#,##0.##";
-                        ws.Cell(row, 4).Style.NumberFormat.Format = "#,##0.##";
-                        ws.Cell(row, 5).Style.NumberFormat.Format = "#,##0.##";
-                        ws.Cell(row, 6).Style.NumberFormat.Format = "#,##0.##";
-                        ws.Cell(row, 7).Style.NumberFormat.Format = "#,##0.##";
-                        ws.Cell(row, 8).Style.NumberFormat.Format = "#,##0.##";
-                        ws.Cell(row, 9).Style.NumberFormat.Format = "#,##0.##";
+                    // Căn lề
+                    ws.Cell(row, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                    ws.Cell(row, 2).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+                    ws.Cell(row, 3).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                    ws.Cell(row, 4).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                    ws.Cell(row, 5).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                    ws.Cell(row, 6).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                    ws.Cell(row, 7).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
 
-                        ws.Range(row, 1, row, headers.Length).Style.Border.TopBorder = XLBorderStyleValues.Thin;
-                        ws.Range(row, 1, row, headers.Length).Style.Border.BottomBorder = XLBorderStyleValues.Thin;
-                        ws.Range(row, 1, row, headers.Length).Style.Border.LeftBorder = XLBorderStyleValues.Thin;
-                        ws.Range(row, 1, row, headers.Length).Style.Border.RightBorder = XLBorderStyleValues.Thin;
-                        ws.Range(row, 1, row, headers.Length).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+                    // Định dạng số
+                    ws.Cell(row, 3).Style.NumberFormat.Format = "#,##0.##";
+                    ws.Cell(row, 4).Style.NumberFormat.Format = "#,##0.##";
+                    ws.Cell(row, 5).Style.NumberFormat.Format = "#,##0.##";
+                    ws.Cell(row, 6).Style.NumberFormat.Format = "#,##0.##";
+                    ws.Cell(row, 7).Style.NumberFormat.Format = "#,##0.##";
+                    ws.Cell(row, 8).Style.NumberFormat.Format = "#,##0.##";
+                    ws.Cell(row, 9).Style.NumberFormat.Format = "#,##0.##";
 
-                        tongAllChiPhiVattu += item.chiphi_vattu ?? 0;
-                        tongAllSoTienConLai += item.sotien_conlai ?? 0;
-                        tongAllThanhTien += item.thanh_tien ?? 0;
-                        ws.Range(row, 1, row, headers.Length).Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+                    ws.Range(row, 1, row, headers.Length).Style.Border.TopBorder = XLBorderStyleValues.Thin;
+                    ws.Range(row, 1, row, headers.Length).Style.Border.BottomBorder = XLBorderStyleValues.Thin;
+                    ws.Range(row, 1, row, headers.Length).Style.Border.LeftBorder = XLBorderStyleValues.Thin;
+                    ws.Range(row, 1, row, headers.Length).Style.Border.RightBorder = XLBorderStyleValues.Thin;
+                    ws.Range(row, 1, row, headers.Length).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+
+                    tongAllChiPhiVattu += item.chiphi_vattu ?? 0;
+                    tongAllSoTienConLai += item.sotien_conlai ?? 0;
+                    tongAllThanhTien += item.thanh_tien ?? 0;
+                    ws.Range(row, 1, row, headers.Length).Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
                     row++;
                 }
-                
+
 
                 // ===== Dòng tổng cộng toàn bộ =====
                 ws.Cell(row, 2).Value = "Tổng";
@@ -1675,7 +1677,7 @@ namespace API.Controllers
                     return BadRequest("Không xác định được database dữ liệu cho user.");
 
                 // khơi tạo arrThangNam để thêm vào điều kiện lọc theo trường ThangNam
-                var endPointMonth =Math.Max((req.DenNam - req.TuNam) * 12, req.DenThang);
+                var endPointMonth = Math.Max((req.DenNam - req.TuNam) * 12, req.DenThang);
                 var arrThangNam = new List<string>();
                 for (var year = req.TuNam; year <= req.DenNam; year++)
                 {
@@ -1688,9 +1690,24 @@ namespace API.Controllers
                 // tạo fromDate, toDate để thêm vào điều kiện lọc Điểm CĐ
                 var fromDate = new DateTime(req.TuNam, req.TuThang, 1);
                 var endDate = new DateTime(req.DenNam, req.DenThang, DateTime.DaysInMonth(req.DenNam, req.DenThang));
-                var sql = $"SELECT officer.OFFICER_NAME, officer.OFFICER_TYPE, officer.BACSIID, t1.DIEMTHUCHIEN, t2.DIEMKEHOACHID, t2.DIEM_KEHOACH, org.ORG_NAME KHOA, t2.DIEM_TRUC, t2.DIEMTANGCUONG, t2.SONGAYTANGCUONG, t2.KHOAID, t3.DIEMCDNHAPVIEN, t1.DIEMTHUCHIEN*0.2 DIEMPTTCHIDINH, t1.DIEMTHUCHIEN*0.8 DIEMPTTTHUCHIEN, t4.DIEMBANT  FROM " +
-                    $"(select dkh.DIEMKEHOACHID, dkh.KHOAID ,dkh.DIEM_KEHOACH, dkh.BACSIID, dkh.DIEM_TRUC, IFNULL(sum(tc.DIEM),0) as DIEMTANGCUONG,IFNULL(sum(tc.SONGAY),0) as SONGAYTANGCUONG  from {dbData}.bc_diemkehoach dkh " +
-                    $"LEFT JOIN {dbData}.bc_tangcuong tc " +
+
+
+                var dsDiemCtkh = await GetBcDiemCtkhFunc(fromDate, endDate, arrThangNam, dbData);
+                return Ok(new {
+                    data = dsDiemCtkh,
+                    message = "Lấy ds điểm CTKH Thành công!"
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest("Lỗi server: " + ex.Message);
+            }
+        }
+        private async Task<List<DiemCtkh>> GetBcDiemCtkhFunc(DateTime tuNgay, DateTime denNgay, List<string>? arrThangNam, string dbName)
+        {
+            var sql = $"SELECT officer.OFFICER_NAME, officer.OFFICER_TYPE, officer.BACSIID, t1.DIEMTHUCHIEN, t2.DIEMKEHOACHID, t2.DIEM_KEHOACH, org.ORG_NAME KHOA, t2.DIEM_TRUC, t2.DIEMTANGCUONG, t2.SONGAYTANGCUONG, t2.KHOAID, t3.DIEMCDNHAPVIEN, t1.DIEMTHUCHIEN*0.2 DIEMPTTCHIDINH, t1.DIEMTHUCHIEN*0.8 DIEMPTTTHUCHIEN, t4.DIEMBANT  FROM " +
+                    $"(select dkh.DIEMKEHOACHID, dkh.KHOAID ,dkh.DIEM_KEHOACH, dkh.BACSIID, dkh.DIEM_TRUC, IFNULL(sum(tc.DIEM),0) as DIEMTANGCUONG,IFNULL(sum(tc.SONGAY),0) as SONGAYTANGCUONG  from {dbName}.bc_diemkehoach dkh " +
+                    $"LEFT JOIN {dbName}.bc_tangcuong tc " +
                     $"ON  tc.DIEMKEHOACHID= dkh.DIEMKEHOACHID " +
                     $"WHERE THANGNAM in (@arrThangNam) " +
                     $"GROUP BY DIEMKEHOACHID,KHOAID ,DIEM_KEHOACH, BACSIID, DIEM_TRUC) t2 " +
@@ -1698,47 +1715,639 @@ namespace API.Controllers
                     $"FROM (SELECT  MA_BAC_SI, SUM(HESO) as DIEMTHUCHIEN " +
                     $"FROM (SELECT " +
                     $"nhom.NHOM_MABHYT_ID,IFNULL(b.MA_DICH_VU,b.MA_VAT_TU) MA_DICH_VU,IFNULL(b.TEN_DICH_VU,b.TEN_VAT_TU) TEN_DICH_VU,nhom.TENNHOM,IFNULL(b.SO_LUONG,0) SO_LUONG,IFNULL(b.DON_GIA_BH, 0) DON_GIA_BH ,IFNULL(dv.HESO,0) HESO, IFNULL(dv.CHIPHI,0) CHIPHI, b.MA_BAC_SI " +
-                    $"FROM  {dbData}.xml1 a, {dbData}.xml3 b LEFT JOIN his_common.dmc_dichvu dv on IFNULL(b.MA_DICH_VU,b.MA_VAT_TU) = dv.MA_DICHVU AND IFNULL(b.TEN_DICH_VU,b.TEN_VAT_TU) = dv.TEN_DICHVU, " +
+                    $"FROM  {dbName}.xml1 a, {dbName}.xml3 b LEFT JOIN his_common.dmc_dichvu dv on IFNULL(b.MA_DICH_VU,b.MA_VAT_TU) = dv.MA_DICHVU AND IFNULL(b.TEN_DICH_VU,b.TEN_VAT_TU) = dv.TEN_DICHVU, " +
                     $"his_common.dmc_nhom_mabhyt nhom " +
                     $"WHERE a.ma_lk = b.ma_lk AND b.ma_nhom = nhom.MANHOM_BHYT AND a.NGAY_RA >= @tuNgay AND a.NGAY_RA <= @denNgay) x " +
                     $"group by MA_BAC_SI) t " +
                     $"LEFT JOIN (SELECT * from his_common.org_officer WHERE STATUS = 1 AND MA_BAC_SI IS NOT NULL AND MA_BAC_SI <> '') activeUsers " +
                     $"ON t.MA_BAC_SI = activeUsers.MA_BAC_SI ) t1 " +
                     $"ON t2.BACSIID = t1.BACSIID " +
-                    $"LEFT JOIN ( SELECT BACSIID, SUM(SOLUONG) DIEMCDNHAPVIEN FROM {dbData}.bc_benhnhan_nhapvien WHERE THANGNAM IN (@arrThangNam) AND BHYT = 1 GROUP BY BACSIID ) t3 ON t2.BACSIID = t3.BACSIID " +
-                    $"LEFT JOIN ( SELECT BACSIID, SUM(SOLUONG) DIEMBANT FROM {dbData}.bc_benhnhan_15t WHERE THANGNAM IN (@arrThangNam) AND BHYT = 1 GROUP BY BACSIID ) t4 ON t2.BACSIID = t4.BACSIID " +
+                    $"LEFT JOIN ( SELECT BACSIID, SUM(SOLUONG) DIEMCDNHAPVIEN FROM {dbName}.bc_benhnhan_nhapvien WHERE THANGNAM IN (@arrThangNam) AND BHYT = 1 GROUP BY BACSIID ) t3 ON t2.BACSIID = t3.BACSIID " +
+                    $"LEFT JOIN ( SELECT BACSIID, IFNULL(SUM(SOLUONG),0)*0.3 DIEMBANT FROM {dbName}.bc_benhnhan_15t WHERE THANGNAM IN (@arrThangNam) AND BHYT = 1 GROUP BY BACSIID ) t4 ON t2.BACSIID = t4.BACSIID " +
                     $"LEFT JOIN his_common.org_organization org ON org.ORG_ID = t2.KHOAID " +
                     $"LEFT JOIN his_common.org_officer officer ON officer.BACSIID = t2.BACSIID " +
                     $"order by t2.KHOAID";
-                    var conn = _context.Database.GetDbConnection();
-                    using var cmd = conn.CreateCommand();
-                    var paramList = new List<DbParameter>();
-                    var p1 = cmd.CreateParameter();
-                    p1.ParameterName = "@tuNgay";
-                    p1.Value = fromDate;
-                    paramList.Add(p1);
+            var conn = _context.Database.GetDbConnection();
+            using var cmd = conn.CreateCommand();
+            var paramList = new List<DbParameter>();
+            var p1 = cmd.CreateParameter();
+            p1.ParameterName = "@tuNgay";
+            p1.Value = tuNgay;
+            paramList.Add(p1);
 
-                    var p2 = cmd.CreateParameter();
-                    p2.ParameterName = "@denNgay";
-                    p2.Value = endDate;
-                    paramList.Add(p2);
+            var p2 = cmd.CreateParameter();
+            p2.ParameterName = "@denNgay";
+            p2.Value = denNgay;
+            paramList.Add(p2);
 
-                    var p3 = cmd.CreateParameter();
-                    p3.ParameterName = "@arrThangNam";
-                    p3.Value = string.Join(',', arrThangNam);
-                    paramList.Add(p3);
-
-                    var dsDiemCtkh = await _context.diemCtkhs.FromSqlRaw(sql, paramList.ToArray())
+            var p3 = cmd.CreateParameter();
+            p3.ParameterName = "@arrThangNam";
+            p3.Value = string.Join(',', arrThangNam);
+            paramList.Add(p3);
+            return await _context.diemCtkhs.FromSqlRaw(sql, paramList.ToArray())
                     .AsNoTracking()
                     .ToListAsync();
-                return Ok(new {
-                    data = dsDiemCtkh,
-                    message="Lấy ds điểm CTKH Thành công!"
-                });
-            }
-            catch (Exception ex)
+        }
+
+        [Authorize]
+        [HttpPost("bc_diem_ctkh_excel")]
+        public async Task<IActionResult> GetBcDiemCtkhExcel([FromBody] BaoCaoDiemCtkhRequest req)
+        {
+            try
             {
-                return BadRequest("Lỗi server: " + ex.Message);
+                var userName = User.FindFirst(ClaimTypes.Name)?.Value
+                    ?? User.FindFirst("USER_NAME")?.Value;
+
+                if (string.IsNullOrEmpty(userName))
+                    return Unauthorized();
+
+                var csytid = User.FindFirst(ClaimTypes.Name)?.Value
+                    ?? User.FindFirst("CSYTID")?.Value;
+                // Lấy tên database động thông qua service dùng chung
+                var dbData = await _dbResolver.GetDatabaseByUserAsync(userName);
+                if (string.IsNullOrEmpty(dbData))
+                    return BadRequest("Không xác định được database dữ liệu cho user.");
+
+                // khơi tạo arrThangNam để thêm vào điều kiện lọc theo trường ThangNam
+                var endPointMonth = Math.Max((req.DenNam - req.TuNam) * 12, req.DenThang);
+                var arrThangNam = new List<string>();
+                for (var year = req.TuNam; year <= req.DenNam; year++)
+                {
+                    for (var month = req.TuThang; month <= endPointMonth; month++)
+                    {
+                        var tempM = month % 12 == 0 ? 12 : month % 12;
+                        arrThangNam.Add($"{tempM}{year}");
+                    }
+                }
+                // tạo fromDate, toDate để thêm vào điều kiện lọc Điểm CĐ
+                var fromDate = new DateTime(req.TuNam, req.TuThang, 1);
+                var endDate = new DateTime(req.DenNam, req.DenThang, DateTime.DaysInMonth(req.DenNam, req.DenThang));
+                var dsBcDiemCtkh = await GetBcDiemCtkhFunc(fromDate, endDate, arrThangNam, dbData);
+
+                var sql_tenbv = $@"SELECT * FROM dmc_benhvien WHERE CSYTID = {csytid}";
+
+                var benhVien = await _context.dmc_benhvien
+                    .FromSqlRaw(sql_tenbv)
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync();
+
+                using var ms = new MemoryStream();
+                var res = await GenerateBcDtkhExcel(dsBcDiemCtkh, req, benhVien);
+                res.SaveAs(ms);
+                var fileName = $"BC_DIEM_CTKH_{Enum.GetName(typeof(LoaiBaoCaoCtkh), req.LoaiBaoCao)}{fromDate:yyyyMMdd}_{endDate:yyyyMMdd}.xlsx";
+
+                return File(
+                    ms.ToArray(),
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    fileName
+                );
+            } catch (Exception ex)
+            {
+                return StatusCode(500, "Lỗi server: " + ex.Message);
+            }
+        }
+
+        private async Task<XLWorkbook> GenerateBcDtkhExcel(List<DiemCtkh>? dataRaw, BaoCaoDiemCtkhRequest req, BenhVien? benhVien)
+        {
+            try
+            {
+                if (req.LoaiBaoCao == LoaiBaoCaoCtkh.BAC_SI) return GenerateBcCtkhExcelBacSi(dataRaw, req, benhVien);
+                else if (req.LoaiBaoCao == LoaiBaoCaoCtkh.DIEU_DUONG) return GenerateBcCtkhExcelDieuDuong(dataRaw, req, benhVien);
+                else return null;
+            }catch(Exception ex) {
+                return null;
+            }
+        }
+        public enum ReportRowType
+        {
+            GROUP,
+            ITEM,
+            GRAND_TOTAL
+        }
+        public class ReportCtkhRow
+        {
+            public ReportRowType type { get; set; }
+            public string stt { get; set; }
+            public DiemCtkh DiemCtkh { get; set; }
+
+            public decimal tongCong { get; set; }
+            public decimal diemTHTheoBS { get; set; }
+            public decimal datCtkh { get; set; }
+        }
+        private string ConvertToRoman(int num)
+        {
+            var lookup = new List<KeyValuePair<string, int>>
+        {
+            new("M", 1000), new("CM", 900),
+            new("D", 500),  new("CD", 400),
+            new("C", 100),  new("XC", 90),
+            new("L", 50),   new("XL", 40),
+            new("X", 10),   new("IX", 9),
+            new("V", 5),    new("IV", 4),
+            new("I", 1)
+        };
+
+            string roman = "";
+            foreach (var (key, value) in lookup)
+            {
+                while (num >= value)
+                {
+                    roman += key;
+                    num -= value;
+                }
+            }
+
+            return roman;
+        }
+
+        private List<ReportCtkhRow> PreGenerateRpCtkh(List<DiemCtkh> dataRaw, BaoCaoDiemCtkhRequest req)
+        {
+            List<ReportCtkhRow> dsDiemCtkh = new List<ReportCtkhRow>();
+            string curKhoa = "";
+
+            // corresponds to total accumulators
+            decimal tongDiemKeHoach = 0, tongDiemCdKham = 0, tongDiemCdDieuTri = 0, tongDiemPTTCD = 0, tongDiemPTTTH = 0;
+            decimal tongDiemTangCuong = 0, tongSoNgayTangCuong = 0, tongDiemTruc = 0, tongDiemCongBANT = 0;
+            decimal tongDiemTHPTTTheoDD = 0, tongDiemBNNDCD = 0, tongDiemBNNDTH = 0, tongDiemBNNDCDNhapVien = 0;
+
+            decimal diemKeHoachKhoa = 0, diemCdKhamKhoa = 0, diemCdDieuTriKhoa = 0, diemPTTCDKhoa = 0, diemPTTTHKhoa = 0;
+            decimal diemTangCuongKhoa = 0, soNgayTangCuongKhoa = 0, diemTrucKhoa = 0, diemCongBANTKhoa = 0, diemTHPTTTheoDDKhoa = 0;
+            decimal diemBNNDCDKhoa = 0, diemBNNDTHKhoa = 0, diemBNNDCDNhapVienKhoa = 0;
+
+            decimal tongDiemTHBS = 0, tongDiemNhapVienBS = 0; // tongDiemNhapVienBS exists in JS but not used later
+            decimal tongDiemTHBSTheoKhoa = 0, tongDiemNhapVienBSTheoKhoa = 0;
+
+            int countGroup = 0;
+            int countItem = 1;
+            int currentGroupIndex = 0;
+
+            for (int i = 0; i < dataRaw.Count; i++)
+            {
+                var item = dataRaw[i];
+
+                if (curKhoa != item.Khoa)
+                {
+                    countItem = 1;
+
+                    if (curKhoa != "")
+                    {
+                        decimal tongDiemTHKhoa =
+                            req.LoaiBaoCao == LoaiBaoCaoCtkh.BAC_SI
+                                ? (diemCdKhamKhoa + diemCdDieuTriKhoa + diemPTTCDKhoa + diemPTTTHKhoa + diemTangCuongKhoa
+                                   + diemTrucKhoa + diemCongBANTKhoa + diemTHPTTTheoDDKhoa + diemBNNDCDKhoa + diemBNNDTHKhoa + diemBNNDCDNhapVienKhoa)
+                                : diemTrucKhoa;
+
+                        dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemKeHoach = diemKeHoachKhoa;
+                        dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemCdKham = diemCdKhamKhoa;
+
+                        dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemCDDieuTri = diemCdDieuTriKhoa;
+                        dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemPTTCD = diemPTTCDKhoa;
+                        dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemPTTTH = diemPTTTHKhoa;
+                        dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemTangCuong = diemTangCuongKhoa;
+                        dsDiemCtkh[currentGroupIndex].DiemCtkh.SoNgayTangCuong = soNgayTangCuongKhoa;
+                        dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemTruc = diemTrucKhoa;
+                        dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemCongBANT = diemCongBANTKhoa;
+                        //dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemTHP = diemTHPTTTheoDDKhoa;
+                        //dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemCdKham = diemBNNDCDKhoa;
+                        //dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemCdKham = diemBNNDTHKhoa;
+                        //dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemCdKham = diemBNNDCDNhapVienKhoa;
+
+                        dsDiemCtkh[currentGroupIndex].tongCong = tongDiemTHKhoa + (req.LoaiBaoCao == LoaiBaoCaoCtkh.DIEU_DUONG ? tongDiemTHBSTheoKhoa : 0);
+                        dsDiemCtkh[currentGroupIndex].diemTHTheoBS = tongDiemTHBSTheoKhoa;
+                        dsDiemCtkh[currentGroupIndex].datCtkh = diemKeHoachKhoa != 0
+                                    ? ((tongDiemTHKhoa + (req.LoaiBaoCao == LoaiBaoCaoCtkh.DIEU_DUONG ? tongDiemTHBSTheoKhoa : 0)) / diemKeHoachKhoa) * 100
+                                    : 0;
+                        
+
+                        if (req.LoaiBaoCao == LoaiBaoCaoCtkh.DIEU_DUONG)
+                        {
+                            int countDD = dsDiemCtkh.Count - currentGroupIndex - 1;
+
+                            for (int j = currentGroupIndex + 1; j < dsDiemCtkh.Count; j++)
+                            {
+                                dsDiemCtkh[j].diemTHTheoBS = countDD > 0 ? (tongDiemTHBSTheoKhoa / countDD) : 0;
+                                dsDiemCtkh[j].tongCong = dsDiemCtkh[j].tongCong + (countDD > 0 ? (tongDiemTHBSTheoKhoa / countDD) : 0);
+                                dsDiemCtkh[j].datCtkh = dsDiemCtkh[j].DiemCtkh.DiemKeHoach != 0 && dsDiemCtkh[j].DiemCtkh.DiemKeHoach != null
+                                    ? (dsDiemCtkh[j].tongCong * 100 / dsDiemCtkh[j].DiemCtkh.DiemKeHoach.GetValueOrDefault())
+                                    : 0;
+                            }
+                        }
+
+                        int countItemKhoa = dsDiemCtkh.Count - currentGroupIndex - 1;
+                        if (countItemKhoa == 0)
+                            dsDiemCtkh.RemoveAt(dsDiemCtkh.Count - 1);
+                    }
+
+                    curKhoa = item.Khoa;
+                    countGroup++;
+                    currentGroupIndex = dsDiemCtkh.Count;
+
+                    // reset per-group accumulators
+                    diemKeHoachKhoa = 0;
+                    diemCdKhamKhoa = 0;
+                    diemCdDieuTriKhoa = 0;
+                    diemPTTCDKhoa = 0;
+                    diemPTTTHKhoa = 0;
+                    diemTangCuongKhoa = 0;
+                    soNgayTangCuongKhoa = 0;
+                    diemTrucKhoa = 0;
+                    diemCongBANTKhoa = 0;
+                    diemTHPTTTheoDDKhoa = 0;
+                    diemBNNDCDKhoa = 0;
+                    diemBNNDTHKhoa = 0;
+                    diemBNNDCDNhapVienKhoa = 0;
+
+                    tongDiemTHBSTheoKhoa = 0;
+                    tongDiemNhapVienBSTheoKhoa = 0;
+
+                    dsDiemCtkh.Add(new ReportCtkhRow
+                    {
+                        type = ReportRowType.GROUP,
+                        stt = ConvertToRoman(countGroup),
+                        DiemCtkh = new DiemCtkh
+                        {
+                            Khoa = item.Khoa,
+                            KhoaId = item.KhoaId,
+                            OfficerType = item.OfficerType,
+
+                            DiemKeHoach = 0,
+                            DiemCdKham = 0,
+                            DiemCDDieuTri = 0,
+                            DiemPTTCD = 0,
+                            DiemPTTTH = 0,
+                            DiemTangCuong = 0,
+                            SoNgayTangCuong = 0,
+                            DiemTruc = 0,
+                            DiemCongBANT = 0,
+                            //DiemTHPTTTheoDD = 0,
+                            //DiemBNNDCD = 0,
+                            //diemBNNDTH = 0,
+                            //diemBNNDCDNhapVien = 0,
+                        },
+                        tongCong = 0,
+                        diemTHTheoBS = 0,
+                        datCtkh = 0
+                    });
+                }
+
+                // if(item.officerType == 4) { // bác sĩ
+                if (item.OfficerType == 4)
+                {
+                    tongDiemTHBS +=
+                        (item.DiemCdKham??0m + item.DiemCDDieuTri??0m + item.DiemPTTCD ?? 0m + item.DiemPTTTH ?? 0m + item.DiemTangCuong ?? 0m
+                         + item.DiemTruc ?? 0m + item.DiemCongBANT ?? 0m
+                         //+ item.DiemTHPTTTheoDD + item.DiemBNNDCD + item.DiemBNNDTH + item.DiemBNNDCDNhapVien
+                         );
+
+                    tongDiemNhapVienBS += (item.DiemCDDieuTri ?? 0m);
+
+                    tongDiemTHBSTheoKhoa +=
+                        (item.DiemCdKham ?? 0m + item.DiemCDDieuTri ?? 0m + item.DiemPTTCD ?? 0m + item.DiemPTTTH ?? 0m + item.DiemTangCuong ?? 0m
+                         + item.DiemTruc ?? 0m + item.DiemCongBANT ?? 0m 
+                         //+ item.diemTHPTTTheoDD + item.diemBNNDCD + item.diemBNNDTH + item.diemBNNDCDNhapVien
+                         );
+
+                    tongDiemNhapVienBSTheoKhoa += item.DiemCDDieuTri ?? 0m;
+                }
+
+                // pushedItem = ((this.loaiBaoCao==='BAC_SI' && item.officerType == 4) || (this.loaiBaoCao==='DIEU_DUONG' && item.officerType == 6)) ? item : null;
+                DiemCtkh pushedItem = null;
+                if ((req.LoaiBaoCao == LoaiBaoCaoCtkh.BAC_SI && item.OfficerType == 4) ||
+                    (req.LoaiBaoCao == LoaiBaoCaoCtkh.DIEU_DUONG && item.OfficerType == 6))
+                {
+                    pushedItem = item;
+                }
+
+                // các đầu điểm cộng dồn theo khoa của bác sĩ / điều dưỡng
+                diemKeHoachKhoa += pushedItem != null ? pushedItem.DiemKeHoach ?? 0m : 0;
+                diemCdKhamKhoa += pushedItem != null ? pushedItem.DiemCdKham??0m : 0;
+                diemCdDieuTriKhoa += pushedItem != null ? pushedItem.DiemCDDieuTri ?? 0m : 0;
+                diemPTTCDKhoa += pushedItem != null ? pushedItem.DiemPTTCD??0m : 0;
+                diemPTTTHKhoa += pushedItem != null ? pushedItem.DiemPTTTH ?? 0m : 0;
+                diemTangCuongKhoa += pushedItem != null ? pushedItem.DiemTangCuong ?? 0m : 0;
+                diemTrucKhoa += pushedItem != null ? pushedItem.DiemTruc ?? 0m : 0;
+                diemCongBANTKhoa += pushedItem != null ? pushedItem.DiemCongBANT ?? 0m : 0;
+                //diemTHPTTTheoDDKhoa += pushedItem != null ? pushedItem.diemTHPTTTheoDD : 0;
+                //diemBNNDCDKhoa += pushedItem != null ? pushedItem.diemBNNDCD : 0;
+                //diemBNNDTHKhoa += pushedItem != null ? pushedItem.diemBNNDTH : 0;
+                //diemBNNDCDNhapVienKhoa += pushedItem != null ? pushedItem.DiemBNNDCDNhapVien ?? 0m : 0;
+                soNgayTangCuongKhoa += pushedItem != null ? pushedItem.SoNgayTangCuong ?? 0m : 0;
+
+                tongDiemKeHoach += pushedItem != null ? pushedItem.DiemKeHoach ?? 0m : 0;
+                tongDiemCdKham += pushedItem != null ? pushedItem.DiemCdKham ?? 0m : 0;
+                tongDiemCdDieuTri += pushedItem != null ? pushedItem.DiemCDDieuTri ?? 0m : 0;
+                tongDiemPTTCD += pushedItem != null ? pushedItem.DiemPTTCD ?? 0m : 0;
+                tongDiemPTTTH += pushedItem != null ? pushedItem.DiemPTTTH ?? 0m : 0;
+                tongDiemTangCuong += pushedItem != null ? pushedItem.DiemTangCuong ?? 0m : 0;
+                tongSoNgayTangCuong += pushedItem != null ? pushedItem.SoNgayTangCuong ?? 0m : 0;
+                tongDiemTruc += pushedItem != null ? pushedItem.DiemTruc ?? 0m : 0;
+                tongDiemCongBANT += pushedItem != null ? pushedItem.DiemCongBANT ?? 0m : 0;
+                //tongDiemTHPTTTheoDD += pushedItem != null ? pushedItem.diemTHPTTTheoDD : 0;
+                //tongDiemBNNDCD += pushedItem != null ? pushedItem.diemBNNDCD : 0;
+                //tongDiemBNNDTH += pushedItem != null ? pushedItem.diemBNNDTH : 0;
+                //tongDiemBNNDCDNhapVien += pushedItem != null ? pushedItem.diemBNNDCDNhapVien : 0;
+
+                if (pushedItem != null)
+                {
+                    decimal tongDiemTHItem =
+                        req.LoaiBaoCao == LoaiBaoCaoCtkh.BAC_SI
+                            ? (pushedItem.DiemCdKham??0m + pushedItem.DiemCDDieuTri ?? 0m + pushedItem.DiemPTTCD ?? 0m + pushedItem.DiemPTTTH ?? 0m + pushedItem.DiemTangCuong ?? 0m
+                               + pushedItem.DiemTruc ?? 0m + pushedItem.DiemCongBANT ?? 0m 
+                               //+ pushedItem.DiemTHPTTTheoDD + pushedItem.diemBNNDCD + pushedItem.diemBNNDTH + pushedItem.diemBNNDCDNhapVien
+                               )
+                            : pushedItem.DiemTruc ?? 0m;
+
+                    var tempItem = new ReportCtkhRow
+                    {
+                        type = ReportRowType.ITEM,
+                        stt = countItem.ToString(),
+                        DiemCtkh = new DiemCtkh {
+                            OfficerName = pushedItem.OfficerName,
+                            OfficerType = pushedItem.OfficerType,
+
+                            DiemKeHoach = pushedItem.DiemKeHoach,
+                            DiemCdKham = pushedItem.DiemCdKham,
+                            DiemCDDieuTri = pushedItem.DiemCDDieuTri,
+                            DiemPTTCD = pushedItem.DiemPTTCD,
+                            DiemPTTTH = pushedItem.DiemPTTTH,
+                            DiemTangCuong = pushedItem.DiemTangCuong,
+                            SoNgayTangCuong = pushedItem.SoNgayTangCuong,
+                            DiemTruc = pushedItem.DiemTruc,
+                            DiemCongBANT = pushedItem.DiemCongBANT,
+                            //DiemTHPTTTheoDD = pushedItem.diemTHPTTTheoDD,
+                            //DiemBNNDCD = pushedItem.diemBNNDCD,
+                            //DiemBNNDTH = pushedItem.diemBNNDTH,
+                            //DiemBNNDCDNhapVien = pushedItem.diemBNNDCDNhapVien,
+                        },
+                        tongCong = tongDiemTHItem,
+                        diemTHTheoBS = 0,
+                        datCtkh = 0
+                    };
+
+                    tempItem.datCtkh = tempItem.DiemCtkh.DiemKeHoach != 0 && tempItem.DiemCtkh.DiemKeHoach != null
+                        ? (tempItem.tongCong / tempItem.DiemCtkh.DiemKeHoach.GetValueOrDefault()) * 100
+                        : 0;
+
+                    dsDiemCtkh.Add(tempItem);
+                    countItem++;
+                }
+            }
+
+            // if(curKhoa != '') { ... }  // close last group
+            if (curKhoa != "")
+            {
+                decimal tongDiemTHKhoa =
+                    req.LoaiBaoCao == LoaiBaoCaoCtkh.BAC_SI
+                        ? (diemCdKhamKhoa + diemCdDieuTriKhoa + diemPTTCDKhoa + diemPTTTHKhoa + diemTangCuongKhoa
+                           + diemTrucKhoa + diemCongBANTKhoa + diemTHPTTTheoDDKhoa + diemBNNDCDKhoa + diemBNNDTHKhoa + diemBNNDCDNhapVienKhoa)
+                        : diemTrucKhoa;
+
+                dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemKeHoach = diemKeHoachKhoa;
+                dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemCdKham = diemCdKhamKhoa;
+
+                dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemCDDieuTri = diemCdDieuTriKhoa;
+                dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemPTTCD = diemPTTCDKhoa;
+                dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemPTTTH = diemPTTTHKhoa;
+                dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemTangCuong = diemTangCuongKhoa;
+                dsDiemCtkh[currentGroupIndex].DiemCtkh.SoNgayTangCuong = soNgayTangCuongKhoa;
+                dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemTruc = diemTrucKhoa;
+                dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemCongBANT = diemCongBANTKhoa;
+                //dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemTHP = diemTHPTTTheoDDKhoa;
+                //dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemCdKham = diemBNNDCDKhoa;
+                //dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemCdKham = diemBNNDTHKhoa;
+                //dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemCdKham = diemBNNDCDNhapVienKhoa;
+
+                dsDiemCtkh[currentGroupIndex].tongCong = tongDiemTHKhoa + (req.LoaiBaoCao == LoaiBaoCaoCtkh.DIEU_DUONG ? tongDiemTHBSTheoKhoa : 0);
+                dsDiemCtkh[currentGroupIndex].diemTHTheoBS = tongDiemTHBSTheoKhoa;
+                dsDiemCtkh[currentGroupIndex].datCtkh = diemKeHoachKhoa != 0
+                            ? ((tongDiemTHKhoa + (req.LoaiBaoCao == LoaiBaoCaoCtkh.DIEU_DUONG ? tongDiemTHBSTheoKhoa : 0)) / diemKeHoachKhoa) * 100
+                            : 0;
+
+                int countItemKhoa = dsDiemCtkh.Count - currentGroupIndex - 1;
+                if (countItemKhoa == 0)
+                    dsDiemCtkh.RemoveAt(dsDiemCtkh.Count - 1);
+            }
+
+            // grand total
+            decimal tongDiemTH =
+                req.LoaiBaoCao == LoaiBaoCaoCtkh.BAC_SI
+                    ? (tongDiemCdKham + tongDiemCdDieuTri + tongDiemPTTCD + tongDiemPTTTH + tongDiemTangCuong + tongDiemTruc + tongDiemCongBANT
+                       + tongDiemTHPTTTheoDD + tongDiemBNNDCD + tongDiemBNNDTH + tongDiemBNNDCDNhapVien)
+                    : tongDiemTruc;
+
+            dsDiemCtkh.Add(new ReportCtkhRow
+            {
+                type = ReportRowType.GRAND_TOTAL,
+                stt = "",
+                DiemCtkh = new DiemCtkh
+                {
+                    Khoa = "Tổng cộng",
+                    OfficerType = 0,
+                    DiemKeHoach = tongDiemKeHoach,
+                    DiemCdKham = tongDiemCdKham,
+                    DiemCDDieuTri = tongDiemCdDieuTri,
+                    DiemPTTCD = tongDiemPTTCD,
+                    DiemPTTTH = tongDiemPTTTH,
+                    DiemTangCuong = tongDiemTangCuong,
+                    SoNgayTangCuong = tongSoNgayTangCuong,
+                    DiemTruc = tongDiemTruc,
+                    DiemCongBANT = tongDiemCongBANT,
+                    //DiemTHPTTTheoDD = tongDiemTHPTTTheoDD,
+                    //DiemBNNDCD = tongDiemBNNDCD,
+                    //DiemBNNDTH = tongDiemBNNDTH,
+                    //DiemBNNDCDNhapVien = tongDiemBNNDCDNhapVien,
+
+                },
+
+                diemTHTheoBS = tongDiemTHBSTheoKhoa, // same as JS (note: JS uses tongDiemTHBSTheoKhoa, which is last group)
+                tongCong = tongDiemTH + (req.LoaiBaoCao == LoaiBaoCaoCtkh.DIEU_DUONG? tongDiemTHBS : 0),
+                datCtkh = tongDiemKeHoach != 0
+                    ? ((tongDiemTH + (req.LoaiBaoCao == LoaiBaoCaoCtkh.DIEU_DUONG ? tongDiemTHBS : 0)) / tongDiemKeHoach) * 100
+                    : 0
+            });
+
+            // distribute tongDiemTHBSTheoKhoa across items after last group (as JS does)
+            int countDDFinal = dsDiemCtkh.Count - currentGroupIndex - 1;
+
+            for (int j = currentGroupIndex + 1; j < dsDiemCtkh.Count; j++)
+            {
+                dsDiemCtkh[j].diemTHTheoBS = countDDFinal > 0 ? (tongDiemTHBSTheoKhoa / countDDFinal) : 0;
+                dsDiemCtkh[j].tongCong = dsDiemCtkh[j].tongCong + (countDDFinal > 0 ? (tongDiemTHBSTheoKhoa / countDDFinal) : 0);
+                dsDiemCtkh[j].datCtkh = dsDiemCtkh[j].DiemCtkh.DiemKeHoach != 0 && dsDiemCtkh[j].DiemCtkh.DiemKeHoach != null
+                    ? (dsDiemCtkh[j].tongCong * 100 / dsDiemCtkh[j].DiemCtkh.DiemKeHoach.GetValueOrDefault())
+                    : 0;
+            }
+            return dsDiemCtkh;
+        }
+        private XLWorkbook GenerateBcCtkhExcelBacSi(List<DiemCtkh>? dataRaw, BaoCaoDiemCtkhRequest req, BenhVien? benhVien) {
+            using var wb = new XLWorkbook();
+            return wb;
+            //var ws = wb.Worksheets.Add("Toàn viện");
+
+            //// ====== 4 dòng đầu ======
+            //ws.Range("A1:T1").Merge();
+            //ws.Cell("A1").Value = benhVien?.tenbenhvien;
+            //ws.Cell("A1").Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+            //ws.Cell("A1").Style.Font.Bold = true;
+
+            //ws.Range("A2:T2").Merge();
+            //var txtLoaiBc = req.LoaiBaoCao == LoaiBaoCaoCtkh.BAC_SI ? "BÁC SỸ" : "ĐIỀU DƯỠNG";
+            //ws.Cell("A2").Value = $"BẢNG TỔNG HỢP {txtLoaiBc} - DƯỢC SỸ THỰC HIỆN CHỈ TIÊU KẾ HOẠCH KCB";
+            //ws.Cell("A2").Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            //ws.Cell("A2").Style.Font.Bold = true;
+            //ws.Cell("A2").Style.Font.FontSize = 14;
+            //ws.Cell("A2").Style.Font.FontColor = XLColor.Blue;
+
+            //ws.Range("A3:T3").Merge();
+            //ws.Cell("A3").Value = BuildTitleBcCtkhExcel(req.TuThang, req.TuNam, req.DenThang, req.DenNam);
+            //ws.Cell("A3").Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            //ws.Cell("A3").Style.Font.Bold = true;
+            //ws.Cell("A3").Style.Font.FontSize = 14;
+            //ws.Cell("A3").Style.Font.FontColor = XLColor.Blue;
+            //var data = PreGenerateRpCtkh(dataRaw, req);
+            //// Dòng 5 trống
+            //int row = 6;
+
+            //// ====== Header ======
+            //string[] headers =
+            //{
+            //        "STT",
+            //        "Khoa, bác sỹ",
+            //        "Điểm kế hoạch",
+            //        "Điểm CĐ Khám, điều trị, phát thuốc (Dược)",
+            //        "Điểm CĐ nhập viện, Dược(hc)",
+            //        "Số tiền còn lại",
+            //        "Ghi chú"
+            //    };
+
+            //for (int i = 0; i < headers.Length; i++)
+            //{
+            //    ws.Cell(row, i + 1).Value = headers[i];
+            //}
+
+            //var headerRange = ws.Range(row, 1, row, headers.Length);
+            //headerRange.Style.Font.Bold = true;
+            //headerRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            //headerRange.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+            //headerRange.Style.Alignment.WrapText = true;
+            //headerRange.Style.Border.TopBorder = XLBorderStyleValues.Thin;
+            //headerRange.Style.Border.BottomBorder = XLBorderStyleValues.Thin;
+            //headerRange.Style.Border.LeftBorder = XLBorderStyleValues.Thin;
+            //headerRange.Style.Border.RightBorder = XLBorderStyleValues.Thin;
+
+            //row++;
+
+            //// ====== D ======
+
+            //int idx = 0;
+
+            //decimal tongAllChiPhiVattu = 0;
+            //decimal tongAllThanhTien = 0;
+            //decimal tongAllSoTienConLai = 0;
+            //foreach (var item in data)
+            //{
+
+            //    idx++;
+            //    ws.Cell(row, 1).Value = $"{idx}";
+            //    ws.Cell(row, 2).Value = item.ma_khoa ?? "";
+            //    ws.Cell(row, 3).Value = item.khoa ?? "";
+            //    ws.Cell(row, 4).Value = item.thanh_tien ?? 0;
+            //    ws.Cell(row, 5).Value = item.chiphi_vattu ?? 0;
+            //    ws.Cell(row, 6).Value = item.sotien_conlai ?? 0;
+            //    ws.Cell(row, 7).Value = "";
+
+            //    // Căn lề
+            //    ws.Cell(row, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            //    ws.Cell(row, 2).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+            //    ws.Cell(row, 3).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+            //    ws.Cell(row, 4).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+            //    ws.Cell(row, 5).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+            //    ws.Cell(row, 6).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+            //    ws.Cell(row, 7).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+
+            //    // Định dạng số
+            //    ws.Cell(row, 3).Style.NumberFormat.Format = "#,##0.##";
+            //    ws.Cell(row, 4).Style.NumberFormat.Format = "#,##0.##";
+            //    ws.Cell(row, 5).Style.NumberFormat.Format = "#,##0.##";
+            //    ws.Cell(row, 6).Style.NumberFormat.Format = "#,##0.##";
+            //    ws.Cell(row, 7).Style.NumberFormat.Format = "#,##0.##";
+            //    ws.Cell(row, 8).Style.NumberFormat.Format = "#,##0.##";
+            //    ws.Cell(row, 9).Style.NumberFormat.Format = "#,##0.##";
+
+            //    ws.Range(row, 1, row, headers.Length).Style.Border.TopBorder = XLBorderStyleValues.Thin;
+            //    ws.Range(row, 1, row, headers.Length).Style.Border.BottomBorder = XLBorderStyleValues.Thin;
+            //    ws.Range(row, 1, row, headers.Length).Style.Border.LeftBorder = XLBorderStyleValues.Thin;
+            //    ws.Range(row, 1, row, headers.Length).Style.Border.RightBorder = XLBorderStyleValues.Thin;
+            //    ws.Range(row, 1, row, headers.Length).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+
+            //    tongAllChiPhiVattu += item.chiphi_vattu ?? 0;
+            //    tongAllSoTienConLai += item.sotien_conlai ?? 0;
+            //    tongAllThanhTien += item.thanh_tien ?? 0;
+            //    ws.Range(row, 1, row, headers.Length).Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+            //    row++;
+            //}
+
+
+            //// ===== Dòng tổng cộng toàn bộ =====
+            //ws.Cell(row, 2).Value = "Tổng";
+
+            //ws.Cell(row, 4).Value = tongAllThanhTien;
+            //ws.Cell(row, 5).Value = tongAllChiPhiVattu;
+            //ws.Cell(row, 6).Value = tongAllSoTienConLai;
+
+            //// format
+            //ws.Cell(row, 4).Style.NumberFormat.Format = "#,##0.##";
+            //ws.Cell(row, 5).Style.NumberFormat.Format = "#,##0.##";
+            //ws.Cell(row, 6).Style.NumberFormat.Format = "#,##0.##";
+
+            //ws.Range(row, 1, row, headers.Length).Style.Font.Bold = true;
+            //ws.Range(row, 1, row, headers.Length).Style.Fill.BackgroundColor = XLColor.FromArgb(200, 200, 200);
+            //ws.Range(row, 1, row, headers.Length).Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+
+            //row++;
+
+            //// ====== Style chung ======
+            //ws.SheetView.FreezeRows(6);
+
+            //ws.Column(1).Width = 5;//
+            //ws.Column(2).Width = 10;//
+            //ws.Column(3).Width = 30;//
+            //ws.Column(4).Width = 20;//
+            //ws.Column(5).Width = 20;//
+            //ws.Column(6).Width = 20;//
+            //ws.Column(7).Width = 10;//
+
+            //ws.Row(1).Height = 22;
+            //ws.Row(2).Height = 22;
+            //ws.Row(3).Height = 24;
+            //ws.Row(4).Height = 22;
+            //ws.Row(6).Height = 34;
+
+            //var usedRange = ws.Range(1, 1, Math.Max(row - 1, 6), headers.Length);
+            //usedRange.Style.Font.FontName = "Times New Roman";
+            //usedRange.Style.Font.FontSize = 11;
+            //usedRange.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+        }
+        private XLWorkbook GenerateBcCtkhExcelDieuDuong(List<DiemCtkh>? dataRaw, BaoCaoDiemCtkhRequest req, BenhVien? benhVien) {
+            using var wb = new XLWorkbook();
+            return wb;
+        }
+
+        private string BuildTitleBcCtkhExcel(int tuThang, int tuNam, int denThang, int denNam)
+        {
+            if (denNam == tuNam && (denThang - tuThang) <= 5)
+            {
+                string temp1 = "";
+                for (int i = tuThang; i <= denThang; i++)
+                {
+                    temp1 = temp1 + $" {i} " + "+";
+                }
+                temp1 = temp1.Substring(0, temp1.Length - 1);
+                return $" THÁNG {temp1} NĂM {tuNam}";
+            }
+            else
+            {
+               return $" TỪ THÁNG {tuThang} NĂM {tuNam} ĐẾN THÁNG {denThang} NĂM {denNam}";
             }
         }
         [Authorize]
@@ -1875,6 +2484,12 @@ namespace API.Controllers
             public int TuNam { get; set; }
             public int DenThang { get; set; }
             public int DenNam { get; set; }
+            public LoaiBaoCaoCtkh? LoaiBaoCao { get; set; }
+        }
+
+        public enum LoaiBaoCaoCtkh {
+            BAC_SI,
+            DIEU_DUONG
         }
 
     }

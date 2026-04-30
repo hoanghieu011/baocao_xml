@@ -70,8 +70,8 @@
     </div>
     <div class="row">
             <div class="col-md-12">
-                <div class="table-responsive">
-                    <table class="table" *ngIf="loaiBaoCao=='BAC_SI'">
+                <div class="table-responsive" style="transform: rotateX(180deg);">
+                    <table class="table" *ngIf="loaiBaoCao=='BAC_SI'" style="transform: rotateX(180deg);">
                         <thead>
                             <tr>
                                 <th class="text-center" rowspan="2" style="width: 80px;">{{'STT'|translate}}</th>
@@ -194,7 +194,7 @@
                           </ng-container>
                         </tbody>
                     </table>
-                    <table class="table" *ngIf="loaiBaoCao=='DIEU_DUONG'">
+                    <table class="table" *ngIf="loaiBaoCao=='DIEU_DUONG'" style="transform: rotateX(180deg);">
                         <thead>
                             <tr>
                                 <th class="text-center" rowspan="2" style="width: 80px;">{{'STT'|translate}}</th>
@@ -247,8 +247,8 @@
                                   <td class="bold">{{ item.khoa }}</td>
                                   <td class="text-end bold">{{ item.diemKeHoach.toFixed(2) }}</td>
                                   <td class="text-end bold">{{ item.diemTHTheoBS?.toFixed(2) }}</td>
-                                  <td class="text-end bold"></td>
-                                  <td class="text-end bold"></td>
+                                  <td class="text-end bold">{{ item.soNgayTangCuong?.toFixed(2) }}</td>
+                                  <td class="text-end bold">{{ item.diemTangCuong?.toFixed(2) }}</td>
                                   <td class="text-end bold"></td>
                                   <td class="text-end bold"></td>
                                   <td class="text-end bold"></td>
@@ -266,8 +266,8 @@
                                   <td class="bold">Tổng cộng</td>
                                   <td class="text-end bold">{{ item.diemKeHoach.toFixed(2) }}</td>
                                   <td class="text-end bold">{{ item.diemTHTheoBS?.toFixed(2) }}</td>
-                                  <td class="text-end bold"></td>
-                                  <td class="text-end bold"></td>
+                                  <td class="text-end bold">{{ item.soNgayTangCuong?.toFixed(2) }}</td>
+                                  <td class="text-end bold">{{ item.diemTangCuong?.toFixed(2) }}</td>
                                   <td class="text-end bold"></td>
                                   <td class="text-end bold"></td>
                                   <td class="text-end bold"></td>
@@ -285,8 +285,8 @@
                                   <td>{{ item.officerType == 4 ? 'BS:' : 'ĐD:' }}{{ item.officerName }}</td>
                                   <td class="text-end">{{ item.diemKeHoach.toFixed(2) }}</td>
                                   <td class="text-end">{{ item.diemTHTheoBS?.toFixed(2) }}</td>
-                                  <td class="text-end"></td>
-                                  <td class="text-end"></td>
+                                  <td class="text-end">{{ item.soNgayTangCuong?.toFixed(2) }}</td>
+                                  <td class="text-end">{{ item.diemTangCuong?.toFixed(2) }}</td>
                                   <td class="text-end"></td>
                                   <td class="text-end"></td>
                                   <td class="text-end"></td>

@@ -116,6 +116,7 @@ export class BCDiemCtkhComponent  {
                   diemTHPTTTheoDD: diemTHPTTTheoDDKhoa,
                   diemBNNDCD: diemBNNDCDKhoa,
                   diemBNNDTH: diemBNNDTHKhoa,
+                  diemTHTheoBS: tongDiemTHBSTheoKhoa,
                   diemBNNDCDNhapVien: diemBNNDCDNhapVienKhoa,
                   tongCong: tongDiemTHKhoa + (this.loaiBaoCao==='DIEU_DUONG' ? tongDiemTHBSTheoKhoa : 0) ,
                   datCtkh: diemKeHoachKhoa !== 0 ? (((tongDiemTHKhoa + (this.loaiBaoCao==='DIEU_DUONG' ? tongDiemTHBSTheoKhoa : 0)) / (diemKeHoachKhoa )) * 100) : 0
@@ -282,7 +283,7 @@ export class BCDiemCtkhComponent  {
             diemPTTTH: tongDiemPTTTH,
             diemTangCuong: tongDiemTangCuong,
             soNgayTangCuong: tongSoNgayTangCuong,
-            diemTHTheoBS: tongDiemTHBSTheoKhoa,
+            diemTHTheoBS: tongDiemTHBS,
             diemTruc: tongDiemTruc,
             diemCongBANT: tongDiemCongBANT,
             diemTHPTTTheoDD: tongDiemTHPTTTheoDD,
