@@ -363,6 +363,21 @@ export class DiemKeHoachComponent  {
       thangNam: new FormControl(this.selectedDiemKeHoach.thangNam, [Validators.required]),
     });
   }
+  onXoaDiemKeHoachBtnClick(diemKeHoach: any) {
+    const res = window.confirm('Bạn có chắc chắn muốn xóa điểm kế hoạch này?');
+    if (res) {
+      this.diemKeHoachService.deleteDiemKeHoach(diemKeHoach.diemKeHoachId).subscribe({
+        next: () => {
+          this.addToast('Xóa điểm kế hoạch thành công', 'success');
+          this.loadDiemKeHoach();
+        },
+        error: (err) => {
+          console.error(err);
+          this.addToast('Có lỗi xảy ra khi xóa điểm kế hoạch', 'danger');
+        }
+      });
+    }
+  }
   onSoBuoiTrucChange($event: any) {
     const soBuoiTruc = $event.target.value || 0;
     const diemTruc = this.isThemMoi ? soBuoiTruc * this.hesoTruc[this.selected_bs.officer_type] || 0

@@ -390,6 +390,50 @@ namespace API.Controllers
                 return StatusCode(500, new { message = "Lỗi server", detail = ex.Message });
             }
         }
+
+        [Authorize]
+        [HttpDelete("xoa-diemkehoach/{id}")]
+        public async Task<ActionResult<object>> XoaDiemKeHoach(int id)
+        {
+            try
+            {
+                var userName = User.FindFirst(ClaimTypes.Name)?.Value
+                    ?? User.FindFirst("USER_NAME")?.Value;
+
+                var csytid = User.FindFirst(ClaimTypes.Name)?.Value
+                ?? User.FindFirst("CSYTID")?.Value;
+                // Lấy tên database động thông qua service dùng chung
+                var dbData = await _dbResolver.GetDatabaseByUserAsync(userName);
+                if (string.IsNullOrEmpty(dbData))
+                    return BadRequest("Không xác định được database dữ liệu cho user.");
+                if (string.IsNullOrEmpty(userName))
+                    return Unauthorized();
+
+                var conn = _context.Database.GetDbConnection();
+
+                if (conn.State != System.Data.ConnectionState.Open)
+                    await conn.OpenAsync();
+
+                using var cmd = conn.CreateCommand();
+                cmd.CommandText = $"DELETE FROM `{dbData}`.bc_diemkehoach WHERE diemkehoachid=@id";
+
+                var p1 = cmd.CreateParameter();
+                p1.ParameterName = "@id";
+                p1.Value = id;
+                cmd.Parameters.Add(p1);
+
+                await cmd.ExecuteNonQueryAsync();
+
+                return Ok(new
+                {
+                    message = "Xoá điểm kế hoạch thành công.",
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Lỗi server", detail = ex.Message });
+            }
+        }
     }
     public class DsDiemKeHoachRequest
     {

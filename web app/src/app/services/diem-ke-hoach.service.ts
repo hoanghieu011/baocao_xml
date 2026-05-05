@@ -80,5 +80,11 @@ export class DiemKeHoachService {
       { headers: this.httpConfig.getHeaders() }
     );
   }
-    
+
+  deleteDiemKeHoach(diemKeHoachId: number): Observable<any> {
+    return this.http.delete<any>(
+      `${this.apiUrl}/xoa-diemkehoach/${diemKeHoachId}`,
+      { headers: this.httpConfig.getHeaders() }
+    );
+  }
 }

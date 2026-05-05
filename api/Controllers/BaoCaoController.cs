@@ -5,6 +5,8 @@ using API.Models;
 using ClosedXML.Excel;
 using DocumentFormat.OpenXml.Bibliography;
 using DocumentFormat.OpenXml.Drawing;
+using DocumentFormat.OpenXml.Drawing.Charts;
+using DocumentFormat.OpenXml.Math;
 using DocumentFormat.OpenXml.Office.Word;
 using DocumentFormat.OpenXml.Spreadsheet;
 using DocumentFormat.OpenXml.Wordprocessing;
@@ -15,6 +17,7 @@ using Org.BouncyCastle.Ocsp;
 using System.Data.Common;
 using System.Security.Claims;
 using System.Text.RegularExpressions;
+using static Humanizer.In;
 
 namespace API.Controllers
 {
@@ -1678,13 +1681,13 @@ namespace API.Controllers
 
                 // khơi tạo arrThangNam để thêm vào điều kiện lọc theo trường ThangNam
                 var endPointMonth = Math.Max((req.DenNam - req.TuNam) * 12, req.DenThang);
-                var arrThangNam = new List<string>();
+                var arrThangNam = new List<int>();
                 for (var year = req.TuNam; year <= req.DenNam; year++)
                 {
                     for (var month = req.TuThang; month <= endPointMonth; month++)
                     {
                         var tempM = month % 12 == 0 ? 12 : month % 12;
-                        arrThangNam.Add($"{tempM}{year}");
+                        arrThangNam.Add(Convert.ToInt32($"{tempM}{year}"));
                     }
                 }
                 // tạo fromDate, toDate để thêm vào điều kiện lọc Điểm CĐ
@@ -1703,30 +1706,58 @@ namespace API.Controllers
                 return BadRequest("Lỗi server: " + ex.Message);
             }
         }
-        private async Task<List<DiemCtkh>> GetBcDiemCtkhFunc(DateTime tuNgay, DateTime denNgay, List<string>? arrThangNam, string dbName)
+        private async Task<List<DiemCtkh>> GetBcDiemCtkhFunc(DateTime tuNgay, DateTime denNgay, List<int>? arrThangNam, string dbName)
         {
-            var sql = $"SELECT officer.OFFICER_NAME, officer.OFFICER_TYPE, officer.BACSIID, t1.DIEMTHUCHIEN, t2.DIEMKEHOACHID, t2.DIEM_KEHOACH, org.ORG_NAME KHOA, t2.DIEM_TRUC, t2.DIEMTANGCUONG, t2.SONGAYTANGCUONG, t2.KHOAID, t3.DIEMCDNHAPVIEN, t1.DIEMTHUCHIEN*0.2 DIEMPTTCHIDINH, t1.DIEMTHUCHIEN*0.8 DIEMPTTTHUCHIEN, t4.DIEMBANT  FROM " +
-                    $"(select dkh.DIEMKEHOACHID, dkh.KHOAID ,dkh.DIEM_KEHOACH, dkh.BACSIID, dkh.DIEM_TRUC, IFNULL(sum(tc.DIEM),0) as DIEMTANGCUONG,IFNULL(sum(tc.SONGAY),0) as SONGAYTANGCUONG  from {dbName}.bc_diemkehoach dkh " +
-                    $"LEFT JOIN {dbName}.bc_tangcuong tc " +
-                    $"ON  tc.DIEMKEHOACHID= dkh.DIEMKEHOACHID " +
-                    $"WHERE THANGNAM in (@arrThangNam) " +
-                    $"GROUP BY DIEMKEHOACHID,KHOAID ,DIEM_KEHOACH, BACSIID, DIEM_TRUC) t2 " +
-                    $"LEFT JOIN  (SELECT t.DIEMTHUCHIEN, activeUsers.BACSIID " +
-                    $"FROM (SELECT  MA_BAC_SI, SUM(HESO) as DIEMTHUCHIEN " +
-                    $"FROM (SELECT " +
-                    $"nhom.NHOM_MABHYT_ID,IFNULL(b.MA_DICH_VU,b.MA_VAT_TU) MA_DICH_VU,IFNULL(b.TEN_DICH_VU,b.TEN_VAT_TU) TEN_DICH_VU,nhom.TENNHOM,IFNULL(b.SO_LUONG,0) SO_LUONG,IFNULL(b.DON_GIA_BH, 0) DON_GIA_BH ,IFNULL(dv.HESO,0) HESO, IFNULL(dv.CHIPHI,0) CHIPHI, b.MA_BAC_SI " +
-                    $"FROM  {dbName}.xml1 a, {dbName}.xml3 b LEFT JOIN his_common.dmc_dichvu dv on IFNULL(b.MA_DICH_VU,b.MA_VAT_TU) = dv.MA_DICHVU AND IFNULL(b.TEN_DICH_VU,b.TEN_VAT_TU) = dv.TEN_DICHVU, " +
-                    $"his_common.dmc_nhom_mabhyt nhom " +
-                    $"WHERE a.ma_lk = b.ma_lk AND b.ma_nhom = nhom.MANHOM_BHYT AND a.NGAY_RA >= @tuNgay AND a.NGAY_RA <= @denNgay) x " +
-                    $"group by MA_BAC_SI) t " +
-                    $"LEFT JOIN (SELECT * from his_common.org_officer WHERE STATUS = 1 AND MA_BAC_SI IS NOT NULL AND MA_BAC_SI <> '') activeUsers " +
-                    $"ON t.MA_BAC_SI = activeUsers.MA_BAC_SI ) t1 " +
-                    $"ON t2.BACSIID = t1.BACSIID " +
-                    $"LEFT JOIN ( SELECT BACSIID, SUM(SOLUONG) DIEMCDNHAPVIEN FROM {dbName}.bc_benhnhan_nhapvien WHERE THANGNAM IN (@arrThangNam) AND BHYT = 1 GROUP BY BACSIID ) t3 ON t2.BACSIID = t3.BACSIID " +
-                    $"LEFT JOIN ( SELECT BACSIID, IFNULL(SUM(SOLUONG),0)*0.3 DIEMBANT FROM {dbName}.bc_benhnhan_15t WHERE THANGNAM IN (@arrThangNam) AND BHYT = 1 GROUP BY BACSIID ) t4 ON t2.BACSIID = t4.BACSIID " +
-                    $"LEFT JOIN his_common.org_organization org ON org.ORG_ID = t2.KHOAID " +
-                    $"LEFT JOIN his_common.org_officer officer ON officer.BACSIID = t2.BACSIID " +
-                    $"order by t2.KHOAID";
+
+            var sql = $"SELECT officer.OFFICER_NAME, officer.OFFICER_TYPE, officer.BACSIID, t1.DIEMTHUCHIEN, t2.KHOAID, t2.DIEM_KEHOACH, org.ORG_NAME KHOA, t2.DIEM_TRUC, t2.DIEMTANGCUONG, t2.SONGAYTANGCUONG, t3.DIEMCDNHAPVIEN*6.4 DIEMCDNHAPVIEN, t3.DIEMCDNHAPVIENBNND*19.2 DIEMCDNHAPVIENBNND, t1.DIEMPTTCD*0.2 DIEMPTTCHIDINH, t5.DIEMPTTTHUCHIEN*0.8 DIEMPTTTHUCHIEN, t4.DIEMBANT  FROM " +
+                $"(select dkh.KHOAID, IFNULL(sum(dkh.DIEM_KEHOACH), 0) as DIEM_KEHOACH, dkh.BACSIID, IFNULL(sum(dkh.DIEM_TRUC), 0) as DIEM_TRUC, IFNULL(sum(tcSum.DIEMTANGCUONG), 0) as DIEMTANGCUONG, IFNULL(sum(tcSum.SONGAYTANGCUONG), 0) as SONGAYTANGCUONG  from `{dbName}`.bc_diemkehoach dkh " +
+                $"LEFT JOIN ( SELECT DIEMKEHOACHID, IFNULL(SUM(tc.DIEM),0) DIEMTANGCUONG, IFNULL(SUM(tc.SONGAY),0) SONGAYTANGCUONG " +
+                $"FROM `{dbName}`.bc_tangcuong tc " +
+                $"GROUP BY DIEMKEHOACHID ) tcSum " +
+                $"ON  tcSum.DIEMKEHOACHID= dkh.DIEMKEHOACHID WHERE THANGNAM in (" + GenerateDynamicParamThangNam(arrThangNam) + ") " +
+                $"GROUP BY KHOAID , BACSIID) t2 " +
+                $"LEFT JOIN  (SELECT t.DIEMTHUCHIEN, activeUsers.BACSIID, t.DIEMPTTCD " +
+                $"FROM (SELECT  MA_BAC_SI, SUM(HESO) as DIEMTHUCHIEN, SUM(CASE WHEN NHOM_MABHYT_ID IN(6,26) THEN HESO ELSE 0 END ) DIEMPTTCD  " +
+                $"FROM (SELECT  " +
+                $"nhom.NHOM_MABHYT_ID,IFNULL(b.MA_DICH_VU,b.MA_VAT_TU) MA_DICH_VU,IFNULL(b.TEN_DICH_VU,b.TEN_VAT_TU) TEN_DICH_VU,nhom.TENNHOM,IFNULL(b.SO_LUONG,0) SO_LUONG,IFNULL(b.DON_GIA_BH, 0) DON_GIA_BH ,IFNULL(dv.HESO,0) HESO, IFNULL(dv.CHIPHI,0) CHIPHI, b.MA_BAC_SI " +
+                $"FROM   `{dbName}`.xml1 a,  `{dbName}`.xml3 b LEFT JOIN his_common.dmc_dichvu dv on IFNULL(b.MA_DICH_VU,b.MA_VAT_TU) = dv.MA_DICHVU AND IFNULL(b.TEN_DICH_VU,b.TEN_VAT_TU) = dv.TEN_DICHVU, " +
+                $"his_common.dmc_nhom_mabhyt nhom " +
+                $"WHERE a.ma_lk = b.ma_lk " +
+                $"AND b.ma_nhom = nhom.MANHOM_BHYT " +
+                $"AND a.NGAY_RA >= @tuNgay " +
+                $"AND a.NGAY_RA <= @denNgay ) x  " +
+                $"group by MA_BAC_SI) t " +
+                $"LEFT JOIN (SELECT * from his_common.org_officer WHERE STATUS = 1 AND MA_BAC_SI IS NOT NULL AND MA_BAC_SI <> \"\") activeUsers  " +
+                $"ON t.MA_BAC_SI = activeUsers.MA_BAC_SI) t1 " +
+                $"ON t2.BACSIID = t1.BACSIID " +
+                $"LEFT JOIN ( SELECT BACSIID, SUM(CASE WHEN BHYT = 1 THEN SOLUONG ELSE 0 END) DIEMCDNHAPVIEN, SUM(CASE WHEN BHYT = 2 THEN SOLUONG ELSE 0 END) DIEMCDNHAPVIENBNND FROM `{dbName}`.bc_benhnhan_nhapvien WHERE THANGNAM IN (" + GenerateDynamicParamThangNam(arrThangNam) + ")  " +
+                $"GROUP BY BACSIID ) t3 " +
+                $"ON t2.BACSIID = t3.BACSIID " +
+                $"LEFT JOIN ( SELECT BACSIID, SUM(SOLUONG) DIEMBANT FROM `{dbName}`.bc_benhnhan_15t WHERE THANGNAM IN (" + GenerateDynamicParamThangNam(arrThangNam) + ") AND BHYT = 1 " +
+                $"GROUP BY BACSIID ) t4 " +
+                $"ON t2.BACSIID = t4.BACSIID " +
+                $"LEFT JOIN  (SELECT pttTHSum.*,  org.BACSIID, org.OFFICER_NAME " +
+                $"FROM  (SELECT NGUOI_THUC_HIEN, SUM(SO_LUONG*HESO) DIEMPTTTHUCHIEN  " +
+                $"FROM (SELECT tPtt.NHOM_MABHYT_ID, tPtt.SO_LUONG, tPtt.HESO,jt.NGUOI_THUC_HIEN " +
+                $"FROM (SELECT nhom.NHOM_MABHYT_ID,IFNULL(b.SO_LUONG,0) SO_LUONG,IFNULL(dv.HESO,0) HESO, b.NGUOI_THUC_HIEN " +
+                $"FROM  `{dbName}`.xml1 a, " +
+                $"`{dbName}`.xml3 b " +
+                $"LEFT JOIN his_common.dmc_dichvu dv " +
+                $"on IFNULL(b.MA_DICH_VU,b.MA_VAT_TU) = dv.MA_DICHVU AND IFNULL(b.TEN_DICH_VU,b.TEN_VAT_TU) = dv.TEN_DICHVU, " +
+                $"his_common.dmc_nhom_mabhyt nhom " +
+                $"WHERE a.ma_lk = b.ma_lk " +
+                $"AND b.ma_nhom = nhom.MANHOM_BHYT " +
+                $"AND a.NGAY_RA >= @tuNgay " +
+                $"AND a.NGAY_RA <= @denNgay AND nhom.NHOM_MABHYT_ID IN (6,26) ) tPtt " +
+                $"JOIN JSON_TABLE( " +
+                $"CONCAT('[\"', REPLACE(tPtt.NGUOI_THUC_HIEN, ';', '\",\"'), '\"]'), " +
+                $"'$[*]' COLUMNS( NGUOI_THUC_HIEN VARCHAR(255) PATH '$' )) AS jt) tPttSplit GROUP BY NGUOI_THUC_HIEN) pttTHSum " +
+                $"LEFT JOIN his_common.org_officer org " +
+                $"ON org.MA_BAC_SI = pttTHSum.NGUOI_THUC_HIEN) t5 " +
+                $"ON t5.BACSIID = t2.BACSIID " +
+                $"LEFT JOIN his_common.org_organization org ON org.ORG_ID = t2.KHOAID " +
+                $"LEFT JOIN his_common.org_officer officer ON officer.BACSIID = t2.BACSIID " +
+                $"order by t2.KHOAID;";
             var conn = _context.Database.GetDbConnection();
             using var cmd = conn.CreateCommand();
             var paramList = new List<DbParameter>();
@@ -1740,15 +1771,30 @@ namespace API.Controllers
             p2.Value = denNgay;
             paramList.Add(p2);
 
-            var p3 = cmd.CreateParameter();
-            p3.ParameterName = "@arrThangNam";
-            p3.Value = string.Join(',', arrThangNam);
-            paramList.Add(p3);
-            return await _context.diemCtkhs.FromSqlRaw(sql, paramList.ToArray())
+            for(var i=0; i< arrThangNam.Count;i++)
+            {
+                var p = cmd.CreateParameter();
+                p.ParameterName = $"pThangNam{i}";
+                p.Value = arrThangNam[i];
+                paramList.Add(p);
+            }
+            var query = _context.diemCtkhs.FromSqlRaw(sql, paramList.ToArray());
+            var qryStr = query.ToQueryString();
+            Console.WriteLine(qryStr);
+            return await query
                     .AsNoTracking()
                     .ToListAsync();
         }
-
+        private string GenerateDynamicParamThangNam(List<int>? arrThangNam)
+        {
+            var res = "";
+            for(var i=0; i< arrThangNam.Count; i++)
+            {
+                if (i > 0) res += ",";
+                res += $"@pThangNam{i}";
+            }
+            return res;
+        }
         [Authorize]
         [HttpPost("bc_diem_ctkh_excel")]
         public async Task<IActionResult> GetBcDiemCtkhExcel([FromBody] BaoCaoDiemCtkhRequest req)
@@ -1770,13 +1816,13 @@ namespace API.Controllers
 
                 // khơi tạo arrThangNam để thêm vào điều kiện lọc theo trường ThangNam
                 var endPointMonth = Math.Max((req.DenNam - req.TuNam) * 12, req.DenThang);
-                var arrThangNam = new List<string>();
+                var arrThangNam = new List<int>();
                 for (var year = req.TuNam; year <= req.DenNam; year++)
                 {
                     for (var month = req.TuThang; month <= endPointMonth; month++)
                     {
                         var tempM = month % 12 == 0 ? 12 : month % 12;
-                        arrThangNam.Add($"{tempM}{year}");
+                        arrThangNam.Add(Convert.ToInt32($"{tempM}{year}"));
                     }
                 }
                 // tạo fromDate, toDate để thêm vào điều kiện lọc Điểm CĐ

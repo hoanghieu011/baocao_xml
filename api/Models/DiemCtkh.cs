@@ -65,9 +65,11 @@ namespace API.Models
         /// Điểm BNND Thực hiện
         /// </summary>
         //public decimal DiemBNNDTH { get; set; } = 0;
+
         /// <summary>
         /// Điểm BNND Chỉ định Nhập viện
         /// </summary>
-        //public decimal DiemBNNDCDNhapVien { get; set; } = 0;
+        [Column("DIEMCDNHAPVIENBNND")]
+        public decimal? DiemBNNDCDNhapVien { get; set; } = 0;
     }
 }
