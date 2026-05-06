@@ -382,6 +382,7 @@ export class DiemKeHoachComponent  {
     const soBuoiTruc = $event.target.value || 0;
     const diemTruc = this.isThemMoi ? soBuoiTruc * this.hesoTruc[this.selected_bs.officer_type] || 0
     : soBuoiTruc * this.hesoTruc[this.selectedDiemKeHoach.officerType] || 0;
+    console.log(this.selectedDiemKeHoach, this.selected_bs, soBuoiTruc, diemTruc);
     this.formDataDiemKeHoach.get('diemTruc')?.setValue(diemTruc);
     this.cd.detectChanges();
   }

@@ -250,7 +250,7 @@ namespace API.Controllers
                 cmd.Parameters.Add(p3);
 
                 var DiemTruc = "";
-                if (req.OfficerType == '4') {
+                if (req.OfficerType == 4) {
                     DiemTruc = req.SoBuoiTruc * 12 + "";
                 } else {
                     DiemTruc = req.SoBuoiTruc * 8 + "";

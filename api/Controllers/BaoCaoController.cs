@@ -467,64 +467,11 @@ namespace API.Controllers
 
                 var csytid = User.FindFirst(ClaimTypes.Name)?.Value
                     ?? User.FindFirst("CSYTID")?.Value;
+                var dbData = await _dbResolver.GetDatabaseByUserAsync(userName);
+                if (string.IsNullOrEmpty(dbData))
+                    return BadRequest("Không xác định được database dữ liệu cho user.");
 
-                var sql = $@"
-                            SELECT NHOM_MABHYT_ID,MA_DICH_VU, TEN_DICH_VU, TENNHOM, TEN_BACSI, DON_GIA_BH, HESO, CHIPHI, SOLUONG , CHIPHI * SOLUONG AS CHIPHI_VATTU, DON_GIA_BH * SOLUONG AS THANH_TIEN, ((DON_GIA_BH - CHIPHI) * SOLUONG) AS SOTIEN_CONLAI, HESO * SOLUONG AS DIEM_THUCHIEN
-                            FROM (
-                                SELECT NHOM_MABHYT_ID,MA_DICH_VU, TEN_DICH_VU, TENNHOM, DON_GIA_BH, HESO, CHIPHI, TEN_BACSI, SUM(SO_LUONG) SOLUONG FROM (
-                                    SELECT 
-                                        nhom.NHOM_MABHYT_ID,IFNULL(b.MA_DICH_VU,b.MA_VAT_TU) MA_DICH_VU,IFNULL(b.TEN_DICH_VU,b.TEN_VAT_TU) TEN_DICH_VU,nhom.TENNHOM,IFNULL(b.SO_LUONG,0) SO_LUONG,IFNULL(b.DON_GIA_BH, 0) DON_GIA_BH ,IFNULL(dv.HESO,0) HESO, IFNULL(dv.CHIPHI,0) CHIPHI, org.OFFICER_NAME TEN_BACSI
-                                    FROM  
-                                        his_data_binhluc.xml1 a, 
-                                        his_data_binhluc.xml3 b LEFT JOIN dmc_dichvu dv on IFNULL(b.MA_DICH_VU,b.MA_VAT_TU) = dv.MA_DICHVU AND IFNULL(b.TEN_DICH_VU,b.TEN_VAT_TU) = dv.TEN_DICHVU,
-                                        dmc_nhom_mabhyt nhom,
-                                        org_officer org
-                                    WHERE a.ma_lk = b.ma_lk
-                                    AND b.ma_nhom = nhom.MANHOM_BHYT
-                                    AND b.NGUOI_THUC_HIEN = org.MA_BAC_SI
-                                    AND a.NGAY_RA >= @tungay 
-                                    AND a.NGAY_RA <= @dengay 
-                                    AND b.nguoi_thuc_hien = @nguoiThucHien
-                                ) th
-                                group by NHOM_MABHYT_ID,MA_DICH_VU, TEN_DICH_VU, TENNHOM, DON_GIA_BH, HESO, CHIPHI, TEN_BACSI
-                            ) th2
-                            ORDER BY NHOM_MABHYT_ID, MA_DICH_VU;";
-
-                var conn = _context.Database.GetDbConnection();
-                using var tempCmd = conn.CreateCommand();
-
-                var paramList = new List<DbParameter>();
-
-                var p1 = tempCmd.CreateParameter();
-                p1.ParameterName = "@tungay";
-                p1.Value = req.TuNgay.Date;
-                paramList.Add(p1);
-
-                var p2 = tempCmd.CreateParameter();
-                p2.ParameterName = "@dengay";
-                p2.Value = req.DenNgay.Date;
-                paramList.Add(p2);
-
-                var p3 = tempCmd.CreateParameter();
-                p3.ParameterName = "@nguoiThucHien";
-                p3.Value = req.MaBacSy.ToString();
-                paramList.Add(p3);
-
-                var doanhthu_bscd = await _context.dto_bc_doanhthu_bscd
-                    .FromSqlRaw(sql, paramList.ToArray())
-                    .AsNoTracking()
-                    .ToListAsync();
-
-                // using var cmd = _context.Database.GetDbConnection().CreateCommand();
-                // cmd.CommandText = @"cmd";
-                // await _context.Database.OpenConnectionAsync();
-
-                // using var reader = await cmd.ExecuteReaderAsync();
-
-                // for (int i = 0; i < reader.FieldCount; i++)
-                // {
-                //     Console.WriteLine($"{reader.GetName(i)} - {reader.GetFieldType(i)}");
-                // }
+                var doanhthu_bscd = await GetDoanhThuBsthFunc(req.TuNgay, req.DenNgay, req.MaBacSy, dbData);
 
                 return Ok(new
                 {
@@ -550,7 +497,9 @@ namespace API.Controllers
 
                 if (string.IsNullOrEmpty(userName))
                     return Unauthorized();
-
+                var dbData = await _dbResolver.GetDatabaseByUserAsync(userName);
+                if (string.IsNullOrEmpty(dbData))
+                    return BadRequest("Không xác định được database dữ liệu cho user.");
                 var sql_tenbv = $@"SELECT * FROM dmc_benhvien WHERE CSYTID = {csytid}";
 
                 var benhVien = await _context.dmc_benhvien
@@ -558,67 +507,7 @@ namespace API.Controllers
                     .AsNoTracking()
                     .FirstOrDefaultAsync();
 
-                var sql = @"
-                    SELECT NHOM_MABHYT_ID, MA_DICH_VU, TEN_DICH_VU, TENNHOM, TEN_BACSI, DON_GIA_BH, HESO, CHIPHI, SOLUONG,
-                        CHIPHI * SOLUONG AS CHIPHI_VATTU,
-                        DON_GIA_BH * SOLUONG AS THANH_TIEN,
-                        ((DON_GIA_BH - CHIPHI) * SOLUONG) AS SOTIEN_CONLAI,
-                        HESO * SOLUONG AS DIEM_THUCHIEN
-                    FROM (
-                        SELECT NHOM_MABHYT_ID, MA_DICH_VU, TEN_DICH_VU, TENNHOM, IFNULL(DON_GIA_BH,0) DON_GIA_BH, IFNULL(HESO,0), IFNULL(CHIPHI, 0) CHIPHI, TEN_BACSI, IFNULL(SUM(SO_LUONG),0) SOLUONG
-                        FROM (
-                            SELECT 
-                                nhom.NHOM_MABHYT_ID,
-                                IFNULL(b.MA_DICH_VU, b.MA_VAT_TU) MA_DICH_VU,
-                                IFNULL(b.TEN_DICH_VU, b.TEN_VAT_TU) TEN_DICH_VU,
-                                nhom.TENNHOM,
-                                b.SO_LUONG,
-                                b.DON_GIA_BH,
-                                dv.HESO,
-                                dv.CHIPHI,
-                                org.OFFICER_NAME TEN_BACSI
-                            FROM  
-                                his_data_binhluc.xml1 a, 
-                                his_data_binhluc.xml3 b 
-                                LEFT JOIN dmc_dichvu dv 
-                                    ON IFNULL(b.MA_DICH_VU, b.MA_VAT_TU) = dv.MA_DICHVU 
-                                AND IFNULL(b.TEN_DICH_VU, b.TEN_VAT_TU) = dv.TEN_DICHVU,
-                                dmc_nhom_mabhyt nhom,
-                                org_officer org
-                            WHERE a.ma_lk = b.ma_lk
-                            AND b.ma_nhom = nhom.MANHOM_BHYT
-                            AND b.NGUOI_THUC_HIEN = org.MA_BAC_SI
-                            AND a.NGAY_RA >= @tungay 
-                            AND a.NGAY_RA <= @dengay 
-                            AND b.nguoi_thuc_hien = @nguoiThucHien
-                        ) th
-                        GROUP BY NHOM_MABHYT_ID, MA_DICH_VU, TEN_DICH_VU, TENNHOM, DON_GIA_BH, HESO, CHIPHI, TEN_BACSI
-                    ) th2
-                    ORDER BY NHOM_MABHYT_ID, MA_DICH_VU;";
-
-                var conn = _context.Database.GetDbConnection();
-                using var tempCmd = conn.CreateCommand();
-                var paramList = new List<DbParameter>();
-
-                var p1 = tempCmd.CreateParameter();
-                p1.ParameterName = "@tungay";
-                p1.Value = req.TuNgay.Date;
-                paramList.Add(p1);
-
-                var p2 = tempCmd.CreateParameter();
-                p2.ParameterName = "@dengay";
-                p2.Value = req.DenNgay.Date;
-                paramList.Add(p2);
-
-                var p3 = tempCmd.CreateParameter();
-                p3.ParameterName = "@nguoiThucHien";
-                p3.Value = req.MaBacSy.ToString();
-                paramList.Add(p3);
-
-                var data = await _context.dto_bc_doanhthu_bscd
-                    .FromSqlRaw(sql, paramList.ToArray())
-                    .AsNoTracking()
-                    .ToListAsync();
+                var data = await GetDoanhThuBsthFunc(req.TuNgay, req.DenNgay, req.MaBacSy, dbData);
 
                 using var wb = new XLWorkbook();
                 var ws = wb.Worksheets.Add("BSTH");
@@ -860,7 +749,73 @@ namespace API.Controllers
                 return StatusCode(500, new { message = "Lỗi server", detail = ex.Message });
             }
         }
+        private async Task<List<BcDoanhThuBscdDto>> GetDoanhThuBsthFunc(DateTime tuNgay, DateTime denNgay, string? maBacSi, string dbName)
+        {
+            var sql = $@"
+                    SELECT NHOM_MABHYT_ID, MA_DICH_VU, TEN_DICH_VU, TENNHOM, DON_GIA_BH, HESO, CHIPHI, SOLUONG,
+                        CHIPHI * SOLUONG AS CHIPHI_VATTU,
+                        DON_GIA_BH * SOLUONG AS THANH_TIEN,
+                        ((DON_GIA_BH - CHIPHI) * SOLUONG) AS SOTIEN_CONLAI,
+                        HESO * SOLUONG AS DIEM_THUCHIEN,
+                        bs.TEN_BACSI
+                    FROM (
+                        SELECT NHOM_MABHYT_ID, MA_DICH_VU, TEN_DICH_VU, TENNHOM, IFNULL(DON_GIA_BH,0) DON_GIA_BH, IFNULL(HESO,0) HESO, IFNULL(CHIPHI, 0) CHIPHI, IFNULL(SUM(SO_LUONG),0) SOLUONG
+                        FROM (
+                            SELECT 
+                                nhom.NHOM_MABHYT_ID,
+                                IFNULL(b.MA_DICH_VU, b.MA_VAT_TU) MA_DICH_VU,
+                                IFNULL(b.TEN_DICH_VU, b.TEN_VAT_TU) TEN_DICH_VU,
+                                nhom.TENNHOM,
+                                b.SO_LUONG,
+                                b.DON_GIA_BH,
+                                dv.HESO,
+                                dv.CHIPHI
+                            FROM  
+                                `{dbName}`.xml1 a, 
+                                `{dbName}`.xml3 b 
+                                LEFT JOIN dmc_dichvu dv 
+                                    ON IFNULL(b.MA_DICH_VU, b.MA_VAT_TU) = dv.MA_DICHVU 
+                                AND IFNULL(b.TEN_DICH_VU, b.TEN_VAT_TU) = dv.TEN_DICHVU,
+                                dmc_nhom_mabhyt nhom
+                            WHERE a.ma_lk = b.ma_lk
+                            AND b.ma_nhom = nhom.MANHOM_BHYT
+                            AND a.NGAY_RA >= @tungay 
+                            AND a.NGAY_RA <= @dengay 
+                            AND b.nguoi_thuc_hien LIKE @nguoiThucHien
+                        ) th
+                        GROUP BY NHOM_MABHYT_ID, MA_DICH_VU, TEN_DICH_VU, TENNHOM, DON_GIA_BH, HESO, CHIPHI
+                    ) th2,
+                    (select OFFICER_NAME TEN_BACSI FROM org_officer where MA_BAC_SI=@nguoiThucHienCode) bs
+                    ORDER BY NHOM_MABHYT_ID, MA_DICH_VU;";
 
+            var conn = _context.Database.GetDbConnection();
+            using var tempCmd = conn.CreateCommand();
+            var paramList = new List<DbParameter>();
+
+            var p1 = tempCmd.CreateParameter();
+            p1.ParameterName = "@tungay";
+            p1.Value = tuNgay.Date;
+            paramList.Add(p1);
+
+            var p2 = tempCmd.CreateParameter();
+            p2.ParameterName = "@dengay";
+            p2.Value = denNgay.Date;
+            paramList.Add(p2);
+
+            var p3 = tempCmd.CreateParameter();
+            p3.ParameterName = "@nguoiThucHien";
+            p3.Value =$"%{maBacSi.ToString()}%";
+            paramList.Add(p3);
+
+            var p4 = tempCmd.CreateParameter();
+            p4.ParameterName = "@nguoiThucHienCode";
+            p4.Value = maBacSi.ToString();
+            paramList.Add(p4);
+            var query = _context.dto_bc_doanhthu_bscd.FromSqlRaw(sql, paramList.ToArray()).ToQueryString();
+            return await _context.dto_bc_doanhthu_bscd.FromSqlRaw(sql, paramList.ToArray())
+                .AsNoTracking()
+                    .ToListAsync();
+        }
         [Authorize]
         [HttpPost("bc_doanhthu_khoa")]
         public async Task<ActionResult<object>> GetDoanhThuKhoa(BaoCaoKhoaRequest req)
@@ -1956,7 +1911,7 @@ namespace API.Controllers
                         //dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemTHP = diemTHPTTTheoDDKhoa;
                         //dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemCdKham = diemBNNDCDKhoa;
                         //dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemCdKham = diemBNNDTHKhoa;
-                        //dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemCdKham = diemBNNDCDNhapVienKhoa;
+                        dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemBNNDCDNhapVien = diemBNNDCDNhapVienKhoa;
 
                         dsDiemCtkh[currentGroupIndex].tongCong = tongDiemTHKhoa + (req.LoaiBaoCao == LoaiBaoCaoCtkh.DIEU_DUONG ? tongDiemTHBSTheoKhoa : 0);
                         dsDiemCtkh[currentGroupIndex].diemTHTheoBS = tongDiemTHBSTheoKhoa;
@@ -2028,7 +1983,7 @@ namespace API.Controllers
                             //DiemTHPTTTheoDD = 0,
                             //DiemBNNDCD = 0,
                             //diemBNNDTH = 0,
-                            //diemBNNDCDNhapVien = 0,
+                            DiemBNNDCDNhapVien = 0,
                         },
                         tongCong = 0,
                         diemTHTheoBS = 0,
@@ -2041,16 +1996,16 @@ namespace API.Controllers
                 {
                     tongDiemTHBS +=
                         (item.DiemCdKham??0m + item.DiemCDDieuTri??0m + item.DiemPTTCD ?? 0m + item.DiemPTTTH ?? 0m + item.DiemTangCuong ?? 0m
-                         + item.DiemTruc ?? 0m + item.DiemCongBANT ?? 0m
-                         //+ item.DiemTHPTTTheoDD + item.DiemBNNDCD + item.DiemBNNDTH + item.DiemBNNDCDNhapVien
+                         + item.DiemTruc ?? 0m + item.DiemCongBANT ?? 0m + item.DiemBNNDCDNhapVien ??0m
+                         //+ item.DiemTHPTTTheoDD + item.DiemBNNDCD + item.DiemBNNDTH 
                          );
 
                     tongDiemNhapVienBS += (item.DiemCDDieuTri ?? 0m);
 
                     tongDiemTHBSTheoKhoa +=
                         (item.DiemCdKham ?? 0m + item.DiemCDDieuTri ?? 0m + item.DiemPTTCD ?? 0m + item.DiemPTTTH ?? 0m + item.DiemTangCuong ?? 0m
-                         + item.DiemTruc ?? 0m + item.DiemCongBANT ?? 0m 
-                         //+ item.diemTHPTTTheoDD + item.diemBNNDCD + item.diemBNNDTH + item.diemBNNDCDNhapVien
+                         + item.DiemTruc ?? 0m + item.DiemCongBANT ?? 0m + item.DiemBNNDCDNhapVien ??0m
+                         //+ item.diemTHPTTTheoDD + item.diemBNNDCD + item.diemBNNDTH 
                          );
 
                     tongDiemNhapVienBSTheoKhoa += item.DiemCDDieuTri ?? 0m;
@@ -2076,7 +2031,7 @@ namespace API.Controllers
                 //diemTHPTTTheoDDKhoa += pushedItem != null ? pushedItem.diemTHPTTTheoDD : 0;
                 //diemBNNDCDKhoa += pushedItem != null ? pushedItem.diemBNNDCD : 0;
                 //diemBNNDTHKhoa += pushedItem != null ? pushedItem.diemBNNDTH : 0;
-                //diemBNNDCDNhapVienKhoa += pushedItem != null ? pushedItem.DiemBNNDCDNhapVien ?? 0m : 0;
+                diemBNNDCDNhapVienKhoa += pushedItem != null ? pushedItem.DiemBNNDCDNhapVien ?? 0m : 0;
                 soNgayTangCuongKhoa += pushedItem != null ? pushedItem.SoNgayTangCuong ?? 0m : 0;
 
                 tongDiemKeHoach += pushedItem != null ? pushedItem.DiemKeHoach ?? 0m : 0;
@@ -2091,15 +2046,15 @@ namespace API.Controllers
                 //tongDiemTHPTTTheoDD += pushedItem != null ? pushedItem.diemTHPTTTheoDD : 0;
                 //tongDiemBNNDCD += pushedItem != null ? pushedItem.diemBNNDCD : 0;
                 //tongDiemBNNDTH += pushedItem != null ? pushedItem.diemBNNDTH : 0;
-                //tongDiemBNNDCDNhapVien += pushedItem != null ? pushedItem.diemBNNDCDNhapVien : 0;
+                tongDiemBNNDCDNhapVien += pushedItem != null ? pushedItem.DiemBNNDCDNhapVien??0m : 0;
 
                 if (pushedItem != null)
                 {
                     decimal tongDiemTHItem =
                         req.LoaiBaoCao == LoaiBaoCaoCtkh.BAC_SI
                             ? (pushedItem.DiemCdKham??0m + pushedItem.DiemCDDieuTri ?? 0m + pushedItem.DiemPTTCD ?? 0m + pushedItem.DiemPTTTH ?? 0m + pushedItem.DiemTangCuong ?? 0m
-                               + pushedItem.DiemTruc ?? 0m + pushedItem.DiemCongBANT ?? 0m 
-                               //+ pushedItem.DiemTHPTTTheoDD + pushedItem.diemBNNDCD + pushedItem.diemBNNDTH + pushedItem.diemBNNDCDNhapVien
+                               + pushedItem.DiemTruc ?? 0m + pushedItem.DiemCongBANT ?? 0m + pushedItem.DiemBNNDCDNhapVien ??0m
+                               //+ pushedItem.DiemTHPTTTheoDD + pushedItem.diemBNNDCD + pushedItem.diemBNNDTH 
                                )
                             : pushedItem.DiemTruc ?? 0m;
 
@@ -2123,7 +2078,7 @@ namespace API.Controllers
                             //DiemTHPTTTheoDD = pushedItem.diemTHPTTTheoDD,
                             //DiemBNNDCD = pushedItem.diemBNNDCD,
                             //DiemBNNDTH = pushedItem.diemBNNDTH,
-                            //DiemBNNDCDNhapVien = pushedItem.diemBNNDCDNhapVien,
+                            DiemBNNDCDNhapVien = pushedItem.DiemBNNDCDNhapVien,
                         },
                         tongCong = tongDiemTHItem,
                         diemTHTheoBS = 0,
@@ -2161,7 +2116,7 @@ namespace API.Controllers
                 //dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemTHP = diemTHPTTTheoDDKhoa;
                 //dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemCdKham = diemBNNDCDKhoa;
                 //dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemCdKham = diemBNNDTHKhoa;
-                //dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemCdKham = diemBNNDCDNhapVienKhoa;
+                dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemBNNDCDNhapVien = diemBNNDCDNhapVienKhoa;
 
                 dsDiemCtkh[currentGroupIndex].tongCong = tongDiemTHKhoa + (req.LoaiBaoCao == LoaiBaoCaoCtkh.DIEU_DUONG ? tongDiemTHBSTheoKhoa : 0);
                 dsDiemCtkh[currentGroupIndex].diemTHTheoBS = tongDiemTHBSTheoKhoa;
@@ -2201,7 +2156,7 @@ namespace API.Controllers
                     //DiemTHPTTTheoDD = tongDiemTHPTTTheoDD,
                     //DiemBNNDCD = tongDiemBNNDCD,
                     //DiemBNNDTH = tongDiemBNNDTH,
-                    //DiemBNNDCDNhapVien = tongDiemBNNDCDNhapVien,
+                    DiemBNNDCDNhapVien = tongDiemBNNDCDNhapVien,
 
                 },
 
@@ -2225,10 +2180,16 @@ namespace API.Controllers
             }
             return dsDiemCtkh;
         }
+        
+        public class CtkhHeaderCell
+        {
+            public int colspan { get; set; }
+            public int rowspan { get; set; }
+            public string name { get; set; }
+        }
         private XLWorkbook GenerateBcCtkhExcelBacSi(List<DiemCtkh>? dataRaw, BaoCaoDiemCtkhRequest req, BenhVien? benhVien) {
             using var wb = new XLWorkbook();
-            return wb;
-            //var ws = wb.Worksheets.Add("Toàn viện");
+            var ws = wb.Worksheets.Add("Toàn viện");
 
             //// ====== 4 dòng đầu ======
             //ws.Range("A1:T1").Merge();
@@ -2251,26 +2212,42 @@ namespace API.Controllers
             //ws.Cell("A3").Style.Font.FontSize = 14;
             //ws.Cell("A3").Style.Font.FontColor = XLColor.Blue;
             //var data = PreGenerateRpCtkh(dataRaw, req);
-            //// Dòng 5 trống
-            //int row = 6;
-
+            //// Dòng 4 trống
+            //int row = 5;
+            return wb;
             //// ====== Header ======
-            //string[] headers =
-            //{
-            //        "STT",
-            //        "Khoa, bác sỹ",
-            //        "Điểm kế hoạch",
-            //        "Điểm CĐ Khám, điều trị, phát thuốc (Dược)",
-            //        "Điểm CĐ nhập viện, Dược(hc)",
-            //        "Số tiền còn lại",
-            //        "Ghi chú"
-            //    };
-
+            //CtkhHeaderCell[] headers1 =
+            //[
+            //        new CtkhHeaderCell{name="STT", rowspan = 2, colspan = 1},
+            //        new CtkhHeaderCell{name="Khoa, bác sỹ",rowspan = 2, colspan = 1} ,
+            //        new CtkhHeaderCell{name="Điểm kế hoạch",rowspan = 2, colspan = 1} ,
+            //        new CtkhHeaderCell{name="Điểm CĐ Khám, điều trị, phát thuốc (Dược)",rowspan = 2, colspan = 1} ,
+            //        new CtkhHeaderCell{name="Điểm CĐ nhập viện, Dược(hc)",rowspan = 2, colspan = 1} ,
+            //        new CtkhHeaderCell{name="Phẫu, thủ thuật",rowspan = 1, colspan = 2} ,
+            //        new CtkhHeaderCell{name="Điểm BH/ĐT; Tăng cường",rowspan = 2, colspan = 1},
+            //        new CtkhHeaderCell{name="Trực",rowspan = 2, colspan = 1},
+            //        new CtkhHeaderCell{name="Điểm cộng BA ngoại trú; TH siêu âm, Dược",rowspan = 2, colspan = 1},
+            //        new CtkhHeaderCell{name="Điểm TH PTT theo Điều dưỡng",rowspan = 2, colspan = 1},
+            //        new CtkhHeaderCell{name="Điểm BNND",rowspan = 1, colspan = 3},
+            //        new CtkhHeaderCell{name="Tổng điểm",rowspan = 2, colspan = 1},
+            //        new CtkhHeaderCell{name="Khoa chia lại điểm",rowspan = 2, colspan = 1},
+            //        new CtkhHeaderCell{name="Đạt CTKH Bác sỹ",rowspan = 2, colspan = 1},
+            //        new CtkhHeaderCell{name="Tổng cộng chung cả khoa",rowspan = 1, colspan = 3}
+            //];
+            //CtkhHeaderCell[] headers2 = [
+            //     new CtkhHeaderCell{name="Chỉ địnhx0.2",rowspan = 1, colspan = 1},
+            //     new CtkhHeaderCell{name="Thực hiệnx0.8",rowspan = 1, colspan = 1},
+            //     new CtkhHeaderCell{name="Chỉ định",rowspan = 1, colspan = 1},
+            //     new CtkhHeaderCell{name="Thực hiện",rowspan = 1, colspan = 1},
+            //     new CtkhHeaderCell{name="Điểm CĐ nhập viện, Dược(hc)",rowspan = 1, colspan = 1},
+            //     new CtkhHeaderCell{name="Điểm K.H",rowspan = 1, colspan = 1},
+            //     new CtkhHeaderCell{name="Tổng điểm T.H",rowspan = 1, colspan = 1},
+            //     new CtkhHeaderCell{name="Đạt CTKH",rowspan = 1, colspan = 1}
+            // ];
             //for (int i = 0; i < headers.Length; i++)
             //{
             //    ws.Cell(row, i + 1).Value = headers[i];
-            //}
-
+        //}
             //var headerRange = ws.Range(row, 1, row, headers.Length);
             //headerRange.Style.Font.Bold = true;
             //headerRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
