@@ -101,7 +101,7 @@ export class BCDiemCtkhComponent  {
             if(curKhoa != item.khoa) {
               countItem = 1;
               if(curKhoa != '') {
-                let tongDiemTHKhoa = this.loaiBaoCao==='BAC_SI' ? diemCdKhamKhoa + diemCdDieuTriKhoa + diemPTTCDKhoa + diemPTTTHKhoa + diemTangCuongKhoa + diemTrucKhoa + diemCongBANTKhoa + diemTHPTTTheoDDKhoa + diemBNNDCDKhoa + diemBNNDTHKhoa + diemBNNDCDNhapVienKhoa : diemTrucKhoa;
+                let tongDiemTHKhoa = this.loaiBaoCao==='BAC_SI' ? diemCdKhamKhoa + diemCdDieuTriKhoa + diemPTTCDKhoa + diemPTTTHKhoa + diemTangCuongKhoa + diemTrucKhoa + diemCongBANTKhoa + diemTHPTTTheoDDKhoa + diemBNNDCDKhoa + diemBNNDTHKhoa + diemBNNDCDNhapVienKhoa : diemTrucKhoa + diemTangCuongKhoa;
                 this.dsDiemCtkh[currentGroupIndex] = {
                   ...this.dsDiemCtkh[currentGroupIndex],
                   diemKeHoach: diemKeHoachKhoa,
@@ -215,7 +215,7 @@ export class BCDiemCtkhComponent  {
             tongDiemBNNDCDNhapVien += (pushedItem ? pushedItem.diemBNNDCDNhapVien || 0 : 0);
             if(pushedItem) {
               let tongDiemTHItem = this.loaiBaoCao ==='BAC_SI' ? (pushedItem.diemCdKham || 0) + (pushedItem.diemCDDieuTri || 0) + (pushedItem.diemPTTCD || 0) + (pushedItem.diemPTTTH || 0) + (pushedItem.diemTangCuong || 0) + (pushedItem.diemTruc || 0) + (pushedItem.diemCongBANT || 0) + (pushedItem.diemTHPTTTheoDD || 0) + (pushedItem.diemBNNDCD || 0) + (pushedItem.diemBNNDTH || 0) + (pushedItem.diemBNNDCDNhapVien || 0) :
-               pushedItem.diemTruc || 0;
+               (pushedItem.diemTruc || 0) + (pushedItem.diemTangCuong || 0);
               let tempItem: ReportRow = {
                 type: 'item',
                 stt: String(countItem),
@@ -246,7 +246,7 @@ export class BCDiemCtkhComponent  {
         
           if(curKhoa != '') {
             let tongDiemTHKhoa = this.loaiBaoCao==='BAC_SI' ? diemCdKhamKhoa + diemCdDieuTriKhoa + diemPTTCDKhoa + diemPTTTHKhoa + diemTangCuongKhoa + diemTrucKhoa + diemCongBANTKhoa + diemTHPTTTheoDDKhoa + diemBNNDCDKhoa + diemBNNDTHKhoa + diemBNNDCDNhapVienKhoa :
-            diemTrucKhoa;
+            diemTrucKhoa+diemTangCuongKhoa;
             this.dsDiemCtkh[currentGroupIndex] = {
               ...this.dsDiemCtkh[currentGroupIndex],
               diemKeHoach: diemKeHoachKhoa,
@@ -270,7 +270,7 @@ export class BCDiemCtkhComponent  {
             if(countItemKhoa==0) this.dsDiemCtkh.pop();
           }
         
-          let tongDiemTH = this.loaiBaoCao==='BAC_SI' ? tongDiemCdKham + tongDiemCdDieuTri + tongDiemPTTCD + tongDiemPTTTH + tongDiemTangCuong + tongDiemTruc + tongDiemCongBANT + tongDiemTHPTTTheoDD + tongDiemBNNDCD + tongDiemBNNDTH + tongDiemBNNDCDNhapVien : tongDiemTruc;
+          let tongDiemTH = this.loaiBaoCao==='BAC_SI' ? tongDiemCdKham + tongDiemCdDieuTri + tongDiemPTTCD + tongDiemPTTTH + tongDiemTangCuong + tongDiemTruc + tongDiemCongBANT + tongDiemTHPTTTheoDD + tongDiemBNNDCD + tongDiemBNNDTH + tongDiemBNNDCDNhapVien : tongDiemTruc + tongDiemTangCuong;
           this.dsDiemCtkh.push({
             type: 'grandTotal',
             stt: '',
@@ -343,7 +343,25 @@ export class BCDiemCtkhComponent  {
     this.loadData();
   }
   exportExcel(){
-
+      this.loadingExcel = true;
+      this.baoCaoDiemCtkhService.exportExcel(this.tuThang, this.tuNam, this.denThang, this.denNam, this.loaiBaoCao === 'BAC_SI' ? 0 : 1).subscribe({
+        next: (res) => {
+          this.loadingExcel = false;
+          const blob = new Blob([res], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `BaoCaoDiemCtkh_${this.tuNam}${String(this.tuThang).padStart(2, '0')}_${this.denNam}${String(this.denThang).padStart(2, '0')}.xlsx`;
+          a.click();
+          window.URL.revokeObjectURL(url);
+          this.addToast('Xuất Excel thành công', 'success');
+        }
+        ,error: (err) => {
+          this.loadingExcel = false;
+          this.addToast('Xuất Excel thất bại');
+          console.error(err);
+        }
+      });
   }
   addToast(message: string, color: string = 'danger') {
     this.toasts.push({
