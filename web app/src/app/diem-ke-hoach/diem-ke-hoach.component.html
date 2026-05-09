@@ -64,7 +64,7 @@
                         <tbody>
                             <tr *ngFor="let item of ds_diemkehoach">
                                 <td>{{ item.khoa }}</td>
-                                <td>{{item.officerType==4? 'Bs' : item.officerType==6 ? 'ĐD' :'' }}: {{ item.officerName }}</td>
+                                <td>{{item.officerType==4? 'Bs' : 'ĐD'  }}: {{ item.officerName }}</td>
                                 <td class="text-end">{{ item.diemKeHoach | number }}</td>
                                 <td class="text-end">{{ item.soBuoiTruc | number }}</td>
                                 <td class="text-end">{{ item.diemTruc | number }}</td>

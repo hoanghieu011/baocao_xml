@@ -184,7 +184,7 @@ export class BCDiemCtkhComponent  {
               tongDiemTHBSTheoKhoa += ((item.diemCdKham || 0) + (item.diemCDDieuTri || 0) + (item.diemPTTCD || 0) + (item.diemPTTTH || 0) + (item.diemTangCuong || 0) + (item.diemTruc || 0) + (item.diemCongBANT || 0) + (item.diemTHPTTTheoDD || 0) + (item.diemBNNDCD || 0) + (item.diemBNNDTH || 0) + (item.diemBNNDCDNhapVien || 0));
               tongDiemNhapVienBSTheoKhoa += (item.diemCDDieuTri || 0);
             }
-            let pushedItem = ((this.loaiBaoCao==='BAC_SI' && item.officerType == 4) || (this.loaiBaoCao==='DIEU_DUONG' && item.officerType == 6)) ? item : null;
+            let pushedItem = ((this.loaiBaoCao==='BAC_SI' && item.officerType == 4) || (this.loaiBaoCao==='DIEU_DUONG' && item.officerType != 4)) ? item : null;
             // các đầu điểm cộng dồn theo khoa của bác sĩ / điều dưỡng
             diemKeHoachKhoa += pushedItem ? pushedItem.diemKeHoach || 0 : 0;
             diemCdKhamKhoa += pushedItem ? pushedItem.diemCdKham || 0 : 0;
@@ -268,6 +268,12 @@ export class BCDiemCtkhComponent  {
             };
             let countItemKhoa = this.dsDiemCtkh.length - currentGroupIndex - 1;
             if(countItemKhoa==0) this.dsDiemCtkh.pop();
+            let countDD = this.dsDiemCtkh.length - currentGroupIndex - 1;
+            for(let j = currentGroupIndex + 1; j < this.dsDiemCtkh.length; j++) {
+              this.dsDiemCtkh[j].diemTHTheoBS = countDD > 0 ? (tongDiemTHBSTheoKhoa / countDD) : 0;
+              this.dsDiemCtkh[j].tongCong = this.dsDiemCtkh[j].tongCong + (this.loaiBaoCao === 'DIEU_DUONG' ? (countDD > 0 ? (tongDiemTHBSTheoKhoa / countDD) : 0) : 0);
+              this.dsDiemCtkh[j].datCtkh = this.dsDiemCtkh[j].diemKeHoach !== 0 ? (this.dsDiemCtkh[j].tongCong*100 /this.dsDiemCtkh[j].diemKeHoach) : 0
+            }
           }
         
           let tongDiemTH = this.loaiBaoCao==='BAC_SI' ? tongDiemCdKham + tongDiemCdDieuTri + tongDiemPTTCD + tongDiemPTTTH + tongDiemTangCuong + tongDiemTruc + tongDiemCongBANT + tongDiemTHPTTTheoDD + tongDiemBNNDCD + tongDiemBNNDTH + tongDiemBNNDCDNhapVien : tongDiemTruc + tongDiemTangCuong;
@@ -293,12 +299,7 @@ export class BCDiemCtkhComponent  {
             tongCong: tongDiemTH + (this.loaiBaoCao==='DIEU_DUONG' ? tongDiemTHBS : 0) ,
             datCtkh: tongDiemKeHoach !== 0 ? (((tongDiemTH + (this.loaiBaoCao==='DIEU_DUONG' ? tongDiemTHBS : 0)) / (tongDiemKeHoach )) * 100)  : 0   
           });
-          let countDD = this.dsDiemCtkh.length - currentGroupIndex - 1;
-          for(let j = currentGroupIndex + 1; j < this.dsDiemCtkh.length; j++) {
-            this.dsDiemCtkh[j].diemTHTheoBS = countDD > 0 ? (tongDiemTHBSTheoKhoa / countDD) : 0;
-            this.dsDiemCtkh[j].tongCong = this.dsDiemCtkh[j].tongCong + (countDD > 0 ? (tongDiemTHBSTheoKhoa / countDD) : 0);
-            this.dsDiemCtkh[j].datCtkh = this.dsDiemCtkh[j].diemKeHoach !== 0 ? (this.dsDiemCtkh[j].tongCong*100 /this.dsDiemCtkh[j].diemKeHoach) : 0
-          }
+          
           console.log(this.dsDiemCtkh);
         },
       error: (err) => {

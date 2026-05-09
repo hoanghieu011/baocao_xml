@@ -19,9 +19,9 @@ namespace api.Models
         public string? MA_XANG_DAU { get; set; }
         public string? DON_VI_TINH { get; set; }
         public string? PHAM_VI { get; set; }
-        public int? SO_LUONG { get; set; }
-        public int? DON_GIA_BV { get; set; }
-        public int? DON_GIA_BH { get; set; }
+        public decimal? SO_LUONG { get; set; }
+        public decimal? DON_GIA_BV { get; set; }
+        public decimal? DON_GIA_BH { get; set; }
         public int? TT_THAU { get; set; }
         public int? TYLE_TT_DV { get; set; }
         public int? TYLE_TT_BH { get; set; }

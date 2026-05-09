@@ -130,7 +130,9 @@ export class BcDoanhthuBsthComponent implements OnInit {
     this.loading = true;
 
     const tu = this.tuNgay ? new Date(this.tuNgay + 'T00:00:00') : undefined;
+    if(tu) tu.setHours(tu.getHours() + 7); // Điều chỉnh múi giờ nếu cần
     const den = this.denNgay ? new Date(this.denNgay + 'T23:59:59') : undefined;
+    if(den) den.setHours(den.getHours() + 7); // Điều chỉnh múi giờ nếu cần
 
     this.baoCaoService.getBcDoanhThuBsth(
       this.cur_officer,
@@ -169,8 +171,9 @@ export class BcDoanhthuBsthComponent implements OnInit {
     this.loadingExcel = true;
 
     const tu = this.tuNgay ? new Date(this.tuNgay + 'T00:00:00') : undefined;
+    if(tu) tu.setHours(tu.getHours() + 7); // Điều chỉnh múi giờ nếu cần
     const den = this.denNgay ? new Date(this.denNgay + 'T23:59:59') : undefined;
-
+    if(den) den.setHours(den.getHours() + 7); // Điều chỉnh múi giờ nếu cần
     this.baoCaoService.exportBcDoanhThuBsthExcel(
       this.cur_officer,
       tu,

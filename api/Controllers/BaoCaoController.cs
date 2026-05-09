@@ -2242,7 +2242,7 @@ namespace API.Controllers
             decimal diemTongTHBS = 0;
             foreach (var d in dataRaw)
             {
-                if (d.OfficerType == 6) filteredData.Add(d);
+                if (d.OfficerType !=4) filteredData.Add(d);
             }
             var groups = filteredData
                 .GroupBy(x => x.Khoa)

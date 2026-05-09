@@ -164,9 +164,12 @@ namespace api.Controllers
                         if (maLK != "")
                         {
                             // xoá dữ liệu với mã lk đang bị lỗi;
-                            await _dbContext.Database.ExecuteSqlRawAsync($"DELETE FROM $`{dbData}`.xml1 WHERE MA_LK='{maLK}'");
-                            await _dbContext.Database.ExecuteSqlRawAsync($"DELETE FROM $`{dbData}`.xml2 WHERE MA_LK='{maLK}'");
-                            await _dbContext.Database.ExecuteSqlRawAsync($"DELETE FROM $`{dbData}`.xml3 WHERE MA_LK='{maLK}'");
+                            var sqlDel1 = $"DELETE FROM `{dbData}`.xml1 WHERE MA_LK={maLK}";
+                            var sqlDel2 = $"DELETE FROM `{dbData}`.xml2 WHERE MA_LK={maLK}";
+                            var sqlDel3 = $"DELETE FROM `{dbData}`.xml3 WHERE MA_LK={maLK}";
+                            await _dbContext.Database.ExecuteSqlRawAsync(sqlDel1);
+                            await _dbContext.Database.ExecuteSqlRawAsync(sqlDel2);
+                            await _dbContext.Database.ExecuteSqlRawAsync(sqlDel3);
                         }
                         return StatusCode(500, $"Lỗi SQL: ở {maLK} : {msg}");
                     }
@@ -232,6 +235,14 @@ namespace api.Controllers
             if (int.TryParse(e.Value.Trim(), out var v)) return v; 
             return defaultVal;
             throw new Exception("GetInt exception: " + e);
+        }
+
+        static decimal GetDecimal(XElement? e)
+        {
+            if (e == null) return 0;
+            if (decimal.TryParse(e.Value.Trim(), CultureInfo.InvariantCulture, out var v)) return v;
+            return 0;
+            throw new Exception("GetDecimal exception: " + e);
         }
 
         static long GetLong(XElement? e, int defaultVal = 0)
@@ -304,7 +315,7 @@ namespace api.Controllers
                 Type underlyingType = Nullable.GetUnderlyingType(propertyType);
                 var pTypeName = underlyingType != null ? underlyingType.Name : propertyType.Name;
                 var pName = p.Name.ToUpper();
-                if (!exceptProps.Contains(p.Name))
+                if (!exceptProps.Contains(pName))
                 {
                     if (pName == "CSYTID")
                     {
@@ -316,6 +327,9 @@ namespace api.Controllers
                         {
                             case "Int32": /// kiểu dữ liệu int
                                 cmd.Parameters.Add(new MySqlParameter(pName, GetInt(xmlData.Element(pName))));
+                                break;
+                            case "Decimal": /// kiểu dữ liệu decimal
+                                cmd.Parameters.Add(new MySqlParameter(pName, GetDecimal(xmlData.Element(pName))));
                                 break;
                             case "String": /// kiểu dữ liệu String
                                 cmd.Parameters.Add(new MySqlParameter(pName, $"{ReplaceCData((string?)xmlData.Element(pName) ?? "")}"));
@@ -333,6 +347,7 @@ namespace api.Controllers
                 }
             }
             ResultInfo result;
+            //return new ResultInfo { message = "Ok", status_code = 200 };
             DbTransaction transaction = conn.BeginTransaction();
             try
             {
@@ -342,11 +357,12 @@ namespace api.Controllers
                 transaction.Commit();
                 return new ResultInfo { message = "Ok", status_code = 200 };
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 Console.WriteLine(ex.Message);
                 transaction.Rollback();
                 return new ResultInfo { message = ex.Message, status_code = 500 };
-            }  
+            }
         }
         private class MyProp
         {
@@ -432,6 +448,9 @@ namespace api.Controllers
                                 case "Int32": /// kiểu dữ liệu int
                                     cmd.Parameters.Add(new MySqlParameter($"{p.propName}{j}", GetInt(xmlData.Element(p.propName))));
                                     break;
+                                case "Decimal": /// kiểu dữ liệu decimal
+                                    cmd.Parameters.Add(new MySqlParameter($"{p.propName}{j}", GetDecimal(xmlData.Element(p.propName))));
+                                    break;
                                 case "String": /// kiểu dữ liệu String
                                     cmd.Parameters.Add(new MySqlParameter($"{p.propName}{j}", $"{ReplaceCData((string?)xmlData.Element(p.propName) ?? "")}"));
                                     break;
@@ -449,6 +468,7 @@ namespace api.Controllers
                 j++;
             }
             ResultInfo result;
+            //return new ResultInfo { message = "Ok", status_code = 200 };
             DbTransaction transaction = conn.BeginTransaction();
             try
             {
