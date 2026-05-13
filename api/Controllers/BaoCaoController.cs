@@ -40,7 +40,7 @@ namespace API.Controllers
         /// Báo cáo doanh thu theo bác sĩ chỉ định.
         /// </summary>
         /// <returns></returns>
-        [Authorize]
+        [Authorize(Roles = "BC_BSCD")]
         [HttpPost("bc_doanhthu_bscd")]
         public async Task<ActionResult<object>> GetDoanhThuBSCD(BaoCaoRequest req)
         {
@@ -70,7 +70,7 @@ namespace API.Controllers
                 return StatusCode(500, new { message = "Lỗi server", detail = ex.Message });
             }
         }
-        [Authorize]
+        [Authorize(Roles = "BC_BSCD_EXCEL")]
         [HttpPost("bc_doanhthu_bscd_excel")]
         public async Task<IActionResult> GetDoanhThuBSCDExcel([FromBody] BaoCaoRequest req)
         {
@@ -454,7 +454,7 @@ namespace API.Controllers
         /// Báo cáo doanh thu theo bác sĩ thực hiện.
         /// </summary>
         /// <returns></returns>
-        [Authorize]
+        [Authorize(Roles = "BC_BSTH")]
         [HttpPost("bc_doanhthu_bsth")]
         public async Task<ActionResult<object>> GetDoanhThuBSTH(BaoCaoRequest req)
         {
@@ -484,7 +484,7 @@ namespace API.Controllers
                 return StatusCode(500, new { message = "Lỗi server", detail = ex.Message });
             }
         }
-        [Authorize]
+        [Authorize(Roles = "BC_BSTH_EXCEL")]
         [HttpPost("bc_doanhthu_bsth_excel")]
         public async Task<IActionResult> GetDoanhThuBSTHExcel([FromBody] BaoCaoRequest req)
         {
@@ -817,7 +817,7 @@ namespace API.Controllers
                 .AsNoTracking()
                     .ToListAsync();
         }
-        [Authorize]
+        [Authorize(Roles = "BC_KHOA")]
         [HttpPost("bc_doanhthu_khoa")]
         public async Task<ActionResult<object>> GetDoanhThuKhoa(BaoCaoKhoaRequest req)
         {
@@ -905,7 +905,7 @@ namespace API.Controllers
                 return StatusCode(500, new { message = "Lỗi server", detail = ex.Message });
             }
         }
-        [Authorize]
+        [Authorize(Roles = "BC_KHOA_EXCEL")]
         [HttpPost("bc_doanhthu_khoa_excel")]
         public async Task<IActionResult> GetDoanhThuKhoaExcel([FromBody] BaoCaoKhoaRequest req)
         {
@@ -1285,7 +1285,7 @@ namespace API.Controllers
             }
         }
 
-        [Authorize]
+        [Authorize(Roles = "BC_TOANVIEN")]
         [HttpPost("bc_doanhthu_toanvien")]
         public async Task<ActionResult<object>> GetDoanhThuToanVien(BaoCaoKhoaRequest req)
         {
@@ -1375,7 +1375,7 @@ namespace API.Controllers
                 return StatusCode(500, new { message = "Lỗi server", detail = ex.Message });
             }
         }
-        [Authorize]
+        [Authorize(Roles = "BC_TOANVIEN_EXCEL")]
         [HttpPost("bc_doanhthu_toanvien_excel")]
         public async Task<IActionResult> GetDoanhThuToanvienExcel([FromBody] BaoCaoKhoaRequest req)
         {
@@ -1611,7 +1611,7 @@ namespace API.Controllers
             }
         }
 
-        [Authorize]
+        [Authorize(Roles = "BC_DIEM_CTKH")]
         [HttpPost("bc_diem_ctkh")]
         ///<summary>
         ///Lấy ds bc điểm ctkh của khoa v1, k có mặc định là 0 
@@ -1751,7 +1751,7 @@ namespace API.Controllers
             }
             return res;
         }
-        [Authorize]
+        [Authorize(Roles = "BC_DIEM_CTKH_EXCEL")]
         [HttpPost("bc_diem_ctkh_excel")]
         public async Task<IActionResult> GetBcDiemCtkhExcel([FromBody] BaoCaoDiemCtkhRequest req)
         {
@@ -2407,7 +2407,7 @@ namespace API.Controllers
                return $" TỪ THÁNG {tuThang} NĂM {tuNam} ĐẾN THÁNG {denThang} NĂM {denNam}";
             }
         }
-        [Authorize]
+        [Authorize(Roles = "BC_DIEM_CTKH,ALL")]
         [HttpPost("bc_diem_ctkh_default0")]
         ///<summary>
         ///Lấy ds bc điểm ctkh của khoa v1, k có mặc định là 0 
