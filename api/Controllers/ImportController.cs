@@ -38,6 +38,7 @@ namespace api.Controllers
             _dbResolver = dbResolver;
         }
         [HttpPost("test")]
+
         public async Task<IActionResult> TestUnderlyingType()
         {
             Type t = typeof(XML3);
@@ -54,7 +55,7 @@ namespace api.Controllers
             return Ok(res);
         }
         
-        [Authorize]
+        [Authorize(Roles ="ADMIN")]
         [RequestSizeLimit(50_000_000)]
         [HttpPost("ImportHospitalData")]
         public async Task<IActionResult> ImportHospitalData(IFormFile file)

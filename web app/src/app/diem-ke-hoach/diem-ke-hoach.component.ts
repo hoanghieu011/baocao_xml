@@ -369,7 +369,15 @@ export class DiemKeHoachComponent  {
       this.diemKeHoachService.deleteDiemKeHoach(diemKeHoach.diemKeHoachId).subscribe({
         next: () => {
           this.addToast('Xóa điểm kế hoạch thành công', 'success');
-          this.loadDiemKeHoach();
+          this.tangCuongService.deleteTangCuong(diemKeHoach.diemKeHoachId).subscribe({
+            next: () => {
+              this.loadDiemKeHoach();
+              },
+            error: (err) => {
+              this.addToast('Đã xảy ra lỗi khi xóa tăng cường liên quan: ' + err.message, 'danger');
+            }
+          });
+          
         },
         error: (err) => {
           console.error(err);

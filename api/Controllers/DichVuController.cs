@@ -126,7 +126,7 @@ namespace API.Controllers
         /// Cập nhật chi phí, hệ số dịch vụ.
         /// </summary>
         /// <returns>Trả về kq cập nhật.</returns>
-        [Authorize]
+        [Authorize(Roles ="EDIT_DICHVU, ADMIN")]
         [HttpPut("cap-nhat-dichvu")]
         public async Task<ActionResult<object>> CapNhatDichVu([FromBody] CapNhatDichVuRequest req)
         {

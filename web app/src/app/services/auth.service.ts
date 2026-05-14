@@ -25,7 +25,6 @@ export class AuthService {
           this.loggedIn = true;
 
           localStorage.setItem('token', response.token);
-
           return true;
         } else {
           this.loggedIn = false;
@@ -72,8 +71,9 @@ export class AuthService {
 
   public redirectBasedOnRole() {
     const userInfo = this.getUserInfo();
-    const roles = userInfo?.roles?.split(',').map((r: string) => r.trim()) || [];
-
+    console.log('userInfo:', userInfo);
+    // const roles = userInfo?.roles?.split(',').map((r: string) => r.trim()) || [];
+    const roles = userInfo?.roles || [];
     if (roles.includes('tao_phieu')) {
       this.router.navigate(['/tao-phieu-nghi-phep']);
     } else if (roles.includes('xu_ly')) {

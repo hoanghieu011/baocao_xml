@@ -60,11 +60,11 @@ namespace API.Models
         /// <summary>
         /// Điểm BNND Chỉ định
         /// </summary>
-        //public decimal DiemBNNDCD { get; set; } = 0;
+        public decimal? DiemBNNDCD { get; set; } = 0;
         /// <summary>
         /// Điểm BNND Thực hiện
         /// </summary>
-        //public decimal DiemBNNDTH { get; set; } = 0;
+        public decimal? DiemBNNDTH { get; set; } = 0;
 
         /// <summary>
         /// Điểm BNND Chỉ định Nhập viện

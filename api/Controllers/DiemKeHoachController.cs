@@ -27,7 +27,7 @@ namespace API.Controllers
         /// Tra cứu danh sách dịch vụ.
         /// </summary>
         /// <returns>Trả về danh sách dịch vụ.</returns>
-        [Authorize]
+        [Authorize(Roles ="DS_DIEMKEHOACH, ADMIN")]
         [HttpPost("ds_diemkehoach")]
         public async Task<ActionResult<object>> GetDsDiemKeHoach([FromBody] DsDiemKeHoachRequest req)
         {
@@ -114,7 +114,7 @@ namespace API.Controllers
         /// Tra cứu danh sách dịch vụ v1: lấy ds tất cả bs của khoa, chưa có điểm thì mặc định = 0
         /// </summary>
         /// <returns>Trả về danh sách dịch vụ.</returns>
-        [Authorize]
+        [Authorize(Roles = "DS_DIEMKEHOACH, ADMIN")]
         [HttpPost("ds_diemkehoach_default_0")]
         public async Task<ActionResult<object>> GetDsDiemKeHoachDefault0([FromBody] DsDiemKeHoachRequest req)
         {
@@ -199,7 +199,8 @@ namespace API.Controllers
         /// Cập nhật điểm kế hoạch.
         /// </summary>
         /// <returns>Trả về kq cập nhật.</returns>
-        [Authorize]
+        [Authorize(Roles = "EDIT_DIEMKEHOACH,EDIT_TANGCUONG, ADMIN")]
+        [Authorize(Roles = "EDIT_TANGCUONG")]
         [HttpPut("cap-nhat-diemkehoach")]
         public async Task<ActionResult<object>> CapNhatDiemKeHoach([FromBody] CapNhatDiemKeHoachRequest req)
         {
@@ -292,7 +293,8 @@ namespace API.Controllers
             }
         }
 
-        [Authorize]
+        [Authorize(Roles = "ADD_DIEMKEHOACH, ADMIN")]
+        [Authorize(Roles = "EDIT_TANGCUONG")]
         [HttpPost("them-moi-diemkehoach")]
         public async Task<ActionResult<object>> ThemDiemKeHoach([FromBody] ThemDiemKeHoachRequest req)
         {
@@ -391,7 +393,8 @@ namespace API.Controllers
             }
         }
 
-        [Authorize]
+        [Authorize(Roles = "DELETE_DIEMKEHOACH, ADMIN")]
+        [Authorize(Roles = "DELETE_TANGCUONG")]
         [HttpDelete("xoa-diemkehoach/{id}")]
         public async Task<ActionResult<object>> XoaDiemKeHoach(int id)
         {

@@ -16,7 +16,12 @@
     <div class="header-right">
       <span class="hospital-name">
         <svg cIcon name="cilHospital" class="hospital-icon me-2"></svg>
-        {{tenbenhvien}}
+        <div class="user-name">
+          {{tenbenhvien}}
+          <span *ngIf="tennguoidung">
+            {{ tennguoidung }}
+          </span>
+        </div>
       </span>
     </div>
     <!-- end -->

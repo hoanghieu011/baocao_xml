@@ -44,4 +44,11 @@ export class TangCuongService {
     );
   }
 
+  deleteTangCuong(diemKeHoachId: number): Observable<any> {
+    return this.http.delete<any>(
+      `${this.apiUrl}/xoa_tangcuong/${diemKeHoachId}`,
+      { headers: this.httpConfig.getHeaders() }
+    );
+  }
+
 }

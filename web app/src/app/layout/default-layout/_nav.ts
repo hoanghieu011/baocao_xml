@@ -16,43 +16,43 @@ export const navItems: INavDataExtended[] = [
     children: [
       {
         name: 'Danh sách bệnh nhân',
-        roles: ['all'],
+        roles: ['ADMIN'],
         url: '/baocao-tracuu/ds_benhnhan',
         iconComponent: { name: 'cil-people' }
       },
       {
         name: 'Báo cáo doanh thu theo bác sĩ chỉ định',
-        roles: ['all'],
+        roles: ['ADMIN','BC_BSCD'],
         url: '/baocao-tracuu/doanhthu_bscd',
         iconComponent: { name: 'cil-chart' }
       },
       {
         name: 'Báo cáo doanh thu theo bác sĩ thực hiện',
-        roles: ['all'],
+        roles: ['ADMIN','BC_BSTH'],
         url: '/baocao-tracuu/doanhthu_bsth',
         iconComponent: { name: 'cil-chart' }
       },
       {
         name: 'Báo cáo doanh thu theo khoa (chi tiết theo nhóm dịch vụ)',
-        roles: ['all'],
+        roles: ['ADMIN', 'BC_KHOA'],
         url: '/baocao-tracuu/doanhthu_khoa_ct',
         iconComponent: { name: 'cil-chart' }
       },
       {
         name: 'Báo cáo doanh thu theo khoa',
-        roles: ['all'],
+        roles: ['ADMIN', 'BC_KHOA'],
         url: '/baocao-tracuu/doanhthu_khoa',
         iconComponent: { name: 'cil-chart' }
       },
       {
         name: 'Báo cáo doanh thu toàn viện',
-        roles: ['all'],
+        roles: ['ADMIN', 'BC_TOANVIEN'],
         url: '/baocao-tracuu/doanhthu_toanvien',
         iconComponent: { name: 'cil-chart' }
       },
       {
         name: 'Báo cáo điểm ctkh',
-        roles: ['all'],
+        roles: ['BC_DIEM_CTKH', 'ADMIN'],
         url: '/baocao-tracuu/diem_ctkh',
         iconComponent: { name: 'cil-chart' }
       }
@@ -66,19 +66,19 @@ export const navItems: INavDataExtended[] = [
     children: [
       {
         name: 'Danh mục dịch vụ',
-        roles: ['all'],
+        roles: ['ADMIN'],
         url: '/danhmuc/dich_vu',
         iconComponent: { name: 'cilMedicalCross' }
       },
       {
         name: 'Danh mục lấy mẫu',
-        roles: ['all'],
+        roles: ['ADMIN'],
         url: '/danhmuc/lay_mau',
         iconComponent: { name: 'cilMedicalCross' }
       },
       {
         name: 'Danh mục điểm kế hoạch',
-        roles: ['all'],
+        roles: ['ADMIN','DS_DIEMKEHOACH'],
         url: '/danhmuc/diem_ke_hoach',
         iconComponent: { name: 'cilMedicalCross' }
       }

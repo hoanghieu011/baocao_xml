@@ -1,4 +1,4 @@
-import { NgStyle, NgTemplateOutlet } from '@angular/common';
+import { CommonModule, NgStyle, NgTemplateOutlet } from '@angular/common';
 import { Component, computed, inject, input, OnInit } from '@angular/core';
 import { RouterLink, RouterLinkActive, Router, NavigationEnd, ActivatedRoute } from '@angular/router';
 
@@ -42,7 +42,7 @@ import { BenhVienService} from '../../../services/benh-vien.service';
     ThemeDirective, DropdownComponent, DropdownToggleDirective, TextColorDirective,
     AvatarComponent, DropdownMenuDirective, DropdownHeaderDirective, DropdownItemDirective,
     BadgeComponent, DropdownDividerDirective, ProgressBarDirective, ProgressComponent,
-    NgStyle, TranslateModule, BreadcrumbWrapperComponent]
+    NgStyle, TranslateModule, BreadcrumbWrapperComponent, CommonModule]
 }) 
 export class DefaultHeaderComponent extends HeaderComponent{
 
@@ -51,7 +51,7 @@ export class DefaultHeaderComponent extends HeaderComponent{
   pageTitle: string = '';
 
   tenbenhvien: string = '';
-
+  tennguoidung: string = '';
   readonly colorModes = [
     { name: 'light', text: 'Light', icon: 'cilSun' },
     { name: 'dark', text: 'Dark', icon: 'cilMoon' },
@@ -83,6 +83,9 @@ export class DefaultHeaderComponent extends HeaderComponent{
 
         this.tenbenhvien = data[0].tenbenhvien;
         localStorage.setItem('TenBenhVien', this.tenbenhvien);
+        this.tennguoidung = localStorage.getItem('FULL_NAME') || '';
+        console.log('Ten benh vien:', this.tenbenhvien);
+        console.log('Ten nguoi dung:', this.tennguoidung);
       },
       error: (err) => {
         console.error(err);

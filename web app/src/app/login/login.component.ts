@@ -111,8 +111,10 @@ export class LoginComponent implements OnInit {
     this.authService.login(this.user_name, this.password).subscribe(
       (isLoggedIn: boolean) => {
         if (isLoggedIn) {
+          // localStorage.setItem('full_name')
+          localStorage.setItem('user_name', this.user_name);
           if (this.rememberMe) {
-            localStorage.setItem('user_name', this.user_name);
+            
             localStorage.setItem('password', this.password);
           } else {
             localStorage.removeItem('password');

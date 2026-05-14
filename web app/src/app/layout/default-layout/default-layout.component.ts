@@ -80,10 +80,16 @@ export class DefaultLayoutComponent implements OnInit {
 
   private filterNavItemsByRole(): INavDataExtended[] {
     const userInfo = this.authService.getUserInfo();
-    const userRoles = userInfo?.roles?.split(',').map((r: string) => r.trim()) || [];
-
+    // const userRoles = userInfo?.roles?.split(',').map((r: string) => r.trim()) || [];
+    const userRoles = userInfo?.roles || [];
     return navItems.filter(item => {
-      return item.roles?.some(role => role === 'all' || userRoles.includes(role));
+      let tempParent = item;
+      if(tempParent.children && tempParent.children.length > 0){
+        tempParent.children = tempParent.children.filter(child => {
+          return child.roles?.some(role => role === 'all' || userRoles.includes(role));
+        });
+      }
+      return tempParent.roles?.some(role => role === 'all' || userRoles.includes(role));
     });
   }
 

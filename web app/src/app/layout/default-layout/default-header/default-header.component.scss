@@ -84,6 +84,12 @@
     width: 26px;
     height: 26px;
   }
+
+  .user-name {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
 }
 .hospital-name {
   font-weight: 600;

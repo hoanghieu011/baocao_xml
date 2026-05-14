@@ -95,6 +95,12 @@ table th, table td {
   border: 1px solid #adadad;
 }
 
+table th {
+  position: sticky;
+  top: 0;
+  background: #f8f9fa;
+  z-index: 1;
+}
 table td {
   font-size: 14px!important;
   padding: 0!important;

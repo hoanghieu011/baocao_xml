@@ -60,7 +60,7 @@ namespace API.Controllers
 
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.UTF8.GetBytes("sdfsdfdsf34fsdfs@1234fsdfsdfsdg54sdg45dsfgsg5");
-            var roles = "";
+            //var roles = "";
             var claims = new List<System.Security.Claims.Claim>
             {
                 new Claim("USER_ID", user.USER_ID.ToString()),
@@ -71,10 +71,13 @@ namespace API.Controllers
                 new Claim("CSYTID", user.CSYTID.ToString()),
                 new Claim("STATUS", user.STATUS.ToString()),
                 new Claim("NOTE", user.NOTE ?? ""),
-                new Claim("ROLE", user.ROLE ?? "")
+                //new Claim("ROLE", user.ROLE ?? "")
 
             };
-
+            string[] roles = user.ROLE.Split(",");
+            foreach (var role in roles) {
+                claims.Add(new Claim("ROLE", role));
+            }
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(claims),

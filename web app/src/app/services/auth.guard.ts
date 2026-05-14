@@ -15,16 +15,17 @@ export class AuthGuard implements CanActivate {
     }
 
     const userInfo = this.authService.getUserInfo();
-    const userRoles = userInfo?.roles?.split(',').map((r: string) => r.trim()) || [];
-
+    // const userRoles = userInfo?.roles?.split(',').map((r: string) => r.trim()) || [];
+    const userRoles = userInfo?.roles || [];
     const requiredRoles = route.data['roles'] as string[];
     const hasPermission = requiredRoles?.some(role => role === '' || userRoles.includes(role));
 
     if (!hasPermission) {
-      this.router.navigate(['/404']);
+      confirm('Bạn không có quyền truy cập vào trang này!');
+      this.router.navigate(['/']);
       return false;
     }
-
+    localStorage.setItem('FULL_NAME', userInfo?.FULL_NAME || '');
     return true;
   }
 }

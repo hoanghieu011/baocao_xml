@@ -4,6 +4,7 @@ using API.Data;
 using API.Models;
 using DocumentFormat.OpenXml.Drawing.Diagrams;
 using DocumentFormat.OpenXml.InkML;
+using DocumentFormat.OpenXml.Office2010.Excel;
 using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -73,7 +74,7 @@ namespace api.Controllers
             }
         }
 
-        [Authorize]
+        [Authorize(Roles = "EDIT_TANGCUONG, ADMIN")]
         [HttpPatch("capnhat_tangcuong")]
         public async Task<ActionResult<TangCuong>> CapNhatTangCuong([FromBody] CapNhatTangCuongRequest req)
         {
@@ -141,6 +142,50 @@ namespace api.Controllers
                 return BadRequest("Lỗi server: " + ex.Message);
             };
         }
+        [Authorize(Roles ="DELETE_TANGCUONG, ADMIN")]
+        [HttpDelete("xoa_tangcuong/{diemkehoachId}")]
+        public async Task<ActionResult<TangCuong>> XoaTangCuong(int diemkehoachId)
+        {
+            try
+            {
+                var userName = User.FindFirst(ClaimTypes.Name)?.Value
+                    ?? User.FindFirst("USER_NAME")?.Value;
+
+                var csytid = User.FindFirst(ClaimTypes.Name)?.Value
+                ?? User.FindFirst("CSYTID")?.Value;
+                // Lấy tên database động thông qua service dùng chung
+                var dbData = await _databaseResolver.GetDatabaseByUserAsync(userName);
+                if (string.IsNullOrEmpty(dbData))
+                    return BadRequest("Không xác định được database dữ liệu cho user.");
+                if (string.IsNullOrEmpty(userName))
+                    return Unauthorized();
+
+                var conn = _dbContext.Database.GetDbConnection();
+
+                if (conn.State != System.Data.ConnectionState.Open)
+                    await conn.OpenAsync();
+
+                using var cmd = conn.CreateCommand();
+                cmd.CommandText = $"DELETE FROM `{dbData}`.bc_tangcuong WHERE diemkehoachid=@id";
+
+                var p1 = cmd.CreateParameter();
+                p1.ParameterName = "@id";
+                p1.Value = diemkehoachId;
+                cmd.Parameters.Add(p1);
+
+                await cmd.ExecuteNonQueryAsync();
+
+                return Ok(new
+                {
+                    message = "Xoá điểm tăng cường thành công.",
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Lỗi server", detail = ex.Message });
+            }
+        }
+        
     }
 
     public class DsTangCuongRequest {

@@ -163,7 +163,7 @@ export const routes: Routes = [
             loadChildren: () => import('../app/bc-doanhthu-bscd/bc-doanhthu-bscd.routes').then(m => m.DOANHTHU_BSCD),
             data: {
               title: 'Báo cáo doanh thu theo bác sĩ chỉ định',
-              roles: ['']
+              roles: ['BC_BSCD', 'ADMIN']
             }
           }, 
           {
@@ -172,7 +172,7 @@ export const routes: Routes = [
             loadChildren: () => import('../app/bc-doanhthu-bsth/bc-doanhthu-bsth.routes').then(m => m.DOANHTHU_BSTH),
             data: {
               title: 'Báo cáo doanh thu theo bác sĩ thực hiện',
-              roles: ['']
+              roles: ['BC_BSTH', 'ADMIN']
             }
           }, 
           {
@@ -181,7 +181,7 @@ export const routes: Routes = [
             loadChildren: () => import('../app/bc-doanhthu-khoa-chitiet/bc-doanhthu-khoa-chitiet.routes').then(m => m.DOANHTHU_KHOA_CT),
             data: {
               title: 'Báo cáo doanh thu theo khoa (chi tiết theo nhóm dịch vụ)',
-              roles: ['']
+              roles: ['BC_KHOA', 'ADMIN']
             }
           },
           {
@@ -190,7 +190,7 @@ export const routes: Routes = [
             loadChildren: () => import('../app/bc-doanhthu-khoa/bc-doanhthu-khoa.routes').then(m => m.DOANHTHU_KHOA),
             data: {
               title: 'Báo cáo doanh thu theo khoa',
-              roles: ['']
+              roles: ['BC_KHOA', 'ADMIN']
             }
           },
           {
@@ -199,7 +199,7 @@ export const routes: Routes = [
             loadChildren: () => import('../app/bc-doanhthu-toanvien/bc-doanhthu-toanvien.routes').then(m => m.DOANHTHU_TOANVIEN),
             data: {
               title: 'Báo cáo doanh thu toàn viện',
-              roles: ['']
+              roles: ['BC_TOANVIEN', 'ADMIN']
             }
           },
           {
@@ -208,7 +208,7 @@ export const routes: Routes = [
             loadChildren: () => import('../app/bao-cao-diem-ctkh/bao-cao-diem-ctkh.routes').then(m => m.BAOCAO_DIEM_CTKH),
             data: {
               title: 'Báo cáo điểm ctkh',
-              roles: ['']
+              roles: ['BC_DIEM_CTKH', 'ADMIN']
             }
           },    
         ]
@@ -222,7 +222,7 @@ export const routes: Routes = [
             loadChildren: () => import('../app/dich-vu/dich-vu.routes').then(m => m.DS_DICHVU),
             data: {
               title: 'Danh mục dịch vụ',
-              roles: ['']
+              roles: ['ADMIN']
             }
           },
           {
@@ -231,7 +231,7 @@ export const routes: Routes = [
             loadChildren: () => import('../app/lay-mau/lay-mau.routes').then(m => m.DS_LAYMAU),
             data: {
               title: 'Danh mục lấy mẫu',
-              roles: ['']
+              roles: ['ADMIN']
             }
           },
           {
@@ -240,7 +240,7 @@ export const routes: Routes = [
             loadChildren: () => import('../app/diem-ke-hoach/diem-ke-hoach.routes').then(m => m.DS_DIEMKEHOACH),
             data: {
               title: 'Danh mục điểm kế hoạch',
-              roles: ['']
+              roles: ['ADMIN', 'DS_DIEMKEHOACH']
             }
           }
         ]

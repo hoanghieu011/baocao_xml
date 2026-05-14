@@ -40,7 +40,7 @@ namespace API.Controllers
         /// Báo cáo doanh thu theo bác sĩ chỉ định.
         /// </summary>
         /// <returns></returns>
-        [Authorize(Roles = "BC_BSCD")]
+        [Authorize(Roles = "BC_BSCD, ADMIN")]
         [HttpPost("bc_doanhthu_bscd")]
         public async Task<ActionResult<object>> GetDoanhThuBSCD(BaoCaoRequest req)
         {
@@ -70,7 +70,7 @@ namespace API.Controllers
                 return StatusCode(500, new { message = "Lỗi server", detail = ex.Message });
             }
         }
-        [Authorize(Roles = "BC_BSCD_EXCEL")]
+        [Authorize(Roles = "BC_BSCD, ADMIN")]
         [HttpPost("bc_doanhthu_bscd_excel")]
         public async Task<IActionResult> GetDoanhThuBSCDExcel([FromBody] BaoCaoRequest req)
         {
@@ -454,7 +454,7 @@ namespace API.Controllers
         /// Báo cáo doanh thu theo bác sĩ thực hiện.
         /// </summary>
         /// <returns></returns>
-        [Authorize(Roles = "BC_BSTH")]
+        [Authorize(Roles = "BC_BSTH, ADMIN")]
         [HttpPost("bc_doanhthu_bsth")]
         public async Task<ActionResult<object>> GetDoanhThuBSTH(BaoCaoRequest req)
         {
@@ -484,7 +484,7 @@ namespace API.Controllers
                 return StatusCode(500, new { message = "Lỗi server", detail = ex.Message });
             }
         }
-        [Authorize(Roles = "BC_BSTH_EXCEL")]
+        [Authorize(Roles = "BC_BSTH, ADMIN")]
         [HttpPost("bc_doanhthu_bsth_excel")]
         public async Task<IActionResult> GetDoanhThuBSTHExcel([FromBody] BaoCaoRequest req)
         {
@@ -817,7 +817,7 @@ namespace API.Controllers
                 .AsNoTracking()
                     .ToListAsync();
         }
-        [Authorize(Roles = "BC_KHOA")]
+        [Authorize(Roles = "BC_KHOA, ADMIN")]
         [HttpPost("bc_doanhthu_khoa")]
         public async Task<ActionResult<object>> GetDoanhThuKhoa(BaoCaoKhoaRequest req)
         {
@@ -905,7 +905,7 @@ namespace API.Controllers
                 return StatusCode(500, new { message = "Lỗi server", detail = ex.Message });
             }
         }
-        [Authorize(Roles = "BC_KHOA_EXCEL")]
+        [Authorize(Roles = "BC_KHOA, ADMIN")]
         [HttpPost("bc_doanhthu_khoa_excel")]
         public async Task<IActionResult> GetDoanhThuKhoaExcel([FromBody] BaoCaoKhoaRequest req)
         {
@@ -1285,7 +1285,7 @@ namespace API.Controllers
             }
         }
 
-        [Authorize(Roles = "BC_TOANVIEN")]
+        [Authorize(Roles = "BC_TOANVIEN, ADMIN")]
         [HttpPost("bc_doanhthu_toanvien")]
         public async Task<ActionResult<object>> GetDoanhThuToanVien(BaoCaoKhoaRequest req)
         {
@@ -1375,7 +1375,7 @@ namespace API.Controllers
                 return StatusCode(500, new { message = "Lỗi server", detail = ex.Message });
             }
         }
-        [Authorize(Roles = "BC_TOANVIEN_EXCEL")]
+        [Authorize(Roles = "BC_TOANVIEN, ADMIN")]
         [HttpPost("bc_doanhthu_toanvien_excel")]
         public async Task<IActionResult> GetDoanhThuToanvienExcel([FromBody] BaoCaoKhoaRequest req)
         {
@@ -1611,7 +1611,7 @@ namespace API.Controllers
             }
         }
 
-        [Authorize(Roles = "BC_DIEM_CTKH")]
+        [Authorize(Roles = "BC_DIEM_CTKH, ADMIN")]
         [HttpPost("bc_diem_ctkh")]
         ///<summary>
         ///Lấy ds bc điểm ctkh của khoa v1, k có mặc định là 0 
@@ -1665,7 +1665,7 @@ namespace API.Controllers
         private async Task<List<DiemCtkh>> GetBcDiemCtkhFunc(DateTime tuNgay, DateTime denNgay, List<int>? arrThangNam, string dbName)
         {
 
-            var sql = $"SELECT officer.OFFICER_NAME, officer.OFFICER_TYPE, officer.BACSIID, t1.DIEMTHUCHIEN, t2.KHOAID, t2.DIEM_KEHOACH, org.ORG_NAME KHOA, t2.DIEM_TRUC, t2.DIEMTANGCUONG, t2.SONGAYTANGCUONG, t3.DIEMCDNHAPVIEN*6.4 DIEMCDNHAPVIEN, t3.DIEMCDNHAPVIENBNND*19.2 DIEMCDNHAPVIENBNND, t1.DIEMPTTCD*0.2 DIEMPTTCHIDINH, t5.DIEMPTTTHUCHIEN*0.8 DIEMPTTTHUCHIEN, t4.DIEMBANT  FROM " +
+            var sql = $"SELECT officer.OFFICER_NAME, officer.OFFICER_TYPE, officer.BACSIID, t1.DIEMTHUCHIEN, t2.KHOAID, t2.DIEM_KEHOACH, org.ORG_NAME KHOA, t2.DIEM_TRUC, t2.DIEMTANGCUONG, t2.SONGAYTANGCUONG, t3.DIEMCDNHAPVIEN*6.4 DIEMCDNHAPVIEN, t3.DIEMCDNHAPVIENBNND*19.2 DIEMCDNHAPVIENBNND, t1.DIEMPTTCD*0.2 DIEMPTTCHIDINH, t5.DIEMPTTTHUCHIEN*0.8 DIEMPTTTHUCHIEN, t4.DIEMBANT, t6.DIEMBNNDCD, t7.DIEMBNNDTH  FROM " +
                 $"(select dkh.KHOAID, IFNULL(sum(dkh.DIEM_KEHOACH), 0) as DIEM_KEHOACH, dkh.BACSIID, IFNULL(sum(dkh.DIEM_TRUC), 0) as DIEM_TRUC, IFNULL(sum(tcSum.DIEMTANGCUONG), 0) as DIEMTANGCUONG, IFNULL(sum(tcSum.SONGAYTANGCUONG), 0) as SONGAYTANGCUONG  from `{dbName}`.bc_diemkehoach dkh " +
                 $"LEFT JOIN ( SELECT DIEMKEHOACHID, IFNULL(SUM(tc.DIEM),0) DIEMTANGCUONG, IFNULL(SUM(tc.SONGAY),0) SONGAYTANGCUONG " +
                 $"FROM `{dbName}`.bc_tangcuong tc " +
@@ -1711,6 +1711,33 @@ namespace API.Controllers
                 $"LEFT JOIN his_common.org_officer org " +
                 $"ON org.MA_BAC_SI = pttTHSum.NGUOI_THUC_HIEN) t5 " +
                 $"ON t5.BACSIID = t2.BACSIID " +
+                $"LEFT JOIN( " +
+                $"SELECT BACSIID_CD, SUM(DIEMBNNDCD) DIEMBNNDCD " +
+                $"FROM (SELECT  xml_bnnd.MADICHVU, dv.DICHVUID, xml_bnnd.TENDICHVU, NGUOIDUNGID BACSIID_CD, IFNULL(HESO,0), IFNULL(SOLUONG,0) SOLUONG, IFNULL(HESO*SOLUONG,0) DIEMBNNDCD , LOAIPHIEUMAUBENHPHAM " +
+                $"FROM `{dbName}`.xml_bnnd  " +
+                $"LEFT JOIN his_common.dmc_dichvu dv  " +
+                $"ON xml_bnnd.MADICHVU = dv.MA_DICHVU AND xml_bnnd.TENDICHVU = dv.TEN_DICHVU " +
+                $"WHERE LOAIPHIEUMAUBENHPHAM<>7  " +
+                $"AND LOAIPHIEUMAUBENHPHAM<>8 " +
+                $"        AND xml_bnnd.NGAY_RAVIEN >= @tuNgay " +
+                $"       AND xml_bnnd.NGAY_RAVIEN <= @denNgay " +
+                $"GROUP BY MADICHVU, DICHVUID, TENDICHVU, NGUOIDUNGID, HESO,  SOLUONG, LOAIPHIEUMAUBENHPHAM) t " +
+                $"GROUP BY BACSIID_CD ) t6 " +
+                $"ON t6.BACSIID_CD = t2.BACSIID " +
+                $"LEFT JOIN ( " +
+                $"SELECT BACSIID_TH, SUM(DIEMBNNDTH) DIEMBNNDTH " +
+                $"FROM (SELECT  xml_bnnd.MADICHVU, dv.DICHVUID, xml_bnnd.TENDICHVU, NGUOITRAKETQUA BACSIID_TH, IFNULL(HESO,0), IFNULL(SOLUONG,0) SOLUONG, IFNULL(HESO*SOLUONG,0) DIEMBNNDTH , LOAIPHIEUMAUBENHPHAM " +
+                $"FROM `{dbName}`.xml_bnnd  " +
+                $"LEFT JOIN his_common.dmc_dichvu dv  " +
+                $"ON xml_bnnd.MADICHVU = dv.MA_DICHVU AND xml_bnnd.TENDICHVU = dv.TEN_DICHVU " +
+                $"WHERE LOAIPHIEUMAUBENHPHAM<>7  " +
+                $"        AND LOAIPHIEUMAUBENHPHAM<>8  " +
+                $"        AND NGUOITRAKETQUA IS NOT NULL " +
+                $"        AND xml_bnnd.NGAY_RAVIEN >= @tuNgay        " +
+                $"        AND xml_bnnd.NGAY_RAVIEN <= @denNgay " +
+                $"GROUP BY MADICHVU, DICHVUID, TENDICHVU, NGUOITRAKETQUA, HESO,  SOLUONG, LOAIPHIEUMAUBENHPHAM) t " +
+                $"GROUP BY BACSIID_TH ) t7 " +
+                $"ON t7.BACSIID_TH = t2.BACSIID "+
                 $"LEFT JOIN his_common.org_organization org ON org.ORG_ID = t2.KHOAID " +
                 $"LEFT JOIN his_common.org_officer officer ON officer.BACSIID = t2.BACSIID " +
                 $"order by t2.KHOAID;";
@@ -1751,7 +1778,7 @@ namespace API.Controllers
             }
             return res;
         }
-        [Authorize(Roles = "BC_DIEM_CTKH_EXCEL")]
+        [Authorize(Roles = "BC_DIEM_CTKH, ADMIN")]
         [HttpPost("bc_diem_ctkh_excel")]
         public async Task<IActionResult> GetBcDiemCtkhExcel([FromBody] BaoCaoDiemCtkhRequest req)
         {
@@ -2024,6 +2051,8 @@ namespace API.Controllers
                 ws.Cell(row, 8).FormulaA1 = $"SUM({colName[8]}{row + 1}:{colName[8]}{row + tongBs})";
                 ws.Cell(row, 9).FormulaA1 = $"SUM({colName[9]}{row + 1}:{colName[9]}{row + tongBs})";
                 ws.Cell(row, 10).FormulaA1 = $"SUM({colName[10]}{row + 1}:{colName[10]}{row + tongBs})";
+                ws.Cell(row, 12).FormulaA1 = $"SUM({colName[12]}{row + 1}:{colName[12]}{row + tongBs})";
+                ws.Cell(row, 13).FormulaA1 = $"SUM({colName[13]}{row + 1}:{colName[13]}{row + tongBs})";
                 ws.Cell(row, 14).FormulaA1 = $"SUM({colName[14]}{row + 1}:{colName[14]}{row + tongBs})";
                 ws.Cell(row, 15).FormulaA1 = $"SUM({colName[15]}{row + 1}:{colName[15]}{row + tongBs})";
                 ws.Cell(row, 17).FormulaA1 = $"IF({colName[3]}{row} > 0 ,{colName[15]}{row}/{colName[3]}{row} ,0)";
@@ -2047,6 +2076,8 @@ namespace API.Controllers
                     ws.Cell(row, 8).Value = item.DiemTangCuong ?? 0;
                     ws.Cell(row, 9).Value = item.DiemTruc ?? 0;
                     ws.Cell(row, 10).Value =item.DiemCongBANT ?? 0;
+                    ws.Cell(row, 12).Value = item.DiemBNNDCD ?? 0;
+                    ws.Cell(row, 13).Value = item.DiemBNNDTH ?? 0;
                     ws.Cell(row, 14).Value =item.DiemBNNDCDNhapVien ?? 0;
                     ws.Cell(row, 15).FormulaA1 = $"SUM({colName[4]}{row}:{colName[14]}{row})"; // tổng các cột trước
                     ws.Cell(row, 17).FormulaA1 = $"IF({colName[3]}{row} > 0 ,{colName[15]}{row}/{colName[3]}{row},0)"; // tính %
@@ -2085,6 +2116,8 @@ namespace API.Controllers
             ws.Cell(row, 8).FormulaA1 = $"SUM({colName[8]}{8}:{colName[8]}{row-1})/2";
             ws.Cell(row, 9).FormulaA1 = $"SUM({colName[9]}{8}:{colName[9]}{row-1})/2";
             ws.Cell(row, 10).FormulaA1 = $"SUM({colName[10]}{8}:{colName[10]}{row-1})/2";
+            ws.Cell(row, 12).FormulaA1 = $"SUM({colName[12]}{8}:{colName[12]}{row-1})/2";
+            ws.Cell(row, 13).FormulaA1 = $"SUM({colName[13]}{8}:{colName[13]}{row-1})/2";
             ws.Cell(row, 14).FormulaA1 = $"SUM({colName[14]}{8}:{colName[14]}{row-1})/2";
             ws.Cell(row, 15).FormulaA1 = $"SUM({colName[15]}{8}:{colName[15]}{row-1})/2";
             ws.Cell(row, 17).FormulaA1 = $"IF({colName[3]}{row} > 0 ,{colName[15]}{row}/{colName[3]}{row} ,0)";
@@ -2093,7 +2126,7 @@ namespace API.Controllers
             row++;
 
             // ====== Style chung ======
-            ws.SheetView.FreezeRows(5);
+            ws.SheetView.FreezeRows(6);
 
             ws.Column(1).Width = 8;
             ws.Column(2).Width = 40;
@@ -2354,7 +2387,7 @@ namespace API.Controllers
             row++;
 
             // ====== Style chung ======
-            ws.SheetView.FreezeRows(5);
+            ws.SheetView.FreezeRows(6);
 
             ws.Column(1).Width = 8;
             ws.Column(2).Width = 40;
@@ -2407,7 +2440,7 @@ namespace API.Controllers
                return $" TỪ THÁNG {tuThang} NĂM {tuNam} ĐẾN THÁNG {denThang} NĂM {denNam}";
             }
         }
-        [Authorize(Roles = "BC_DIEM_CTKH,ALL")]
+        [Authorize(Roles = "BC_DIEM_CTKH,ALL, ADMIN")]
         [HttpPost("bc_diem_ctkh_default0")]
         ///<summary>
         ///Lấy ds bc điểm ctkh của khoa v1, k có mặc định là 0 
