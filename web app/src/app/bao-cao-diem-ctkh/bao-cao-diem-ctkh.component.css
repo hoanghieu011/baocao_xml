@@ -40,7 +40,10 @@
     top: -290px;
   }
 }
-
+.table-responsive {
+  /* width: 100%; */
+  overflow: auto;
+}
 .w-40 {
   width: 40%;
 }
@@ -97,9 +100,25 @@ table th, table td {
 
 table th {
   position: sticky;
-  top: 0;
-  background: #f8f9fa;
   z-index: 1;
+}
+.first-row {
+  top: 0;
+   background: #f8f9fa;
+}
+.second-row {
+  top: 41px;
+   background: #f8f9fa;
+}
+.second-row-dd {
+  top: 65px;
+   background: #f8f9fa;
+}
+.third-row {
+  top: 202px;
+}
+.third-row-dd {
+  top: 154px;
 }
 table td {
   font-size: 14px!important;

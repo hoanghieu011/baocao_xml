@@ -54,10 +54,6 @@ namespace API.Models
         [Column("DIEMBANT")]
         public decimal? DiemCongBANT { get; set; } = 0;
         /// <summary>
-        /// Điểm TH PTT theo điều dưỡng
-        /// </summary>
-        //public decimal DiemTHPTTTheoDD { get; set; } = 0;
-        /// <summary>
         /// Điểm BNND Chỉ định
         /// </summary>
         public decimal? DiemBNNDCD { get; set; } = 0;

@@ -36,6 +36,7 @@ type ReportRow = {
   diemBNNDCD: number;
   diemBNNDTH: number;
   diemBNNDCDNhapVien: number;
+  diemBNNDTheoBs?: number;
   tongCong: number;
   datCtkh: number;
   diemTHTheoBS?: number;
@@ -89,10 +90,10 @@ export class BCDiemCtkhComponent  {
           return;
         }
         let curKhoa = '';
-          let tongDiemKeHoach = 0, tongDiemCdKham = 0, tongDiemCdDieuTri = 0, tongDiemPTTCD = 0, tongDiemPTTTH = 0, tongDiemTangCuong = 0, tongSoNgayTangCuong = 0, tongDiemTruc = 0, tongDiemCongBANT = 0,tongDiemTHPTTTheoDD = 0,tongDiemBNNDCD = 0,tongDiemBNNDTH = 0,tongDiemBNNDCDNhapVien = 0;
-          let diemKeHoachKhoa = 0, diemCdKhamKhoa = 0, diemCdDieuTriKhoa = 0, diemPTTCDKhoa = 0, diemPTTTHKhoa = 0, diemTangCuongKhoa = 0, soNgayTangCuongKhoa = 0, diemTrucKhoa = 0, diemCongBANTKhoa = 0,diemTHPTTTheoDDKhoa = 0,diemBNNDCDKhoa = 0,diemBNNDTHKhoa = 0,diemBNNDCDNhapVienKhoa = 0;
-          let tongDiemTHBS = 0, tongDiemNhapVienBS = 0;
-          let tongDiemTHBSTheoKhoa = 0, tongDiemNhapVienBSTheoKhoa = 0;
+          let tongDiemKeHoach = 0, tongDiemCdKham = 0, tongDiemCdDieuTri = 0, tongDiemPTTCD = 0, tongDiemPTTTH = 0, tongDiemTangCuong = 0, tongSoNgayTangCuong = 0, tongDiemTruc = 0, tongDiemCongBANT = 0,tongDiemBNNDCD = 0,tongDiemBNNDTH = 0,tongDiemBNNDCDNhapVien = 0;
+          let diemKeHoachKhoa = 0, diemCdKhamKhoa = 0, diemCdDieuTriKhoa = 0, diemPTTCDKhoa = 0, diemPTTTHKhoa = 0, diemTangCuongKhoa = 0, soNgayTangCuongKhoa = 0, diemTrucKhoa = 0, diemCongBANTKhoa = 0,diemBNNDCDKhoa = 0,diemBNNDTHKhoa = 0,diemBNNDCDNhapVienKhoa = 0;
+          let tongDiemTHBS = 0, tongDiemNhapVienBS = 0, tongDiemPTTTHTheoDD = 0, tongDiemBNNDTheoBS = 0;
+          let tongDiemTHBSTheoKhoa = 0, tongDiemNhapVienBSTheoKhoa = 0, tongDiemPTTTHTheoDDKhoa = 0, tongDiemBNNDTheoBSKhoa = 0;
           let countGroup = 0;
           let countItem = 1;
           let currentGroupIndex = 0;
@@ -101,7 +102,8 @@ export class BCDiemCtkhComponent  {
             if(curKhoa != item.khoa) {
               countItem = 1;
               if(curKhoa != '') {
-                let tongDiemTHKhoa = this.loaiBaoCao==='BAC_SI' ? diemCdKhamKhoa + diemCdDieuTriKhoa + diemPTTCDKhoa + diemPTTTHKhoa + diemTangCuongKhoa + diemTrucKhoa + diemCongBANTKhoa + diemTHPTTTheoDDKhoa + diemBNNDCDKhoa + diemBNNDTHKhoa + diemBNNDCDNhapVienKhoa : diemTrucKhoa + diemTangCuongKhoa;
+                // tổng điểm TH của từng khoa sẽ bao gồm điểm TH của bác sĩ / điều dưỡng trong khoa đó + điểm PTTTHTheoDD (nếu là bác sĩ) hoặc điểm TH (nếu là điều dưỡng) + điểm BNNDTheoBS (nếu là điều dưỡng)
+                let tongDiemTHKhoa = this.loaiBaoCao==='BAC_SI' ? diemCdKhamKhoa + diemCdDieuTriKhoa + diemPTTCDKhoa + diemPTTTHKhoa + diemTangCuongKhoa + diemTrucKhoa + diemCongBANTKhoa + diemBNNDCDKhoa + diemBNNDTHKhoa + diemBNNDCDNhapVienKhoa : diemTrucKhoa + diemTangCuongKhoa + tongDiemPTTTHTheoDDKhoa;
                 this.dsDiemCtkh[currentGroupIndex] = {
                   ...this.dsDiemCtkh[currentGroupIndex],
                   diemKeHoach: diemKeHoachKhoa,
@@ -113,21 +115,30 @@ export class BCDiemCtkhComponent  {
                   soNgayTangCuong: soNgayTangCuongKhoa,
                   diemTruc: diemTrucKhoa,
                   diemCongBANT: diemCongBANTKhoa,
-                  diemTHPTTTheoDD: diemTHPTTTheoDDKhoa,
                   diemBNNDCD: diemBNNDCDKhoa,
                   diemBNNDTH: diemBNNDTHKhoa,
-                  diemTHTheoBS: tongDiemTHBSTheoKhoa,
                   diemBNNDCDNhapVien: diemBNNDCDNhapVienKhoa,
-                  tongCong: tongDiemTHKhoa + (this.loaiBaoCao==='DIEU_DUONG' ? tongDiemTHBSTheoKhoa : 0) ,
-                  datCtkh: diemKeHoachKhoa !== 0 ? (((tongDiemTHKhoa + (this.loaiBaoCao==='DIEU_DUONG' ? tongDiemTHBSTheoKhoa : 0)) / (diemKeHoachKhoa )) * 100) : 0
+                  diemTHPTTTheoDD: tongDiemPTTTHTheoDDKhoa,
+                  diemBNNDTheoBs: tongDiemBNNDTheoBSKhoa,
+                  diemTHTheoBS: tongDiemTHBSTheoKhoa,
+                  tongCong: tongDiemTHKhoa + (this.loaiBaoCao==='DIEU_DUONG' ? (tongDiemTHBSTheoKhoa + tongDiemBNNDTheoBSKhoa) : tongDiemPTTTHTheoDDKhoa) ,
+                  datCtkh: diemKeHoachKhoa !== 0 ? (((tongDiemTHKhoa + (this.loaiBaoCao==='DIEU_DUONG' ? (tongDiemTHBSTheoKhoa + tongDiemBNNDTheoBSKhoa) : tongDiemPTTTHTheoDDKhoa)) / (diemKeHoachKhoa )) * 100) : 0
                 };
 
-                if(this.loaiBaoCao==='DIEU_DUONG') {
+                if(this.loaiBaoCao==='DIEU_DUONG') { // cập nhật lại những điểm tính theo BS ( tổng của BS cả khoa rồi chia TB)
                   let countDD = this.dsDiemCtkh.length - currentGroupIndex - 1;
-                  console.log(countDD);
                   for(let j = currentGroupIndex + 1; j < this.dsDiemCtkh.length; j++) {
+                    this.dsDiemCtkh[j].diemBNNDTheoBs = countDD > 0 ? (tongDiemBNNDTheoBSKhoa / countDD) : 0;
                     this.dsDiemCtkh[j].diemTHTheoBS = countDD > 0 ? (tongDiemTHBSTheoKhoa / countDD) : 0;
-                    this.dsDiemCtkh[j].tongCong = this.dsDiemCtkh[j].tongCong + (countDD > 0 ? (tongDiemTHBSTheoKhoa / countDD) : 0);
+                    this.dsDiemCtkh[j].tongCong = this.dsDiemCtkh[j].tongCong + (countDD > 0 ? (tongDiemTHBSTheoKhoa / countDD + tongDiemBNNDTheoBSKhoa / countDD) : 0);
+                    this.dsDiemCtkh[j].datCtkh = this.dsDiemCtkh[j].diemKeHoach !== 0 ? (this.dsDiemCtkh[j].tongCong*100 /this.dsDiemCtkh[j].diemKeHoach) : 0
+                  }
+                }
+                else if(this.loaiBaoCao==='BAC_SI') { // cập nhật lại những điểm tính theo điều dưỡng (điểm PTTTHTheoDD: tổng điểm PTTTH của điều dưỡng cả khoa chia TB)
+                  let countBS = this.dsDiemCtkh.length - currentGroupIndex - 1;
+                  for(let j = currentGroupIndex + 1; j < this.dsDiemCtkh.length; j++) {
+                    this.dsDiemCtkh[j].diemTHPTTTheoDD = countBS > 0 ? (tongDiemPTTTHTheoDDKhoa / countBS) : 0;
+                    this.dsDiemCtkh[j].tongCong = this.dsDiemCtkh[j].tongCong + (countBS > 0 ? (tongDiemPTTTHTheoDDKhoa / countBS) : 0);
                     this.dsDiemCtkh[j].datCtkh = this.dsDiemCtkh[j].diemKeHoach !== 0 ? (this.dsDiemCtkh[j].tongCong*100 /this.dsDiemCtkh[j].diemKeHoach) : 0
                   }
                 }
@@ -141,16 +152,18 @@ export class BCDiemCtkhComponent  {
               diemKeHoachKhoa = 0;
               diemCdKhamKhoa = 0;
               diemCdDieuTriKhoa = 0;
-              diemPTTCDKhoa = 0;
-              diemPTTTHKhoa = 0;
+              diemPTTCDKhoa = 0;//BS
+              diemPTTTHKhoa = 0;//BS => DD  =BS/0.8 (vì SQL * 0.8)
               diemTangCuongKhoa = 0;
               soNgayTangCuongKhoa = 0;
               diemTrucKhoa = 0;
               diemCongBANTKhoa = 0;
-              diemTHPTTTheoDDKhoa = 0;
               diemBNNDCDKhoa = 0;
               diemBNNDTHKhoa = 0;
               diemBNNDCDNhapVienKhoa = 0;
+
+              tongDiemBNNDTheoBSKhoa = 0;
+              tongDiemPTTTHTheoDDKhoa = 0;
               tongDiemTHBSTheoKhoa = 0;
               tongDiemNhapVienBSTheoKhoa = 0;
               this.dsDiemCtkh.push({
@@ -172,19 +185,29 @@ export class BCDiemCtkhComponent  {
                 diemBNNDCD: 0,
                 diemBNNDTH: 0,
                 diemBNNDCDNhapVien: 0,
+                diemBNNDTheoBs: 0,
                 tongCong: 0,
                 diemTHTheoBS: 0,
                 datCtkh: 0
               });
             }
-          
+            //start
+           // Tổng những điểm lẻ của bác sĩ / điều dưỡng để cập nhật vào tổng điểm của khoa và tổng điểm theo BS (điểm THBS, điểm BNNDTheoBS) khi chuyển sang khoa khác hoặc khi kết thúc vòng lặp (cập nhật vào dòng tổng cộng)
             if(item.officerType == 4) { // bác sĩ
-              tongDiemTHBS += ((item.diemCdKham || 0) + (item.diemCDDieuTri || 0) + (item.diemPTTCD || 0) + (item.diemPTTTH || 0) + (item.diemTangCuong || 0) + (item.diemTruc || 0) + (item.diemCongBANT || 0) + (item.diemTHPTTTheoDD || 0) + (item.diemBNNDCD || 0) + (item.diemBNNDTH || 0) + (item.diemBNNDCDNhapVien || 0));
+              tongDiemTHBS += ((item.diemCdKham || 0) + (item.diemCDDieuTri || 0) + (item.diemPTTCD || 0) + (item.diemPTTTH || 0) + (item.diemTangCuong || 0) + (item.diemTruc || 0) + (item.diemCongBANT || 0) + (item.diemBNNDCD || 0) + (item.diemBNNDTH || 0) + (item.diemBNNDCDNhapVien || 0));
               tongDiemNhapVienBS += (item.diemCDDieuTri || 0);
-              tongDiemTHBSTheoKhoa += ((item.diemCdKham || 0) + (item.diemCDDieuTri || 0) + (item.diemPTTCD || 0) + (item.diemPTTTH || 0) + (item.diemTangCuong || 0) + (item.diemTruc || 0) + (item.diemCongBANT || 0) + (item.diemTHPTTTheoDD || 0) + (item.diemBNNDCD || 0) + (item.diemBNNDTH || 0) + (item.diemBNNDCDNhapVien || 0));
+              tongDiemTHBSTheoKhoa += ((item.diemCdKham || 0) + (item.diemCDDieuTri || 0) + (item.diemPTTCD || 0) + (item.diemPTTTH || 0) + (item.diemTangCuong || 0) + (item.diemTruc || 0) + (item.diemCongBANT || 0)  + (item.diemBNNDCD || 0) + (item.diemBNNDTH || 0) + (item.diemBNNDCDNhapVien || 0));
               tongDiemNhapVienBSTheoKhoa += (item.diemCDDieuTri || 0);
+              tongDiemBNNDTheoBS += (item.diemBNNDTH || 0);
+              tongDiemBNNDTheoBSKhoa += (item.diemBNNDTH || 0);
             }
+            if(item.officerType != 4) { // điều dưỡng
+              tongDiemPTTTHTheoDD += (item.diemPTTTH ? item.diemPTTTH/0.8 : 0); // SQL đang nhân luôn hệ số => chia ra để lấy điểm thực tế
+              tongDiemPTTTHTheoDDKhoa += (item.diemPTTTH ? item.diemPTTTH/0.8 : 0);
+            }
+            //end
             let pushedItem = ((this.loaiBaoCao==='BAC_SI' && item.officerType == 4) || (this.loaiBaoCao==='DIEU_DUONG' && item.officerType != 4)) ? item : null;
+            //start
             // các đầu điểm cộng dồn theo khoa của bác sĩ / điều dưỡng
             diemKeHoachKhoa += pushedItem ? pushedItem.diemKeHoach || 0 : 0;
             diemCdKhamKhoa += pushedItem ? pushedItem.diemCdKham || 0 : 0;
@@ -194,7 +217,6 @@ export class BCDiemCtkhComponent  {
             diemTangCuongKhoa += pushedItem ? pushedItem.diemTangCuong || 0 : 0;
             diemTrucKhoa += pushedItem ? pushedItem.diemTruc || 0 : 0;
             diemCongBANTKhoa += pushedItem ? pushedItem.diemCongBANT || 0 : 0;
-            diemTHPTTTheoDDKhoa += pushedItem ? pushedItem.diemTHPTTTheoDD || 0 : 0;
             diemBNNDCDKhoa += pushedItem ? pushedItem.diemBNNDCD || 0 : 0;
             diemBNNDTHKhoa += pushedItem ? pushedItem.diemBNNDTH || 0 : 0;
             diemBNNDCDNhapVienKhoa += (pushedItem ? pushedItem.diemBNNDCDNhapVien || 0 : 0);
@@ -209,13 +231,14 @@ export class BCDiemCtkhComponent  {
             tongSoNgayTangCuong += pushedItem ? pushedItem.soNgayTangCuong || 0 : 0;
             tongDiemTruc += pushedItem ? pushedItem.diemTruc || 0 : 0;
             tongDiemCongBANT += pushedItem ? pushedItem.diemCongBANT || 0 : 0;
-            tongDiemTHPTTTheoDD += pushedItem ? pushedItem.diemTHPTTTheoDD || 0 : 0;
             tongDiemBNNDCD += pushedItem ? pushedItem.diemBNNDCD || 0 : 0;
             tongDiemBNNDTH += pushedItem ? pushedItem.diemBNNDTH || 0 : 0;
             tongDiemBNNDCDNhapVien += (pushedItem ? pushedItem.diemBNNDCDNhapVien || 0 : 0);
+            //end
             if(pushedItem) {
-              let tongDiemTHItem = this.loaiBaoCao ==='BAC_SI' ? (pushedItem.diemCdKham || 0) + (pushedItem.diemCDDieuTri || 0) + (pushedItem.diemPTTCD || 0) + (pushedItem.diemPTTTH || 0) + (pushedItem.diemTangCuong || 0) + (pushedItem.diemTruc || 0) + (pushedItem.diemCongBANT || 0) + (pushedItem.diemTHPTTTheoDD || 0) + (pushedItem.diemBNNDCD || 0) + (pushedItem.diemBNNDTH || 0) + (pushedItem.diemBNNDCDNhapVien || 0) :
-               (pushedItem.diemTruc || 0) + (pushedItem.diemTangCuong || 0);
+              // tổng điểm TH  của từng bác sĩ / điều dưỡng sẽ k bao gồm (điểm PTTTHTheoDD)/(điểm BNNDTheoBS, điểm THBS) vì những điểm này sẽ được cập nhật khi logic code chuyển sang khoa khác)
+              let tongDiemTHItem = this.loaiBaoCao ==='BAC_SI' ? (pushedItem.diemCdKham || 0) + (pushedItem.diemCDDieuTri || 0) + (pushedItem.diemPTTCD || 0) + (pushedItem.diemPTTTH || 0) + (pushedItem.diemTangCuong || 0) + (pushedItem.diemTruc || 0) + (pushedItem.diemCongBANT || 0) + (pushedItem.diemBNNDCD || 0) + (pushedItem.diemBNNDTH || 0) + (pushedItem.diemBNNDCDNhapVien || 0) :
+               (pushedItem.diemTruc || 0) + (pushedItem.diemTangCuong || 0) + (pushedItem.diemPTTTH ? pushedItem.diemPTTTH/0.8 : 0);
               let tempItem: ReportRow = {
                 type: 'item',
                 stt: String(countItem),
@@ -245,8 +268,8 @@ export class BCDiemCtkhComponent  {
           }
         
           if(curKhoa != '') {
-            let tongDiemTHKhoa = this.loaiBaoCao==='BAC_SI' ? diemCdKhamKhoa + diemCdDieuTriKhoa + diemPTTCDKhoa + diemPTTTHKhoa + diemTangCuongKhoa + diemTrucKhoa + diemCongBANTKhoa + diemTHPTTTheoDDKhoa + diemBNNDCDKhoa + diemBNNDTHKhoa + diemBNNDCDNhapVienKhoa :
-            diemTrucKhoa+diemTangCuongKhoa;
+            let tongDiemTHKhoa = this.loaiBaoCao==='BAC_SI' ? diemCdKhamKhoa + diemCdDieuTriKhoa + diemPTTCDKhoa + diemPTTTHKhoa + diemTangCuongKhoa + diemTrucKhoa + diemCongBANTKhoa  + diemBNNDCDKhoa + diemBNNDTHKhoa + diemBNNDCDNhapVienKhoa :
+            diemTrucKhoa+diemTangCuongKhoa+ tongDiemPTTTHTheoDDKhoa;
             this.dsDiemCtkh[currentGroupIndex] = {
               ...this.dsDiemCtkh[currentGroupIndex],
               diemKeHoach: diemKeHoachKhoa,
@@ -259,24 +282,36 @@ export class BCDiemCtkhComponent  {
               diemTruc: diemTrucKhoa,
               diemTHTheoBS: tongDiemTHBSTheoKhoa,
               diemCongBANT: diemCongBANTKhoa,
-              diemTHPTTTheoDD: diemTHPTTTheoDDKhoa,
               diemBNNDCD: diemBNNDCDKhoa,
               diemBNNDTH: diemBNNDTHKhoa,
+              diemTHPTTTheoDD: tongDiemPTTTHTheoDDKhoa,
+              diemBNNDTheoBs: tongDiemBNNDTheoBSKhoa,
               diemBNNDCDNhapVien: diemBNNDCDNhapVienKhoa,
-              tongCong: tongDiemTHKhoa + (this.loaiBaoCao==='DIEU_DUONG' ? tongDiemTHBSTheoKhoa : 0) ,
-              datCtkh:  diemKeHoachKhoa !== 0 ? (((tongDiemTHKhoa + (this.loaiBaoCao==='DIEU_DUONG' ? tongDiemTHBSTheoKhoa : 0)) / (diemKeHoachKhoa )) * 100) : 0
+              tongCong: tongDiemTHKhoa + (this.loaiBaoCao==='DIEU_DUONG' ? (tongDiemTHBSTheoKhoa + tongDiemBNNDTheoBSKhoa) : tongDiemPTTTHTheoDDKhoa) ,
+              datCtkh:  diemKeHoachKhoa !== 0 ? (((tongDiemTHKhoa + (this.loaiBaoCao==='DIEU_DUONG' ? (tongDiemTHBSTheoKhoa + tongDiemBNNDTheoBSKhoa) : tongDiemPTTTHTheoDDKhoa)) / (diemKeHoachKhoa )) * 100) : 0
             };
             let countItemKhoa = this.dsDiemCtkh.length - currentGroupIndex - 1;
             if(countItemKhoa==0) this.dsDiemCtkh.pop();
-            let countDD = this.dsDiemCtkh.length - currentGroupIndex - 1;
-            for(let j = currentGroupIndex + 1; j < this.dsDiemCtkh.length; j++) {
-              this.dsDiemCtkh[j].diemTHTheoBS = countDD > 0 ? (tongDiemTHBSTheoKhoa / countDD) : 0;
-              this.dsDiemCtkh[j].tongCong = this.dsDiemCtkh[j].tongCong + (this.loaiBaoCao === 'DIEU_DUONG' ? (countDD > 0 ? (tongDiemTHBSTheoKhoa / countDD) : 0) : 0);
-              this.dsDiemCtkh[j].datCtkh = this.dsDiemCtkh[j].diemKeHoach !== 0 ? (this.dsDiemCtkh[j].tongCong*100 /this.dsDiemCtkh[j].diemKeHoach) : 0
+            if(this.loaiBaoCao==='DIEU_DUONG') {
+              let countDD = this.dsDiemCtkh.length - currentGroupIndex - 1;
+              for(let j = currentGroupIndex + 1; j < this.dsDiemCtkh.length; j++) {
+                this.dsDiemCtkh[j].diemBNNDTheoBs = countDD > 0 ? (tongDiemBNNDTheoBSKhoa / countDD) : 0;
+                this.dsDiemCtkh[j].diemTHTheoBS = countDD > 0 ? (tongDiemTHBSTheoKhoa / countDD) : 0;
+                this.dsDiemCtkh[j].tongCong = this.dsDiemCtkh[j].tongCong + (this.loaiBaoCao === 'DIEU_DUONG' ? (countDD > 0 ? (tongDiemTHBSTheoKhoa / countDD) : 0) : 0);
+                this.dsDiemCtkh[j].datCtkh = this.dsDiemCtkh[j].diemKeHoach !== 0 ? (this.dsDiemCtkh[j].tongCong*100 /this.dsDiemCtkh[j].diemKeHoach) : 0
+              }
+            }
+            else if(this.loaiBaoCao==='BAC_SI') {
+              let countBS = this.dsDiemCtkh.length - currentGroupIndex - 1;
+              for(let j = currentGroupIndex + 1; j < this.dsDiemCtkh.length; j++) {
+                this.dsDiemCtkh[j].diemTHPTTTheoDD = countBS > 0 ? (tongDiemPTTTHTheoDDKhoa / countBS) : 0;
+                this.dsDiemCtkh[j].tongCong = this.dsDiemCtkh[j].tongCong +  (countBS > 0 ? (tongDiemPTTTHTheoDDKhoa / countBS) : 0) ;
+                this.dsDiemCtkh[j].datCtkh = this.dsDiemCtkh[j].diemKeHoach !== 0 ? (this.dsDiemCtkh[j].tongCong*100 /this.dsDiemCtkh[j].diemKeHoach) : 0
+              }
             }
           }
         
-          let tongDiemTH = this.loaiBaoCao==='BAC_SI' ? tongDiemCdKham + tongDiemCdDieuTri + tongDiemPTTCD + tongDiemPTTTH + tongDiemTangCuong + tongDiemTruc + tongDiemCongBANT + tongDiemTHPTTTheoDD + tongDiemBNNDCD + tongDiemBNNDTH + tongDiemBNNDCDNhapVien : tongDiemTruc + tongDiemTangCuong;
+          let tongDiemTH = this.loaiBaoCao==='BAC_SI' ? tongDiemCdKham + tongDiemCdDieuTri + tongDiemPTTCD + tongDiemPTTTH + tongDiemTangCuong + tongDiemTruc + tongDiemCongBANT + tongDiemPTTTHTheoDD + tongDiemBNNDCD + tongDiemBNNDTH + tongDiemBNNDCDNhapVien :tongDiemTHBS+ tongDiemTruc + tongDiemTangCuong + tongDiemPTTTHTheoDD + tongDiemBNNDTheoBS;
           this.dsDiemCtkh.push({
             type: 'grandTotal',
             stt: '',
@@ -292,7 +327,8 @@ export class BCDiemCtkhComponent  {
             diemTHTheoBS: tongDiemTHBS,
             diemTruc: tongDiemTruc,
             diemCongBANT: tongDiemCongBANT,
-            diemTHPTTTheoDD: tongDiemTHPTTTheoDD,
+            diemTHPTTTheoDD: tongDiemPTTTHTheoDD,
+            diemBNNDTheoBs: tongDiemBNNDTheoBS,
             diemBNNDCD: tongDiemBNNDCD,
             diemBNNDTH: tongDiemBNNDTH,
             diemBNNDCDNhapVien: tongDiemBNNDCDNhapVien,
