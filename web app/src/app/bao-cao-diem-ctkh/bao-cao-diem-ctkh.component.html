@@ -124,73 +124,73 @@
                             </tr>
                         </thead>
                         <tbody>
-                          <ng-container *ngFor="let item of dsDiemCtkh; let i = index">
+                          <ng-container *ngFor="let item of dsDiemCtkhBS; let i = index">
                              <tr *ngIf="item.type === 'group'" class="table-secondary fw-bold">
                                   <td class="text-center bold">{{ item.stt }}</td>
                                   <td class="bold">{{ item.khoa }}</td>
-                                  <td class="text-end bold">{{ Math.trunc(item.diemKeHoach) == item.diemKeHoach ? Math.trunc(item.diemKeHoach) : item.diemKeHoach.toFixed(1) }}</td>
-                                  <td class="text-end bold">{{ Math.trunc(item.diemCdKham) == item.diemCdKham ? Math.trunc(item.diemCdKham) : item.diemCdKham.toFixed(1) }}</td>
-                                  <td class="text-end bold">{{ Math.trunc(item.diemCDDieuTri) == item.diemCDDieuTri ? Math.trunc(item.diemCDDieuTri) : item.diemCDDieuTri.toFixed(1) }}</td>
-                                  <td class="text-end bold">{{ Math.trunc(item.diemPTTCD) == item.diemPTTCD ? Math.trunc(item.diemPTTCD) : item.diemPTTCD.toFixed(1) }}</td>
-                                  <td class="text-end bold">{{ Math.trunc(item.diemPTTTH) == item.diemPTTTH ? Math.trunc(item.diemPTTTH) : item.diemPTTTH.toFixed(1) }}</td>
-                                  <td class="text-end bold">{{ Math.trunc(item.diemTangCuong) == item.diemTangCuong ? Math.trunc(item.diemTangCuong) : item.diemTangCuong.toFixed(1) }}</td>
-                                  <td class="text-end bold">{{ Math.trunc(item.diemTruc) == item.diemTruc ? Math.trunc(item.diemTruc) : item.diemTruc.toFixed(1) }}
-                                  <td class="text-end bold">{{ Math.trunc(item.diemCongBANT) == item.diemCongBANT ? Math.trunc(item.diemCongBANT) : item.diemCongBANT.toFixed(1) }}</td>
-                                  <td class="text-end bold">{{ Math.trunc(item.diemTHPTTTheoDD) == item.diemTHPTTTheoDD ? Math.trunc(item.diemTHPTTTheoDD) : item.diemTHPTTTheoDD.toFixed(1) }}</td>
-                                  <td class="text-end bold">{{Math.trunc(item.diemBNNDCD) == item.diemBNNDCD ? Math.trunc(item.diemBNNDCD) : item.diemBNNDCD.toFixed(1)}}</td>
-                                  <td class="text-end bold">{{Math.trunc(item.diemBNNDTH) == item.diemBNNDTH ? Math.trunc(item.diemBNNDTH) : item.diemBNNDTH.toFixed(1)}} </td>
-                                  <td class="text-end bold">{{ Math.trunc(item.diemBNNDCDNhapVien) == item.diemBNNDCDNhapVien ? Math.trunc(item.diemBNNDCDNhapVien) : item.diemBNNDCDNhapVien.toFixed(1) }}</td>
-                                  <td class="text-end bold">{{ Math.trunc(item.tongCong) == item.tongCong ? Math.trunc(item.tongCong) : item.tongCong.toFixed(1) }}</td>
+                                  <td class="text-end bold">{{ Math.trunc(item.diemKeHoach) == item.diemKeHoach ? Math.trunc(item.diemKeHoach) : Math.round(item.diemKeHoach * 10) / 10 }}</td>
+                                  <td class="text-end bold">{{ Math.trunc(item.diemCdKham) == item.diemCdKham ? Math.trunc(item.diemCdKham) : Math.round(item.diemCdKham * 10) / 10 }}</td>
+                                  <td class="text-end bold">{{ Math.trunc(item.diemCDDieuTri) == item.diemCDDieuTri ? Math.trunc(item.diemCDDieuTri) : Math.round(item.diemCDDieuTri * 10) / 10 }}</td>
+                                  <td class="text-end bold">{{ Math.trunc(item.diemPTTCD) == item.diemPTTCD ? Math.trunc(item.diemPTTCD) : Math.round(item.diemPTTCD * 10) / 10 }}</td>
+                                  <td class="text-end bold">{{ Math.trunc(item.diemPTTTH) == item.diemPTTTH ? Math.trunc(item.diemPTTTH) : Math.round(item.diemPTTTH * 10) / 10 }}</td>
+                                  <td class="text-end bold">{{ Math.trunc(item.diemTangCuong) == item.diemTangCuong ? Math.trunc(item.diemTangCuong) : Math.round(item.diemTangCuong * 10) / 10 }}</td>
+                                  <td class="text-end bold">{{ Math.trunc(item.diemTruc) == item.diemTruc ? Math.trunc(item.diemTruc) : Math.round(item.diemTruc * 10) / 10 }}</td>
+                                  <td class="text-end bold">{{ Math.trunc(item.diemCongBANT) == item.diemCongBANT ? Math.trunc(item.diemCongBANT) : Math.round(item.diemCongBANT * 10) / 10 }}</td>
+                                  <td class="text-end bold">{{ Math.trunc(item.diemTHPTTTheoDD) == item.diemTHPTTTheoDD ? Math.trunc(item.diemTHPTTTheoDD) : Math.round(item.diemTHPTTTheoDD * 10) / 10 }}</td>
+                                  <td class="text-end bold">{{Math.trunc(item.diemBNNDCD) == item.diemBNNDCD ? Math.trunc(item.diemBNNDCD) : Math.round(item.diemBNNDCD * 10) / 10}}</td>
+                                  <td class="text-end bold">{{Math.trunc(item.diemBNNDTH) == item.diemBNNDTH ? Math.trunc(item.diemBNNDTH) : Math.round(item.diemBNNDTH * 10) / 10}} </td>
+                                  <td class="text-end bold">{{ Math.trunc(item.diemBNNDCDNhapVien) == item.diemBNNDCDNhapVien ? Math.trunc(item.diemBNNDCDNhapVien) : Math.round(item.diemBNNDCDNhapVien * 10) / 10 }}</td>
+                                  <td class="text-end bold">{{ Math.trunc(item.tongCong) == item.tongCong ? Math.trunc(item.tongCong) : Math.round(item.tongCong * 10) / 10 }}</td>
                                   <td class="text-end bold"></td>
-                                  <td class="text-end bold">{{ Math.trunc(item.datCtkh) == item.datCtkh ? Math.trunc(item.datCtkh) : item.datCtkh.toFixed(1) }}%</td>
-                                  <td class="text-end bold"></td>
-                                  <td class="text-end bold"></td>
-                                  <td class="text-end bold"></td>
+                                  <td class="text-end bold">{{ Math.trunc(item.datCtkh) == item.datCtkh ? Math.trunc(item.datCtkh) : Math.round(item.datCtkh * 10) / 10 }}%</td>
+                                  <td></td>
+                                  <td></td>
+                                  <td></td>
                                 </tr>
                                 <tr *ngIf="item.type === 'grandTotal'" class="table-primary fw-bold">
                                   <td class="text-center bold"></td>
                                   <td class="bold">Tổng cộng</td>
-                                  <td class="text-end bold">{{ Math.trunc(item.diemKeHoach) == item.diemKeHoach ? Math.trunc(item.diemKeHoach) : item.diemKeHoach.toFixed(1) }}</td>
-                                  <td class="text-end bold">{{ Math.trunc(item.diemCdKham) == item.diemCdKham ? Math.trunc(item.diemCdKham) : item.diemCdKham.toFixed(1) }}</td>
-                                  <td class="text-end bold">{{ Math.trunc(item.diemCDDieuTri) == item.diemCDDieuTri ? Math.trunc(item.diemCDDieuTri) : item.diemCDDieuTri.toFixed(1) }}</td>
-                                  <td class="text-end bold">{{ Math.trunc(item.diemPTTCD) == item.diemPTTCD ? Math.trunc(item.diemPTTCD) : item.diemPTTCD.toFixed(1) }}</td>
-                                  <td class="text-end bold">{{ Math.trunc(item.diemPTTTH) == item.diemPTTTH ? Math.trunc(item.diemPTTTH) : item.diemPTTTH.toFixed(1) }}</td>
-                                  <td class="text-end bold">{{ Math.trunc(item.diemTangCuong) == item.diemTangCuong ? Math.trunc(item.diemTangCuong) : item.diemTangCuong.toFixed(1) }}</td>
-                                  <td class="text-end bold">{{ Math.trunc(item.diemTruc) == item.diemTruc ? Math.trunc(item.diemTruc) : item.diemTruc.toFixed(1) }}</td>
-                                  <td class="text-end bold">{{ Math.trunc(item.diemCongBANT) == item.diemCongBANT ? Math.trunc(item.diemCongBANT) : item.diemCongBANT.toFixed(1) }}</td>
-                                  <td class="text-end bold">{{ Math.trunc(item.diemTHPTTTheoDD) == item.diemTHPTTTheoDD ? Math.trunc(item.diemTHPTTTheoDD) : item.diemTHPTTTheoDD.toFixed(1) }}</td>
-                                  <td class="text-end bold">{{Math.trunc(item.diemBNNDCD) == item.diemBNNDCD ? Math.trunc(item.diemBNNDCD) : item.diemBNNDCD.toFixed(1)}}</td>
-                                  <td class="text-end bold">{{Math.trunc(item.diemBNNDTH) == item.diemBNNDTH ? Math.trunc(item.diemBNNDTH) : item.diemBNNDTH.toFixed(1)}} </td>
-                                  <td class="text-end bold">{{ Math.trunc(item.diemBNNDCDNhapVien) == item.diemBNNDCDNhapVien ? Math.trunc(item.diemBNNDCDNhapVien) : item.diemBNNDCDNhapVien.toFixed(1) }}</td>
-                                  <td class="text-end bold">{{ Math.trunc(item.tongCong) == item.tongCong ? Math.trunc(item.tongCong) : item.tongCong.toFixed(1) }}</td>
+                                  <td class="text-end bold">{{ Math.trunc(item.diemKeHoach) == item.diemKeHoach ? Math.trunc(item.diemKeHoach) : Math.round(item.diemKeHoach * 10) / 10 }}</td>
+                                  <td class="text-end bold">{{ Math.trunc(item.diemCdKham) == item.diemCdKham ? Math.trunc(item.diemCdKham) : Math.round(item.diemCdKham * 10) / 10 }}</td>
+                                  <td class="text-end bold">{{ Math.trunc(item.diemCDDieuTri) == item.diemCDDieuTri ? Math.trunc(item.diemCDDieuTri) : Math.round(item.diemCDDieuTri * 10) / 10 }}</td>
+                                  <td class="text-end bold">{{ Math.trunc(item.diemPTTCD) == item.diemPTTCD ? Math.trunc(item.diemPTTCD) : Math.round(item.diemPTTCD * 10) / 10 }}</td>
+                                  <td class="text-end bold">{{ Math.trunc(item.diemPTTTH) == item.diemPTTTH ? Math.trunc(item.diemPTTTH) : Math.round(item.diemPTTTH * 10) / 10 }}</td>
+                                  <td class="text-end bold">{{ Math.trunc(item.diemTangCuong) == item.diemTangCuong ? Math.trunc(item.diemTangCuong) : Math.round(item.diemTangCuong * 10) / 10 }}</td>
+                                  <td class="text-end bold">{{ Math.trunc(item.diemTruc) == item.diemTruc ? Math.trunc(item.diemTruc) : Math.round(item.diemTruc * 10) / 10 }}</td>
+                                  <td class="text-end bold">{{ Math.trunc(item.diemCongBANT) == item.diemCongBANT ? Math.trunc(item.diemCongBANT) : Math.round(item.diemCongBANT * 10) / 10 }}</td>
+                                  <td class="text-end bold">{{ Math.trunc(item.diemTHPTTTheoDD) == item.diemTHPTTTheoDD ? Math.trunc(item.diemTHPTTTheoDD) : Math.round(item.diemTHPTTTheoDD * 10) / 10 }}</td>
+                                  <td class="text-end bold">{{Math.trunc(item.diemBNNDCD) == item.diemBNNDCD ? Math.trunc(item.diemBNNDCD) : Math.round(item.diemBNNDCD * 10) / 10}}</td>
+                                  <td class="text-end bold">{{Math.trunc(item.diemBNNDTH) == item.diemBNNDTH ? Math.trunc(item.diemBNNDTH) : Math.round(item.diemBNNDTH * 10) / 10}} </td>
+                                  <td class="text-end bold">{{ Math.trunc(item.diemBNNDCDNhapVien) == item.diemBNNDCDNhapVien ? Math.trunc(item.diemBNNDCDNhapVien) : Math.round(item.diemBNNDCDNhapVien * 10) / 10 }}</td>
+                                  <td class="text-end bold">{{ Math.trunc(item.tongCong) == item.tongCong ? Math.trunc(item.tongCong) : Math.round(item.tongCong * 10) / 10 }}
                                   <td class="text-end bold"></td>
-                                  <td class="text-end bold">{{ Math.trunc(item.datCtkh) == item.datCtkh ? Math.trunc(item.datCtkh) : item.datCtkh.toFixed(1) }}%</td>
-                                  <td class="text-end bold"></td>
-                                  <td class="text-end bold"></td>
-                                  <td class="text-end bold"></td>
+                                  <td class="text-end bold">{{ Math.trunc(item.datCtkh) == item.datCtkh ? Math.trunc(item.datCtkh) : Math.round(item.datCtkh*10)/10 }}%</td>
+                                  <td class="text-end">{{ Math.trunc(item.tongDiemKH??0) == item.tongDiemKH ? Math.trunc(item.tongDiemKH??0) : Math.round((item.tongDiemKH??0) * 10) / 10 }}</td>
+                                  <td class="text-end">{{ Math.trunc(item.tongDiemTH??0) == item.tongDiemTH ? Math.trunc(item.tongDiemTH??0) : Math.round((item.tongDiemTH??0) * 10) / 10 }}</td>
+                                  <td class="text-end">{{ Math.trunc(item.datCtkhTong??0) == item.datCtkhTong ? Math.trunc(item.datCtkhTong??0) : Math.round((item.datCtkhTong??0) * 10) / 10 }}%</td>
                                 </tr>
                                 <tr *ngIf="item.type === 'item'">
                                   <td class="text-center">{{ item.stt }}</td>
                                   <td>{{ item.officerType == 4 ? 'BS:' : 'ĐD:' }}{{ item.officerName }}</td>
-                                  <td class="text-end">{{ Math.trunc(item.diemKeHoach) == item.diemKeHoach ? Math.trunc(item.diemKeHoach) : item.diemKeHoach.toFixed(1) }}</td>
-                                  <td class="text-end">{{ Math.trunc(item.diemCdKham) == item.diemCdKham ? Math.trunc(item.diemCdKham) : item.diemCdKham.toFixed(1) }}</td>
-                                  <td class="text-end">{{ Math.trunc(item.diemCDDieuTri) == item.diemCDDieuTri ? Math.trunc(item.diemCDDieuTri) : item.diemCDDieuTri.toFixed(1) }}</td>
-                                  <td class="text-end">{{ Math.trunc(item.diemPTTCD) == item.diemPTTCD ? Math.trunc(item.diemPTTCD) : item.diemPTTCD.toFixed(1) }}</td>
-                                  <td class="text-end">{{ Math.trunc(item.diemPTTTH) == item.diemPTTTH ? Math.trunc(item.diemPTTTH) : item.diemPTTTH.toFixed(1) }}</td>
-                                  <td class="text-end">{{ Math.trunc(item.diemTangCuong) == item.diemTangCuong ? Math.trunc(item.diemTangCuong) : item.diemTangCuong.toFixed(1) }}</td>
-                                  <td class="text-end">{{ Math.trunc(item.diemTruc) == item.diemTruc ? Math.trunc(item.diemTruc) : item.diemTruc.toFixed(1) }}</td>
-                                  <td class="text-end">{{ Math.trunc(item.diemCongBANT) == item.diemCongBANT ? Math.trunc(item.diemCongBANT) : item.diemCongBANT.toFixed(1) }}</td>
-                                  <td class="text-end">{{ Math.trunc(item.diemTHPTTTheoDD) == item.diemTHPTTTheoDD ? Math.trunc(item.diemTHPTTTheoDD) : item.diemTHPTTTheoDD.toFixed(1) }}</td>
-                                  <td class="text-end">{{Math.trunc(item.diemBNNDCD) == item.diemBNNDCD ? Math.trunc(item.diemBNNDCD) : item.diemBNNDCD.toFixed(1)}}</td>
-                                  <td class="text-end">{{Math.trunc(item.diemBNNDTH) == item.diemBNNDTH ? Math.trunc(item.diemBNNDTH) : item.diemBNNDTH.toFixed(1)}} </td>
-                                  <td class="text-end">{{ Math.trunc(item.diemBNNDCDNhapVien) == item.diemBNNDCDNhapVien ? Math.trunc(item.diemBNNDCDNhapVien) : item.diemBNNDCDNhapVien.toFixed(1) }}</td>
-                                  <td class="text-end">{{ Math.trunc(item.tongCong) == item.tongCong ? Math.trunc(item.tongCong) : item.tongCong.toFixed(1) }}</td>
+                                  <td class="text-end">{{ Math.trunc(item.diemKeHoach) == item.diemKeHoach ? Math.trunc(item.diemKeHoach) : Math.round(item.diemKeHoach * 10) / 10 }}</td>
+                                  <td class="text-end">{{ Math.trunc(item.diemCdKham) == item.diemCdKham ? Math.trunc(item.diemCdKham) : Math.round(item.diemCdKham * 10) / 10 }}</td>
+                                  <td class="text-end">{{ Math.trunc(item.diemCDDieuTri) == item.diemCDDieuTri ? Math.trunc(item.diemCDDieuTri) : Math.round(item.diemCDDieuTri * 10) / 10 }}</td>
+                                  <td class="text-end">{{ Math.trunc(item.diemPTTCD) == item.diemPTTCD ? Math.trunc(item.diemPTTCD) : Math.round(item.diemPTTCD * 10) / 10 }}</td>
+                                  <td class="text-end">{{ Math.trunc(item.diemPTTTH) == item.diemPTTTH ? Math.trunc(item.diemPTTTH) : Math.round(item.diemPTTTH * 10) / 10 }}</td>
+                                  <td class="text-end">{{ Math.trunc(item.diemTangCuong) == item.diemTangCuong ? Math.trunc(item.diemTangCuong) : Math.round(item.diemTangCuong * 10) / 10 }}</td>
+                                  <td class="text-end">{{ Math.trunc(item.diemTruc) == item.diemTruc ? Math.trunc(item.diemTruc) : Math.round(item.diemTruc * 10) / 10 }}</td>
+                                  <td class="text-end">{{ Math.trunc(item.diemCongBANT) == item.diemCongBANT ? Math.trunc(item.diemCongBANT) : Math.round(item.diemCongBANT * 10) / 10 }}</td>
+                                  <td class="text-end">{{ Math.trunc(item.diemTHPTTTheoDD) == item.diemTHPTTTheoDD ? Math.trunc(item.diemTHPTTTheoDD) : Math.round(item.diemTHPTTTheoDD * 10) / 10 }}</td>
+                                  <td class="text-end">{{Math.trunc(item.diemBNNDCD) == item.diemBNNDCD ? Math.trunc(item.diemBNNDCD) : Math.round(item.diemBNNDCD * 10) / 10}}</td>
+                                  <td class="text-end">{{Math.trunc(item.diemBNNDTH) == item.diemBNNDTH ? Math.trunc(item.diemBNNDTH) : Math.round(item.diemBNNDTH * 10) / 10}} </td>
+                                  <td class="text-end">{{ Math.trunc(item.diemBNNDCDNhapVien) == item.diemBNNDCDNhapVien ? Math.trunc(item.diemBNNDCDNhapVien) : Math.round(item.diemBNNDCDNhapVien * 10) / 10 }}</td>
+                                  <td class="text-end">{{ Math.trunc(item.tongCong) == item.tongCong ? Math.trunc(item.tongCong) : Math.round(item.tongCong * 10) / 10 }}</td>
                                   <td class="text-end"></td>
-                                  <td class="text-end">{{ Math.trunc(item.datCtkh) == item.datCtkh ? Math.trunc(item.datCtkh) : item.datCtkh.toFixed(1) }}%</td>
-                                  <td class="text-end"></td>
-                                  <td class="text-end"></td>
-                                  <td class="text-end"></td>
-                                </tr>
+                                  <td class="text-end">{{ Math.trunc(item.datCtkh) == item.datCtkh ? Math.trunc(item.datCtkh) : Math.round(item.datCtkh * 10) / 10 }}%</td>
+                                  <td *ngIf="i>=1 && dsDiemCtkhBS[i-1].type=='group'" [attr.rowspan]="(dsDiemCtkhBS[i-1].tongBS??1)" class="text-end">{{ Math.trunc(dsDiemCtkhBS[i-1].tongDiemKH??0) == dsDiemCtkhBS[i-1].tongDiemKH ? Math.trunc(dsDiemCtkhBS[i-1].tongDiemKH??0) : Math.round((dsDiemCtkhBS[i-1].tongDiemKH??0) * 10) / 10 }}</td>
+                                  <td *ngIf="i>=1 && dsDiemCtkhBS[i-1].type=='group'" [attr.rowspan]="(dsDiemCtkhBS[i-1].tongBS??1)" class="text-end">{{ Math.trunc(dsDiemCtkhBS[i-1].tongDiemTH??0) == dsDiemCtkhBS[i-1].tongDiemTH ? Math.trunc(dsDiemCtkhBS[i-1].tongDiemTH??0) : Math.round((dsDiemCtkhBS[i-1].tongDiemTH??0) * 10) / 10 }}</td>
+                                  <td *ngIf="i>=1 && dsDiemCtkhBS[i-1].type=='group'" [attr.rowspan]="(dsDiemCtkhBS[i-1].tongBS??1)" class="text-end">{{ Math.trunc(dsDiemCtkhBS[i-1].datCtkhTong??0) == dsDiemCtkhBS[i-1].datCtkhTong ? Math.trunc(dsDiemCtkhBS[i-1].datCtkhTong??0) : Math.round((dsDiemCtkhBS[i-1].datCtkhTong??0) * 10) / 10 }}%</td>
+                                                                  </tr>
                           </ng-container>
                         </tbody>
                     </table>
@@ -241,63 +241,63 @@
                             </tr>
                         </thead>
                         <tbody>
-                          <ng-container *ngFor="let item of dsDiemCtkh; let i = index">
+                          <ng-container *ngFor="let item of dsDiemCtkhDD; let i = index">
                              <tr *ngIf="item.type === 'group'" class="table-secondary fw-bold">
                                   <td class="text-center bold">{{ item.stt }}</td>
                                   <td class="bold">{{ item.khoa }}</td>
-                                  <td class="text-end bold">{{ Math.trunc(item.diemKeHoach) == item.diemKeHoach ? Math.trunc(item.diemKeHoach) : item.diemKeHoach.toFixed(1) }}</td>
-                                  <td class="text-end bold">{{ Math.trunc(item.diemTHTheoBS || 0) == item.diemTHTheoBS ? Math.trunc(item.diemTHTheoBS) : item.diemTHTheoBS?.toFixed(1) }}</td>
-                                  <td class="text-end bold">{{ Math.trunc(item.soNgayTangCuong || 0) == item.soNgayTangCuong ? Math.trunc(item.soNgayTangCuong) : item.soNgayTangCuong?.toFixed(1) }}</td>
-                                  <td class="text-end bold">{{ Math.trunc(item.diemTangCuong) == item.diemTangCuong ? Math.trunc(item.diemTangCuong) : item.diemTangCuong.toFixed(1) }}</td>
+                                  <td class="text-end bold">{{ Math.trunc(item.diemKeHoach) == item.diemKeHoach ? Math.trunc(item.diemKeHoach) : Math.round(item.diemKeHoach * 10) / 10 }}</td>
+                                  <td class="text-end bold">{{ Math.trunc(item.diemTHTheoBS || 0) == item.diemTHTheoBS ? Math.trunc(item.diemTHTheoBS) : Math.round((item.diemTHTheoBS || 0) * 10) / 10 }}</td>
+                                  <td class="text-end bold">{{ Math.trunc(item.soNgayTangCuong || 0) == item.soNgayTangCuong ? Math.trunc(item.soNgayTangCuong) : Math.round((item.soNgayTangCuong||0) * 10) / 10 }}</td>
+                                  <td class="text-end bold">{{ Math.trunc(item.diemTangCuong) == item.diemTangCuong ? Math.trunc(item.diemTangCuong) : Math.round(item.diemTangCuong * 10) / 10 }}</td>
                                   <td class="text-end bold"></td>
                                   <td class="text-end bold"></td>
                                   <td class="text-end bold"></td>
                                   <td class="text-end bold"></td>
-                                  <td class="text-end bold">{{Math.trunc(item.diemTruc) == item.diemTruc ? Math.trunc(item.diemTruc) : item.diemTruc.toFixed(1)}}</td>
-                                  <td class="text-end bold">{{Math.trunc(item.diemPTTTH/0.8) == item.diemPTTTH/0.8 ? Math.trunc(item.diemPTTTH/0.8) : (item.diemPTTTH/0.8).toFixed(1)}}</td>
-                                  <td class="text-end bold">{{Math.trunc(item.diemBNNDTheoBs || 0) == item.diemBNNDTheoBs ? Math.trunc(item.diemBNNDTheoBs) : item.diemBNNDTheoBs?.toFixed(1)}}</td>
+                                  <td class="text-end bold">{{Math.trunc(item.diemTruc) == item.diemTruc ? Math.trunc(item.diemTruc) : Math.round(item.diemTruc * 10) / 10}}</td>
+                                  <td class="text-end bold">{{Math.trunc(item.diemPTTTH/0.8) == item.diemPTTTH/0.8 ? Math.trunc(item.diemPTTTH/0.8) : Math.round((item.diemPTTTH/0.8) * 10) / 10}}</td>
+                                  <td class="text-end bold">{{Math.trunc(item.diemBNNDTheoBs || 0) == item.diemBNNDTheoBs ? Math.trunc(item.diemBNNDTheoBs) : Math.round((item.diemBNNDTheoBs || 0) * 10) / 10}}</td>
                                   <td class="text-end bold"></td>
-                                  <td class="text-end bold">{{ Math.trunc(item.tongCong) == item.tongCong ? Math.trunc(item.tongCong) : item.tongCong.toFixed(1) }}</td>
+                                  <td class="text-end bold">{{ Math.trunc(item.tongCong) == item.tongCong ? Math.trunc(item.tongCong) : Math.round(item.tongCong * 10) / 10 }}</td>
                                   <td class="text-end bold"></td>
-                                  <td class="text-end bold">{{ Math.trunc(item.datCtkh) == item.datCtkh ? Math.trunc(item.datCtkh) : item.datCtkh.toFixed(1) }}%</td>
+                                  <td class="text-end bold">{{ Math.trunc(item.datCtkh) == item.datCtkh ? Math.trunc(item.datCtkh) : Math.round(item.datCtkh * 10) / 10 }}%</td>
                                 </tr>
                                 <tr *ngIf="item.type === 'grandTotal'" class="table-primary fw-bold">
                                   <td class="text-center bold"></td>
                                   <td class="bold">Tổng cộng</td>
-                                  <td class="text-end bold">{{ Math.trunc(item.diemKeHoach) == item.diemKeHoach ? Math.trunc(item.diemKeHoach) : item.diemKeHoach.toFixed(1) }}</td>
-                                  <td class="text-end bold">{{ Math.trunc(item.diemTHTheoBS || 0) == item.diemTHTheoBS ? Math.trunc(item.diemTHTheoBS) : item.diemTHTheoBS?.toFixed(1) }}</td>
-                                  <td class="text-end bold">{{ Math.trunc(item.soNgayTangCuong || 0) == item.soNgayTangCuong ? Math.trunc(item.soNgayTangCuong) : item.soNgayTangCuong?.toFixed(1) }}</td>
-                                  <td class="text-end bold">{{ Math.trunc(item.diemTangCuong) == item.diemTangCuong ? Math.trunc(item.diemTangCuong) : item.diemTangCuong.toFixed(1) }}</td>
+                                  <td class="text-end bold">{{ Math.trunc(item.diemKeHoach) == item.diemKeHoach ? Math.trunc(item.diemKeHoach) : Math.round(item.diemKeHoach * 10) / 10 }}</td>
+                                  <td class="text-end bold">{{ Math.trunc(item.diemTHTheoBS || 0) == item.diemTHTheoBS ? Math.trunc(item.diemTHTheoBS) : Math.round((item.diemTHTheoBS || 0) * 10) / 10 }}</td>
+                                  <td class="text-end bold">{{ Math.trunc(item.soNgayTangCuong || 0) == item.soNgayTangCuong ? Math.trunc(item.soNgayTangCuong) : Math.round((item.soNgayTangCuong || 0) * 10) / 10 }}</td>
+                                  <td class="text-end bold">{{ Math.trunc(item.diemTangCuong) == item.diemTangCuong ? Math.trunc(item.diemTangCuong) : Math.round(item.diemTangCuong * 10) / 10 }}</td>
                                   <td class="text-end bold"></td>
                                   <td class="text-end bold"></td>
                                   <td class="text-end bold"></td>
                                   <td class="text-end bold"></td>
-                                  <td class="text-end bold">{{Math.trunc(item.diemTruc) == item.diemTruc ? Math.trunc(item.diemTruc) : item.diemTruc.toFixed(1)}}</td>
-                                  <td class="text-end bold">{{Math.trunc(item.diemPTTTH/0.8) == item.diemPTTTH/0.8 ? Math.trunc(item.diemPTTTH/0.8) : (item.diemPTTTH/0.8).toFixed(1)}}</td>
-                                  <td class="text-end bold">{{Math.trunc(item.diemBNNDTheoBs || 0) == item.diemBNNDTheoBs ? Math.trunc(item.diemBNNDTheoBs) : item.diemBNNDTheoBs?.toFixed(1)}}</td>
+                                  <td class="text-end bold">{{Math.trunc(item.diemTruc) == item.diemTruc ? Math.trunc(item.diemTruc) : Math.round(item.diemTruc * 10) / 10}}</td>
+                                  <td class="text-end bold">{{Math.trunc(item.diemPTTTH/0.8) == item.diemPTTTH/0.8 ? Math.trunc(item.diemPTTTH/0.8) : Math.round((item.diemPTTTH/0.8) * 10) / 10}}</td>
+                                  <td class="text-end bold">{{Math.trunc(item.diemBNNDTheoBs || 0) == item.diemBNNDTheoBs ? Math.trunc(item.diemBNNDTheoBs) : Math.round((item.diemBNNDTheoBs || 0) * 10) / 10}}</td>
                                   <td class="text-end bold"></td>
-                                  <td class="text-end bold">{{ item.tongCong.toFixed(1) }}</td>
+                                  <td class="text-end bold">{{ Math.trunc(item.tongCong) == item.tongCong ? Math.trunc(item.tongCong) : Math.round(item.tongCong * 10) / 10 }}</td>
                                   <td class="text-end bold"></td>
                                   <td class="text-end bold">{{ item.datCtkh.toFixed(1) }}%</td>
                                 </tr>
                                 <tr *ngIf="item.type === 'item'">
                                   <td class="text-center">{{ item.stt }}</td>
                                   <td>{{ item.officerType == 4 ? 'BS:' : 'ĐD:' }}{{ item.officerName }}</td>
-                                  <td class="text-end">{{ Math.trunc(item.diemKeHoach) == item.diemKeHoach ? Math.trunc(item.diemKeHoach) : item.diemKeHoach.toFixed(1) }}</td>
-                                  <td class="text-end">{{ Math.trunc(item.diemTHTheoBS || 0) == item.diemTHTheoBS ? Math.trunc(item.diemTHTheoBS) : item.diemTHTheoBS?.toFixed(1) }}</td>
-                                  <td class="text-end">{{ Math.trunc(item.soNgayTangCuong || 0) == item.soNgayTangCuong ? Math.trunc(item.soNgayTangCuong) : item.soNgayTangCuong?.toFixed(1) }}</td>
-                                  <td class="text-end">{{ Math.trunc(item.diemTangCuong) == item.diemTangCuong ? Math.trunc(item.diemTangCuong) : item.diemTangCuong.toFixed(1) }}</td>
+                                  <td class="text-end">{{ Math.trunc(item.diemKeHoach) == item.diemKeHoach ? Math.trunc(item.diemKeHoach) : Math.round(item.diemKeHoach*10)/10 }}</td>
+                                  <td class="text-end">{{ Math.trunc(item.diemTHTheoBS || 0) == item.diemTHTheoBS ? Math.trunc(item.diemTHTheoBS) : Math.round((item.diemTHTheoBS || 0) * 10) / 10 }}</td>
+                                  <td class="text-end">{{ Math.trunc(item.soNgayTangCuong || 0) == item.soNgayTangCuong ? Math.trunc(item.soNgayTangCuong) : Math.round((item.soNgayTangCuong || 0) * 10) / 10 }}</td>
+                                  <td class="text-end">{{ Math.trunc(item.diemTangCuong) == item.diemTangCuong ? Math.trunc(item.diemTangCuong) : Math.round(item.diemTangCuong * 10) / 10 }}</td>
                                   <td class="text-end"></td>
                                   <td class="text-end"></td>
                                   <td class="text-end"></td>
                                   <td class="text-end"></td>
-                                  <td class="text-end">{{ Math.trunc(item.diemTruc) == item.diemTruc ? Math.trunc(item.diemTruc) : item.diemTruc.toFixed(1) }}</td>
-                                  <td class="text-end">{{ Math.trunc((item.diemPTTTH/0.8)) == (item.diemPTTTH/0.8) ? Math.trunc((item.diemPTTTH/0.8)) : (item.diemPTTTH/0.8).toFixed(1) }}</td>
-                                  <td class="text-end">{{ Math.trunc(item.diemBNNDTheoBs || 0) == item.diemBNNDTheoBs ? Math.trunc(item.diemBNNDTheoBs) : item.diemBNNDTheoBs?.toFixed(1) }}</td>
+                                  <td class="text-end">{{ Math.trunc(item.diemTruc) == item.diemTruc ? Math.trunc(item.diemTruc) : Math.round(item.diemTruc * 10) / 10 }}</td>
+                                  <td class="text-end">{{ Math.trunc((item.diemPTTTH/0.8)) == (item.diemPTTTH/0.8) ? Math.trunc((item.diemPTTTH/0.8)) : Math.round((item.diemPTTTH/0.8) * 10) / 10 }}</td>
+                                  <td class="text-end">{{ Math.trunc(item.diemBNNDTheoBs || 0) == item.diemBNNDTheoBs ? Math.trunc(item.diemBNNDTheoBs) : Math.round((item.diemBNNDTheoBs || 0) * 10) / 10 }}</td>
                                   <td class="text-end"></td>
-                                  <td class="text-end">{{ Math.trunc(item.tongCong) == item.tongCong ? Math.trunc(item.tongCong) : item.tongCong.toFixed(1) }}</td>
+                                  <td class="text-end">{{ Math.trunc(item.tongCong) == item.tongCong ? Math.trunc(item.tongCong) : Math.round(item.tongCong * 10) / 10 }}</td>
                                   <td class="text-end"></td>
-                                  <td class="text-end">{{ Math.trunc(item.datCtkh) == item.datCtkh ? Math.trunc(item.datCtkh) : item.datCtkh.toFixed(1) }}%</td>
+                                  <td class="text-end">{{ Math.trunc(item.datCtkh) == item.datCtkh ? Math.trunc(item.datCtkh) : Math.round(item.datCtkh * 10) / 10 }}%</td>
                                 </tr>
                           </ng-container>
                         </tbody>

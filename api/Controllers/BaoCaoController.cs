@@ -16,6 +16,7 @@ using Microsoft.EntityFrameworkCore;
 using Org.BouncyCastle.Ocsp;
 using Org.BouncyCastle.Utilities;
 using System.Data.Common;
+using System.Diagnostics.Metrics;
 using System.Security.Claims;
 using System.Text.RegularExpressions;
 using static Humanizer.In;
@@ -1865,8 +1866,15 @@ namespace API.Controllers
             public decimal tongCong { get; set; }
             public decimal diemTHTheoBS { get; set; }
             public decimal diemPTTTHTheoDD { get; set; }
+            public decimal diemBNNDTheoBs { get; set; }
             public decimal datCtkh { get; set; }
+
+            public decimal tongDiemKH { get; set; }// tùy theo ReportRowType
+            public decimal tongDiemTH { get; set; }// tùy theo ReportRowType
+            public decimal datCtkhTong { get; set; }// tùy theo ReportRowType
+            public int tongBS { get; set; } // tùy theo ReportRowType, GROUP => tổng BS trong Khoa, ITEM => tổng BS = 1, GRAND_TOTAL => tổng BS trong viện
         }
+
         private string ConvertToRoman(int num)
         {
             var lookup = new List<KeyValuePair<string, int>>
@@ -1900,12 +1908,35 @@ namespace API.Controllers
         }
         private void GenerateCtkhExcel2Sheet(XLWorkbook wb,List<DiemCtkh>? dataRaw, BaoCaoDiemCtkhRequest req, BenhVien? benhVien)
         {
-            GenerateBcCtkhExcelBacSi(wb,dataRaw, req, benhVien);
-            GenerateBcCtkhExcelDieuDuong(wb,dataRaw, req, benhVien);
-            wb.TryGetWorksheet("BAC_SI", out var wsBs);
-            wb.TryGetWorksheet("DIEU_DUONG", out var wsDd);
+            var dataBs = PreGenerateRpCtkh(dataRaw, LoaiBaoCaoCtkh.BAC_SI);
+            var dataDd = PreGenerateRpCtkh(dataRaw, LoaiBaoCaoCtkh.DIEU_DUONG);
+            var tongTH = 0m; var tongKH = 0m;
+            foreach(var bsItem in dataBs)
+            {
+                if(bsItem.type == ReportRowType.GROUP)
+                {
+                    var ddItem = dataDd.Find(dd => (dd.type == bsItem.type && dd.DiemCtkh.KhoaId == bsItem.DiemCtkh.KhoaId));
+                    if(ddItem!= null)
+                    {
+                        
+                        bsItem.tongDiemKH = bsItem.tongDiemKH +( ddItem.DiemCtkh.DiemKeHoach?? 0m);
+                        bsItem.tongDiemTH = bsItem.tongDiemTH + ddItem.tongCong;
+                        bsItem.datCtkhTong = bsItem.tongDiemKH!=0 ? bsItem.tongDiemTH/ bsItem.tongDiemKH : 0;
+                        tongTH += (bsItem.tongDiemTH);
+                        tongKH += (bsItem.tongDiemKH);
+                    }
+                }
+                if (bsItem.type == ReportRowType.GRAND_TOTAL)
+                {
+                    bsItem.tongDiemKH = tongKH;
+                    bsItem.tongDiemTH = tongTH;
+                    bsItem.datCtkhTong = bsItem.tongDiemKH != 0 ? bsItem.tongDiemTH / bsItem.tongDiemKH : 0;
+                }
+            }
+            GenerateBcCtkhExcelBacSi(wb, dataBs, req, benhVien);
+            GenerateBcCtkhExcelDieuDuong(wb, dataDd, req, benhVien);
         }
-        private List<ReportCtkhRow> PreGenerateRpCtkh(List<DiemCtkh> dataRaw, BaoCaoDiemCtkhRequest req)
+        private List<ReportCtkhRow> PreGenerateRpCtkh(List<DiemCtkh> dataRaw, LoaiBaoCaoCtkh LoaiBaoCao)
         {
             List<ReportCtkhRow> dsDiemCtkh = new List<ReportCtkhRow>();
             string curKhoa = "";
@@ -1913,14 +1944,14 @@ namespace API.Controllers
             // corresponds to total accumulators
             decimal tongDiemKeHoach = 0, tongDiemCdKham = 0, tongDiemCdDieuTri = 0, tongDiemPTTCD = 0, tongDiemPTTTH = 0;
             decimal tongDiemTangCuong = 0, tongSoNgayTangCuong = 0, tongDiemTruc = 0, tongDiemCongBANT = 0;
-            decimal tongDiemTHPTTTheoDD = 0, tongDiemBNNDCD = 0, tongDiemBNNDTH = 0, tongDiemBNNDCDNhapVien = 0;
+            decimal tongDiemBNNDCD = 0, tongDiemBNNDTH = 0, tongDiemBNNDCDNhapVien = 0;
 
             decimal diemKeHoachKhoa = 0, diemCdKhamKhoa = 0, diemCdDieuTriKhoa = 0, diemPTTCDKhoa = 0, diemPTTTHKhoa = 0;
-            decimal diemTangCuongKhoa = 0, soNgayTangCuongKhoa = 0, diemTrucKhoa = 0, diemCongBANTKhoa = 0, diemTHPTTTheoDDKhoa = 0;
+            decimal diemTangCuongKhoa = 0, soNgayTangCuongKhoa = 0, diemTrucKhoa = 0, diemCongBANTKhoa = 0;
             decimal diemBNNDCDKhoa = 0, diemBNNDTHKhoa = 0, diemBNNDCDNhapVienKhoa = 0;
 
-            decimal tongDiemTHBS = 0, tongDiemNhapVienBS = 0; // tongDiemNhapVienBS exists in JS but not used later
-            decimal tongDiemTHBSTheoKhoa = 0, tongDiemNhapVienBSTheoKhoa = 0;
+            decimal tongDiemTHBS = 0, tongDiemNhapVienBS = 0, tongDiemPTTTHTheoDD = 0, tongDiemBNNDTheoBS = 0;
+            decimal tongDiemTHBSTheoKhoa = 0, tongDiemNhapVienBSTheoKhoa = 0, tongDiemPTTTHTheoDDKhoa = 0, tongDiemBNNDTheoBSKhoa = 0;
 
             int countGroup = 0;
             int countItem = 1;
@@ -1936,15 +1967,15 @@ namespace API.Controllers
 
                     if (curKhoa != "")
                     {
+                        // tổng điểm TH của từng khoa sẽ bao gồm điểm TH của bác sĩ / điều dưỡng trong khoa đó + điểm PTTTHTheoDD (nếu là bác sĩ) hoặc điểm TH (nếu là điều dưỡng) + điểm BNNDTheoBS (nếu là điều dưỡng)
                         decimal tongDiemTHKhoa =
-                            req.LoaiBaoCao == LoaiBaoCaoCtkh.BAC_SI
+                            LoaiBaoCao == LoaiBaoCaoCtkh.BAC_SI
                                 ? (diemCdKhamKhoa + diemCdDieuTriKhoa + diemPTTCDKhoa + diemPTTTHKhoa + diemTangCuongKhoa
-                                   + diemTrucKhoa + diemCongBANTKhoa + diemTHPTTTheoDDKhoa + diemBNNDCDKhoa + diemBNNDTHKhoa + diemBNNDCDNhapVienKhoa)
-                                : diemTrucKhoa + diemTangCuongKhoa;
+                                   + diemTrucKhoa + diemCongBANTKhoa + diemBNNDCDKhoa + diemBNNDTHKhoa + diemBNNDCDNhapVienKhoa)
+                                : diemTrucKhoa + diemTangCuongKhoa + tongDiemPTTTHTheoDDKhoa;
 
                         dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemKeHoach = diemKeHoachKhoa;
                         dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemCdKham = diemCdKhamKhoa;
-
                         dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemCDDieuTri = diemCdDieuTriKhoa;
                         dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemPTTCD = diemPTTCDKhoa;
                         dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemPTTTH = diemPTTTHKhoa;
@@ -1955,30 +1986,47 @@ namespace API.Controllers
                         dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemBNNDCD = diemBNNDCDKhoa;
                         dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemBNNDTH = diemBNNDTHKhoa;
                         dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemBNNDCDNhapVien = diemBNNDCDNhapVienKhoa;
-
-                        dsDiemCtkh[currentGroupIndex].diemPTTTHTheoDD = diemTHPTTTheoDDKhoa;
-                        dsDiemCtkh[currentGroupIndex].tongCong = tongDiemTHKhoa + (req.LoaiBaoCao == LoaiBaoCaoCtkh.DIEU_DUONG ? tongDiemTHBSTheoKhoa : 0);
+                        dsDiemCtkh[currentGroupIndex].diemPTTTHTheoDD = tongDiemPTTTHTheoDDKhoa;
+                        dsDiemCtkh[currentGroupIndex].diemBNNDTheoBs = tongDiemBNNDTheoBSKhoa;
+                        dsDiemCtkh[currentGroupIndex].diemTHTheoBS = tongDiemTHBSTheoKhoa;
+                        dsDiemCtkh[currentGroupIndex].tongCong = tongDiemTHKhoa + (LoaiBaoCao == LoaiBaoCaoCtkh.DIEU_DUONG ? (tongDiemTHBSTheoKhoa + tongDiemBNNDTheoBSKhoa) : tongDiemPTTTHTheoDDKhoa);
                         dsDiemCtkh[currentGroupIndex].diemTHTheoBS = tongDiemTHBSTheoKhoa;
                         dsDiemCtkh[currentGroupIndex].datCtkh = diemKeHoachKhoa != 0
-                                    ? ((tongDiemTHKhoa + (req.LoaiBaoCao == LoaiBaoCaoCtkh.DIEU_DUONG ? tongDiemTHBSTheoKhoa : 0)) / diemKeHoachKhoa) * 100
+                                    ? ((tongDiemTHKhoa + (LoaiBaoCao == LoaiBaoCaoCtkh.DIEU_DUONG ? (tongDiemTHBSTheoKhoa + tongDiemBNNDTheoBSKhoa) : tongDiemPTTTHTheoDDKhoa)) / diemKeHoachKhoa) * 100
                                     : 0;
-
-
-                        if (req.LoaiBaoCao == LoaiBaoCaoCtkh.DIEU_DUONG)
+                        if (LoaiBaoCao == LoaiBaoCaoCtkh.DIEU_DUONG) // cập nhật lại những điểm tính theo BS ( tổng của BS cả khoa rồi chia TB)
                         {
                             int countDD = dsDiemCtkh.Count - currentGroupIndex - 1;
 
                             for (int j = currentGroupIndex + 1; j < dsDiemCtkh.Count; j++)
                             {
+                                dsDiemCtkh[j].diemBNNDTheoBs = countDD > 0 ? (tongDiemBNNDTheoBSKhoa / countDD) : 0;
                                 dsDiemCtkh[j].diemTHTheoBS = countDD > 0 ? (tongDiemTHBSTheoKhoa / countDD) : 0;
-                                dsDiemCtkh[j].tongCong = dsDiemCtkh[j].tongCong + (countDD > 0 ? (tongDiemTHBSTheoKhoa / countDD) : 0);
+                                dsDiemCtkh[j].tongCong = dsDiemCtkh[j].tongCong + (countDD > 0 ? (tongDiemTHBSTheoKhoa / countDD + tongDiemBNNDTheoBSKhoa / countDD ) : 0);
                                 dsDiemCtkh[j].datCtkh = dsDiemCtkh[j].DiemCtkh.DiemKeHoach != 0 && dsDiemCtkh[j].DiemCtkh.DiemKeHoach != null
                                     ? (dsDiemCtkh[j].tongCong * 100 / dsDiemCtkh[j].DiemCtkh.DiemKeHoach.GetValueOrDefault())
                                     : 0;
                             }
                         }
+                        else if(LoaiBaoCao == LoaiBaoCaoCtkh.BAC_SI)
+                        {
+                            int countBS = dsDiemCtkh.Count - currentGroupIndex - 1;
+                            dsDiemCtkh[currentGroupIndex].tongBS = countBS;
+                            dsDiemCtkh[currentGroupIndex].tongDiemKH = diemKeHoachKhoa;
+                            dsDiemCtkh[currentGroupIndex].tongDiemTH = dsDiemCtkh[currentGroupIndex].tongCong;
+                            dsDiemCtkh[currentGroupIndex].datCtkhTong = diemKeHoachKhoa !=0 ? ((dsDiemCtkh[currentGroupIndex].tongCong / (diemKeHoachKhoa)) * 100) : 0;
+                            for (int j = currentGroupIndex + 1; j < dsDiemCtkh.Count; j++)
+                            {
+                                dsDiemCtkh[j].diemPTTTHTheoDD = countBS > 0 ? (tongDiemPTTTHTheoDDKhoa / countBS) : 0;
+                                dsDiemCtkh[j].tongCong = dsDiemCtkh[j].tongCong + (countBS > 0 ? (tongDiemPTTTHTheoDDKhoa / countBS) : 0);
+                                dsDiemCtkh[j].datCtkh = dsDiemCtkh[j].DiemCtkh.DiemKeHoach != 0 && dsDiemCtkh[j].DiemCtkh.DiemKeHoach != null
+                                    ? (dsDiemCtkh[j].tongCong * 100 / dsDiemCtkh[j].DiemCtkh.DiemKeHoach.GetValueOrDefault())
+                                    : 0;
+                            }
 
-                        int countItemKhoa = dsDiemCtkh.Count - currentGroupIndex - 1;
+                        }
+
+                            int countItemKhoa = dsDiemCtkh.Count - currentGroupIndex - 1;
                         if (countItemKhoa == 0)
                             dsDiemCtkh.RemoveAt(dsDiemCtkh.Count - 1);
                     }
@@ -1990,17 +2038,18 @@ namespace API.Controllers
                     diemKeHoachKhoa = 0;
                     diemCdKhamKhoa = 0;
                     diemCdDieuTriKhoa = 0;
-                    diemPTTCDKhoa = 0;
-                    diemPTTTHKhoa = 0;
+                    diemPTTCDKhoa = 0; // BS
+                    diemPTTTHKhoa = 0; // BS => DD  =BS/0.8 (vì SQL * 0.8)
                     diemTangCuongKhoa = 0;
                     soNgayTangCuongKhoa = 0;
                     diemTrucKhoa = 0;
                     diemCongBANTKhoa = 0;
-                    diemTHPTTTheoDDKhoa = 0;
                     diemBNNDCDKhoa = 0;
                     diemBNNDTHKhoa = 0;
                     diemBNNDCDNhapVienKhoa = 0;
 
+                    tongDiemBNNDTheoBSKhoa = 0;
+                    tongDiemPTTTHTheoDDKhoa = 0;
                     tongDiemTHBSTheoKhoa = 0;
                     tongDiemNhapVienBSTheoKhoa = 0;
 
@@ -2023,41 +2072,48 @@ namespace API.Controllers
                             SoNgayTangCuong = 0,
                             DiemTruc = 0,
                             DiemCongBANT = 0,
-                            //DiemTHPTTTheoDD = 0,
                             DiemBNNDCD = 0,
                             DiemBNNDTH = 0,
                             DiemBNNDCDNhapVien = 0,
                         },
+                        diemPTTTHTheoDD = 0,
+                        diemBNNDTheoBs = 0,
                         tongCong = 0,
                         diemTHTheoBS = 0,
                         datCtkh = 0
                     });
                 }
-
-                // if(item.officerType == 4) { // bác sĩ
-                if (item.OfficerType == 4)
+                //start
+                // Tổng những điểm lẻ của bác sĩ / điều dưỡng để cập nhật vào tổng điểm của khoa và tổng điểm theo BS (điểm THBS, điểm BNNDTheoBS) khi chuyển sang khoa khác hoặc khi kết thúc vòng lặp (cập nhật vào dòng tổng cộng)
+                if (item.OfficerType == 4) // bác sĩ
                 {
                     tongDiemTHBS +=
-                        (item.DiemCdKham ?? 0m + item.DiemCDDieuTri ?? 0m + item.DiemPTTCD ?? 0m + item.DiemPTTTH ?? 0m + item.DiemTangCuong ?? 0m
-                         + item.DiemTruc ?? 0m + item.DiemCongBANT ?? 0m + item.DiemBNNDCDNhapVien ?? 0m
-                         + item.DiemBNNDCD??0m + item.DiemBNNDTH ?? 0m
-                         );
+                        (item.DiemCdKham ?? 0m) + (item.DiemCDDieuTri ?? 0m) +( item.DiemPTTCD ?? 0m) + (item.DiemPTTTH ?? 0m) + (item.DiemTangCuong ?? 0m)
+                         + (item.DiemTruc ?? 0m) + (item.DiemCongBANT ?? 0m) + (item.DiemBNNDCDNhapVien ?? 0m)
+                         + (item.DiemBNNDCD??0m )+ (item.DiemBNNDTH ?? 0m)
+                         ;
 
                     tongDiemNhapVienBS += (item.DiemCDDieuTri ?? 0m);
 
                     tongDiemTHBSTheoKhoa +=
-                        (item.DiemCdKham ?? 0m + item.DiemCDDieuTri ?? 0m + item.DiemPTTCD ?? 0m + item.DiemPTTTH ?? 0m + item.DiemTangCuong ?? 0m
-                         + item.DiemTruc ?? 0m + item.DiemCongBANT ?? 0m + item.DiemBNNDCDNhapVien ?? 0m
-                         //+ item.DiemTHPTTTheoDD ?? 0m + item.DiemBNNDCD ?? 0m + item.DiemBNNDTH ?? 0m
-                         );
+                        (item.DiemCdKham ?? 0m) + (item.DiemCDDieuTri ?? 0m) + (item.DiemPTTCD ?? 0m) + (item.DiemPTTTH ?? 0m) + (item.DiemTangCuong ?? 0m)
+                         +( item.DiemTruc ?? 0m) +( item.DiemCongBANT ?? 0m) + (item.DiemBNNDCDNhapVien ?? 0m)
+                         +(item.DiemBNNDCD ?? 0m) + (item.DiemBNNDTH ?? 0m);
 
                     tongDiemNhapVienBSTheoKhoa += item.DiemCDDieuTri ?? 0m;
+                    tongDiemBNNDTheoBS += (item.DiemBNNDTH ?? 0m);
+                    tongDiemBNNDTheoBSKhoa += (item.DiemBNNDTH ?? 0m);
                 }
-
-                // pushedItem = ((this.loaiBaoCao==='BAC_SI' && item.officerType == 4) || (this.loaiBaoCao==='DIEU_DUONG' && item.officerType == 6)) ? item : null;
-                DiemCtkh pushedItem = null;
-                if ((req.LoaiBaoCao == LoaiBaoCaoCtkh.BAC_SI && item.OfficerType == 4) ||
-                    (req.LoaiBaoCao == LoaiBaoCaoCtkh.DIEU_DUONG && item.OfficerType == 6))
+                else
+                { // điều dưỡng
+                    tongDiemPTTTHTheoDD +=(item.DiemPTTTH ?? 0m)/0.8m; // SQL đang nhân luôn hệ số => chia ra để lấy điểm thực tế
+                    tongDiemPTTTHTheoDDKhoa += (item.DiemPTTTH ?? 0m) / 0.8m;
+                }
+                    //end
+                    // pushedItem = ((this.loaiBaoCao==='BAC_SI' && item.officerType == 4) || (this.loaiBaoCao==='DIEU_DUONG' && item.officerType !=4)) ? item : null;
+                    DiemCtkh pushedItem = null;
+                if ((LoaiBaoCao == LoaiBaoCaoCtkh.BAC_SI && item.OfficerType == 4) ||
+                    (LoaiBaoCao == LoaiBaoCaoCtkh.DIEU_DUONG && item.OfficerType != 4))
                 {
                     pushedItem = item;
                 }
@@ -2071,9 +2127,8 @@ namespace API.Controllers
                 diemTangCuongKhoa += pushedItem != null ? pushedItem.DiemTangCuong ?? 0m : 0;
                 diemTrucKhoa += pushedItem != null ? pushedItem.DiemTruc ?? 0m : 0;
                 diemCongBANTKhoa += pushedItem != null ? pushedItem.DiemCongBANT ?? 0m : 0;
-                //diemTHPTTTheoDDKhoa += pushedItem != null ? pushedItem.diemTHPTTTheoDD : 0;
-                //diemBNNDCDKhoa += pushedItem != null ? pushedItem.diemBNNDCD : 0;
-                //diemBNNDTHKhoa += pushedItem != null ? pushedItem.diemBNNDTH : 0;
+                diemBNNDCDKhoa += pushedItem != null ? pushedItem.DiemBNNDCD ?? 0m : 0;
+                diemBNNDTHKhoa += pushedItem != null ? pushedItem.DiemBNNDTH ?? 0m : 0;
                 diemBNNDCDNhapVienKhoa += pushedItem != null ? pushedItem.DiemBNNDCDNhapVien ?? 0m : 0;
                 soNgayTangCuongKhoa += pushedItem != null ? pushedItem.SoNgayTangCuong ?? 0m : 0;
 
@@ -2086,20 +2141,19 @@ namespace API.Controllers
                 tongSoNgayTangCuong += pushedItem != null ? pushedItem.SoNgayTangCuong ?? 0m : 0;
                 tongDiemTruc += pushedItem != null ? pushedItem.DiemTruc ?? 0m : 0;
                 tongDiemCongBANT += pushedItem != null ? pushedItem.DiemCongBANT ?? 0m : 0;
-                //tongDiemTHPTTTheoDD += pushedItem != null ? pushedItem.diemTHPTTTheoDD : 0;
-                //tongDiemBNNDCD += pushedItem != null ? pushedItem.diemBNNDCD : 0;
-                //tongDiemBNNDTH += pushedItem != null ? pushedItem.diemBNNDTH : 0;
+                tongDiemBNNDCD += pushedItem != null ? pushedItem.DiemBNNDCD??0m : 0;
+                tongDiemBNNDTH += pushedItem != null ? pushedItem.DiemBNNDTH ??0m : 0;
                 tongDiemBNNDCDNhapVien += pushedItem != null ? pushedItem.DiemBNNDCDNhapVien ?? 0m : 0;
 
                 if (pushedItem != null)
                 {
                     decimal tongDiemTHItem =
-                        req.LoaiBaoCao == LoaiBaoCaoCtkh.BAC_SI
-                            ? (pushedItem.DiemCdKham ?? 0m + pushedItem.DiemCDDieuTri ?? 0m + pushedItem.DiemPTTCD ?? 0m + pushedItem.DiemPTTTH ?? 0m + pushedItem.DiemTangCuong ?? 0m
-                               + pushedItem.DiemTruc ?? 0m + pushedItem.DiemCongBANT ?? 0m + pushedItem.DiemBNNDCDNhapVien ?? 0m
-                               //+ pushedItem.DiemTHPTTTheoDD + pushedItem.diemBNNDCD + pushedItem.diemBNNDTH 
-                               )
-                            : pushedItem.DiemTruc ?? 0m;
+                        LoaiBaoCao == LoaiBaoCaoCtkh.BAC_SI
+                            ? (pushedItem.DiemCdKham ?? 0m) + (pushedItem.DiemCDDieuTri ?? 0m) + (pushedItem.DiemPTTCD ?? 0m) + (pushedItem.DiemPTTTH ?? 0m) + (pushedItem.DiemTangCuong ?? 0m)
+                               + (pushedItem.DiemTruc ?? 0m) +( pushedItem.DiemCongBANT ?? 0m) + (pushedItem.DiemBNNDCDNhapVien ?? 0m)
+                               + (pushedItem.DiemBNNDCD ?? 0m) + (pushedItem.DiemBNNDTH ?? 0m)
+                               
+                            : (pushedItem.DiemTruc ?? 0m) + (pushedItem.DiemTangCuong?? 0m) +( pushedItem.DiemPTTTH??0m) /0.8m;
 
                     var tempItem = new ReportCtkhRow
                     {
@@ -2119,18 +2173,18 @@ namespace API.Controllers
                             SoNgayTangCuong = pushedItem.SoNgayTangCuong,
                             DiemTruc = pushedItem.DiemTruc,
                             DiemCongBANT = pushedItem.DiemCongBANT,
-                            //DiemTHPTTTheoDD = pushedItem.diemTHPTTTheoDD,
-                            //DiemBNNDCD = pushedItem.diemBNNDCD,
-                            //DiemBNNDTH = pushedItem.diemBNNDTH,
+                            DiemBNNDCD = pushedItem.DiemBNNDCD,
+                            DiemBNNDTH = pushedItem.DiemBNNDTH,
                             DiemBNNDCDNhapVien = pushedItem.DiemBNNDCDNhapVien,
                         },
+                        diemPTTTHTheoDD = 0, // update lại khi sang khoa khác
                         tongCong = tongDiemTHItem,
                         diemTHTheoBS = 0,
                         datCtkh = 0
                     };
 
                     tempItem.datCtkh = tempItem.DiemCtkh.DiemKeHoach != 0 && tempItem.DiemCtkh.DiemKeHoach != null
-                        ? (tempItem.tongCong / tempItem.DiemCtkh.DiemKeHoach.GetValueOrDefault()) * 100
+                        ? (tempItem.tongCong / tempItem.DiemCtkh.DiemKeHoach.GetValueOrDefault())
                         : 0;
 
                     dsDiemCtkh.Add(tempItem);
@@ -2142,43 +2196,69 @@ namespace API.Controllers
             if (curKhoa != "")
             {
                 decimal tongDiemTHKhoa =
-                    req.LoaiBaoCao == LoaiBaoCaoCtkh.BAC_SI
+                    LoaiBaoCao == LoaiBaoCaoCtkh.BAC_SI
                         ? (diemCdKhamKhoa + diemCdDieuTriKhoa + diemPTTCDKhoa + diemPTTTHKhoa + diemTangCuongKhoa
-                           + diemTrucKhoa + diemCongBANTKhoa + diemTHPTTTheoDDKhoa + diemBNNDCDKhoa + diemBNNDTHKhoa + diemBNNDCDNhapVienKhoa)
-                        : diemTrucKhoa;
+                           + diemTrucKhoa + diemCongBANTKhoa + diemBNNDCDKhoa + diemBNNDTHKhoa + diemBNNDCDNhapVienKhoa)
+                        : diemTrucKhoa + diemTangCuongKhoa + tongDiemPTTTHTheoDDKhoa;
 
                 dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemKeHoach = diemKeHoachKhoa;
                 dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemCdKham = diemCdKhamKhoa;
-
                 dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemCDDieuTri = diemCdDieuTriKhoa;
                 dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemPTTCD = diemPTTCDKhoa;
                 dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemPTTTH = diemPTTTHKhoa;
                 dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemTangCuong = diemTangCuongKhoa;
                 dsDiemCtkh[currentGroupIndex].DiemCtkh.SoNgayTangCuong = soNgayTangCuongKhoa;
                 dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemTruc = diemTrucKhoa;
-                dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemCongBANT = diemCongBANTKhoa;
-                //dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemTHP = diemTHPTTTheoDDKhoa;
-                //dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemCdKham = diemBNNDCDKhoa;
-                //dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemCdKham = diemBNNDTHKhoa;
-                dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemBNNDCDNhapVien = diemBNNDCDNhapVienKhoa;
-
-                dsDiemCtkh[currentGroupIndex].tongCong = tongDiemTHKhoa + (req.LoaiBaoCao == LoaiBaoCaoCtkh.DIEU_DUONG ? tongDiemTHBSTheoKhoa : 0);
                 dsDiemCtkh[currentGroupIndex].diemTHTheoBS = tongDiemTHBSTheoKhoa;
+                dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemCongBANT = diemCongBANTKhoa;
+                dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemBNNDCD = diemBNNDCDKhoa;
+                dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemBNNDTH = diemBNNDTHKhoa;
+                dsDiemCtkh[currentGroupIndex].diemPTTTHTheoDD = tongDiemPTTTHTheoDDKhoa;
+                dsDiemCtkh[currentGroupIndex].diemBNNDTheoBs = tongDiemBNNDTheoBSKhoa;
+                dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemBNNDCDNhapVien = diemBNNDCDNhapVienKhoa;
+                dsDiemCtkh[currentGroupIndex].tongCong = tongDiemTHKhoa + (LoaiBaoCao == LoaiBaoCaoCtkh.DIEU_DUONG ? (tongDiemTHBSTheoKhoa + tongDiemBNNDTheoBSKhoa) : tongDiemPTTTHTheoDDKhoa);
                 dsDiemCtkh[currentGroupIndex].datCtkh = diemKeHoachKhoa != 0
-                            ? ((tongDiemTHKhoa + (req.LoaiBaoCao == LoaiBaoCaoCtkh.DIEU_DUONG ? tongDiemTHBSTheoKhoa : 0)) / diemKeHoachKhoa) * 100
+                            ? ((tongDiemTHKhoa + (LoaiBaoCao == LoaiBaoCaoCtkh.DIEU_DUONG ? (tongDiemTHBSTheoKhoa + tongDiemBNNDTheoBSKhoa) : tongDiemPTTTHTheoDDKhoa))*100 / diemKeHoachKhoa) 
                             : 0;
 
                 int countItemKhoa = dsDiemCtkh.Count - currentGroupIndex - 1;
                 if (countItemKhoa == 0)
                     dsDiemCtkh.RemoveAt(dsDiemCtkh.Count - 1);
+                if(LoaiBaoCao == LoaiBaoCaoCtkh.DIEU_DUONG)
+                {
+                    var countDD = dsDiemCtkh.Count - currentGroupIndex - 1;
+                    for(var j = currentGroupIndex + 1; j < dsDiemCtkh.Count; j++)
+                    {
+                        dsDiemCtkh[j].diemBNNDTheoBs = countDD > 0 ? (tongDiemBNNDTheoBSKhoa / countDD) : 0;
+                        dsDiemCtkh[j].diemTHTheoBS = countDD > 0 ? (tongDiemTHBSTheoKhoa / countDD) : 0;
+                        dsDiemCtkh[j].tongCong = dsDiemCtkh[j].tongCong + (LoaiBaoCao == LoaiBaoCaoCtkh.DIEU_DUONG? (countDD > 0 ? (tongDiemTHBSTheoKhoa / countDD) : 0) : 0);
+                        dsDiemCtkh[j].datCtkh = dsDiemCtkh[j].DiemCtkh.DiemKeHoach != 0 ? (dsDiemCtkh[j].tongCong*100 / dsDiemCtkh[j].DiemCtkh.DiemKeHoach.GetValueOrDefault()) : 0;
+                    }
+                }
+                else if(LoaiBaoCao == LoaiBaoCaoCtkh.BAC_SI)
+                {
+                    int countBS = dsDiemCtkh.Count - currentGroupIndex - 1;
+                    dsDiemCtkh[currentGroupIndex].tongBS = countBS;
+                    dsDiemCtkh[currentGroupIndex].tongDiemKH = diemKeHoachKhoa;
+                    dsDiemCtkh[currentGroupIndex].tongDiemTH = dsDiemCtkh[currentGroupIndex].tongCong;
+                    dsDiemCtkh[currentGroupIndex].datCtkhTong = diemKeHoachKhoa != 0 ? ((dsDiemCtkh[currentGroupIndex].tongCong / (diemKeHoachKhoa)) * 100) : 0;
+                    for (int j = currentGroupIndex + 1; j < dsDiemCtkh.Count; j++)
+                    {
+                        dsDiemCtkh[j].diemPTTTHTheoDD = countBS > 0 ? (tongDiemPTTTHTheoDDKhoa / countBS) : 0;
+                        dsDiemCtkh[j].tongCong = dsDiemCtkh[j].tongCong + (countBS > 0 ? (tongDiemPTTTHTheoDDKhoa / countBS) : 0);
+                        dsDiemCtkh[j].datCtkh = dsDiemCtkh[j].DiemCtkh.DiemKeHoach != 0 && dsDiemCtkh[j].DiemCtkh.DiemKeHoach != null
+                            ? (dsDiemCtkh[j].tongCong*100 / dsDiemCtkh[j].DiemCtkh.DiemKeHoach.GetValueOrDefault())
+                            : 0;
+                    }
+                }
             }
 
             // grand total
             decimal tongDiemTH =
-                req.LoaiBaoCao == LoaiBaoCaoCtkh.BAC_SI
+                LoaiBaoCao == LoaiBaoCaoCtkh.BAC_SI
                     ? (tongDiemCdKham + tongDiemCdDieuTri + tongDiemPTTCD + tongDiemPTTTH + tongDiemTangCuong + tongDiemTruc + tongDiemCongBANT
-                       + tongDiemTHPTTTheoDD + tongDiemBNNDCD + tongDiemBNNDTH + tongDiemBNNDCDNhapVien)
-                    : tongDiemTruc;
+                       + tongDiemPTTTHTheoDD + tongDiemBNNDCD + tongDiemBNNDTH + tongDiemBNNDCDNhapVien)
+                    : tongDiemTruc + tongDiemTHBS + tongDiemTangCuong + tongDiemPTTTHTheoDD + tongDiemBNNDTheoBS;
 
             dsDiemCtkh.Add(new ReportCtkhRow
             {
@@ -2197,34 +2277,26 @@ namespace API.Controllers
                     SoNgayTangCuong = tongSoNgayTangCuong,
                     DiemTruc = tongDiemTruc,
                     DiemCongBANT = tongDiemCongBANT,
-                    //DiemTHPTTTheoDD = tongDiemTHPTTTheoDD,
-                    //DiemBNNDCD = tongDiemBNNDCD,
-                    //DiemBNNDTH = tongDiemBNNDTH,
+                    DiemBNNDCD = tongDiemBNNDCD,
+                    DiemBNNDTH = tongDiemBNNDTH,
                     DiemBNNDCDNhapVien = tongDiemBNNDCDNhapVien,
 
                 },
-
-                diemTHTheoBS = tongDiemTHBSTheoKhoa, // same as JS (note: JS uses tongDiemTHBSTheoKhoa, which is last group)
-                tongCong = tongDiemTH + (req.LoaiBaoCao == LoaiBaoCaoCtkh.DIEU_DUONG ? tongDiemTHBS : 0),
+                diemPTTTHTheoDD = tongDiemPTTTHTheoDD,
+                diemBNNDTheoBs = tongDiemBNNDTheoBS,
+                diemTHTheoBS = tongDiemTHBS, 
+                tongCong = tongDiemTH,
                 datCtkh = tongDiemKeHoach != 0
-                    ? ((tongDiemTH + (req.LoaiBaoCao == LoaiBaoCaoCtkh.DIEU_DUONG ? tongDiemTHBS : 0)) / tongDiemKeHoach) * 100
-                    : 0
+                    ? (tongDiemTH*100  / tongDiemKeHoach) 
+                    : 0,
+                tongBS = 1,
+                tongDiemKH = tongDiemKeHoach,
+                tongDiemTH = tongDiemTH,
+                datCtkhTong = 0, // khi cộng của BS + Dd sẽ tính lại
             });
-
-            // distribute tongDiemTHBSTheoKhoa across items after last group (as JS does)
-            int countDDFinal = dsDiemCtkh.Count - currentGroupIndex - 1;
-
-            for (int j = currentGroupIndex + 1; j < dsDiemCtkh.Count; j++)
-            {
-                dsDiemCtkh[j].diemTHTheoBS = countDDFinal > 0 ? (tongDiemTHBSTheoKhoa / countDDFinal) : 0;
-                dsDiemCtkh[j].tongCong = dsDiemCtkh[j].tongCong + (countDDFinal > 0 ? (tongDiemTHBSTheoKhoa / countDDFinal) : 0);
-                dsDiemCtkh[j].datCtkh = dsDiemCtkh[j].DiemCtkh.DiemKeHoach != 0 && dsDiemCtkh[j].DiemCtkh.DiemKeHoach != null
-                    ? (dsDiemCtkh[j].tongCong * 100 / dsDiemCtkh[j].DiemCtkh.DiemKeHoach.GetValueOrDefault())
-                    : 0;
-            }
             return dsDiemCtkh;
         }
-        private void GenerateBcCtkhExcelBacSi(XLWorkbook wb, List<DiemCtkh>? dataRaw, BaoCaoDiemCtkhRequest req, BenhVien? benhVien)
+        private void GenerateBcCtkhExcelBacSi(XLWorkbook wb, List<ReportCtkhRow>? data, BaoCaoDiemCtkhRequest req, BenhVien? benhVien)
         {
             var ws = wb.Worksheets.Add("BAC_SI");
             string[] colName = new string[30];
@@ -2330,29 +2402,10 @@ namespace API.Controllers
             header2Range.Style.Border.RightBorder = XLBorderStyleValues.Thin;
             row += 3;
 
-            //// ====== D ======
-
-            // ====== Dữ liệu theo nhóm KhoaId ======
-            var data = PreGenerateRpCtkh(dataRaw, req);
-            var filteredData = new List<DiemCtkh>();
-            foreach (var d in dataRaw)
+            for (int r = 0; r < data.Count; r++)
             {
-                if (d.OfficerType == 4) filteredData.Add(d);
-            }
-            var groups = filteredData
-                .GroupBy(x => x.Khoa)
-                .ToList();
-
-            int groupIndex = 0;
-
-            for (int gCount = 0; gCount < groups.Count; gCount++)
-            {
-                var group = groups[gCount];
-                groupIndex++;
-
-                // Dòng tên nhóm: cột STT + merge 9 cột còn lại
-                var tongBs = group.Count();
-                ws.Range(row, 1, row, colCount).Style.Font.Bold = true;
+                var dataRow = data[r];
+                //ws.Range(row, 1, row, colCount).Style.Font.Bold = true;
                 ws.Range(row, 1, row, colCount).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
                 ws.Range(row, 1, row, colCount).Style.Alignment.WrapText = true;
 
@@ -2362,102 +2415,64 @@ namespace API.Controllers
                 {
                     if (col == 1) ws.Cell(row, col).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
                     else if (col != 2) ws.Cell(row, col).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
-
                 }
-
-                ws.Range(row, 1, row, colCount).Style.Fill.BackgroundColor = XLColor.FromArgb(242, 242, 242);
+                if (dataRow.type != ReportRowType.ITEM)
+                {
+                    ws.Range(row, 1, row, colCount).Style.Fill.BackgroundColor = XLColor.FromArgb(242, 242, 242);
+                    ws.Range(row, 1, row, colCount).Style.Font.Bold = true;
+                }
                 ws.Range(row, 1, row, colCount).Style.Border.TopBorder = XLBorderStyleValues.Thin;
                 ws.Range(row, 1, row, colCount).Style.Border.BottomBorder = XLBorderStyleValues.Thin;
                 ws.Range(row, 1, row, colCount).Style.Border.LeftBorder = XLBorderStyleValues.Thin;
                 ws.Range(row, 1, row, colCount).Style.Border.RightBorder = XLBorderStyleValues.Thin;
-                ws.Cell(row, 1).Value = ConvertToRoman(gCount + 1);
-                ws.Cell(row, 2).Value = group.Key ?? "";
-                var cellRow3Val = $"SUM({colName[3]}{row + 1}:{colName[3]}{row + tongBs})"; ws.Cell(row, 3).FormulaA1 = $"IF(MOD({cellRow3Val},1)=0, TEXT({cellRow3Val},\"#,##0\"), TEXT({cellRow3Val},\"#,##0.0\"))"; // format tùy theo giá trị integer hay decimal
-                var cellRow4Val = $"SUM({colName[4]}{row + 1}:{colName[4]}{row + tongBs})"; ws.Cell(row, 4).FormulaA1 = $"IF(MOD({cellRow4Val},1)=0, TEXT({cellRow4Val},\"#,##0\"), TEXT({cellRow4Val},\"#,##0.0\"))";
-                var cellRow5Val = $"SUM({colName[5]}{row + 1}:{colName[5]}{row + tongBs})"; ws.Cell(row, 5).FormulaA1 = $"IF(MOD({cellRow5Val},1)=0, TEXT({cellRow5Val},\"#,##0\"), TEXT({cellRow5Val},\"#,##0.0\"))";
-                var cellRow6Val = $"SUM({colName[6]}{row + 1}:{colName[6]}{row + tongBs})"; ws.Cell(row, 6).FormulaA1 = $"IF(MOD({cellRow6Val},1)=0, TEXT({cellRow6Val},\"#,##0\"), TEXT({cellRow6Val},\"#,##0.0\"))";
-                var cellRow7Val = $"SUM({colName[7]}{row + 1}:{colName[7]}{row + tongBs})"; ws.Cell(row, 7).FormulaA1 = $"IF(MOD({cellRow7Val},1)=0, TEXT({cellRow7Val},\"#,##0\"), TEXT({cellRow7Val},\"#,##0.0\"))";
-                var cellRow8Val = $"SUM({colName[8]}{row + 1}:{colName[8]}{row + tongBs})"; ws.Cell(row, 8).FormulaA1 = $"IF(MOD({cellRow8Val},1)=0, TEXT({cellRow8Val},\"#,##0\"), TEXT({cellRow8Val},\"#,##0.0\"))";
-                var cellRow9Val = $"SUM({colName[9]}{row + 1}:{colName[9]}{row + tongBs})"; ws.Cell(row, 9).FormulaA1 = $"IF(MOD({cellRow9Val},1)=0, TEXT({cellRow9Val},\"#,##0\"), TEXT({cellRow9Val},\"#,##0.0\"))";
-                var cellRow10Val = $"SUM({colName[10]}{row + 1}:{colName[10]}{row + tongBs})"; ws.Cell(row, 10).FormulaA1 = $"IF(MOD({cellRow10Val},1)=0, TEXT({cellRow10Val},\"#,##0\"), TEXT({cellRow10Val},\"#,##0.0\"))";
-                //var cellRow11Val = $"SUM({colName[11]}{row + 1}:{colName[11]}{row + tongBs})"; ws.Cell(row, 11).FormulaA1 = $"IF(MOD({cellRow11Val},1)=0, TEXT({cellRow11Val},\"#,##0\"), TEXT({cellRow11Val},\"#,##0.0\"))";
-                var cellRow12Val = $"SUM({colName[12]}{row + 1}:{colName[12]}{row + tongBs})"; ws.Cell(row, 12).FormulaA1 = $"IF(MOD({cellRow12Val},1)=0, TEXT({cellRow12Val},\"#,##0\"), TEXT({cellRow12Val},\"#,##0.0\"))";
-                var cellRow13Val = $"SUM({colName[13]}{row + 1}:{colName[13]}{row + tongBs})"; ws.Cell(row, 13).FormulaA1 = $"IF(MOD({cellRow13Val},1)=0, TEXT({cellRow13Val},\"#,##0\"), TEXT({cellRow13Val},\"#,##0.0\"))";
-                var cellRow14Val = $"SUM({colName[14]}{row + 1}:{colName[14]}{row + tongBs})"; ws.Cell(row, 14).FormulaA1 = $"IF(MOD({cellRow14Val},1)=0, TEXT({cellRow14Val},\"#,##0\"), TEXT({cellRow14Val},\"#,##0.0\"))";
-                var cellRow15Val = $"SUM({colName[15]}{row + 1}:{colName[15]}{row + tongBs})"; ws.Cell(row, 15).FormulaA1 = $"IF(MOD({cellRow15Val},1)=0, TEXT({cellRow15Val},\"#,##0\"), TEXT({cellRow15Val},\"#,##0.0\"))";
+                ws.Range(row, 1, row, colCount).Style.Border.LeftBorder = XLBorderStyleValues.Thin;
+                ws.Range(row, 1, row, colCount).Style.Border.RightBorder = XLBorderStyleValues.Thin;
 
-                ws.Cell(row, 17).FormulaA1 = $"IF({colName[3]}{row} > 0 ,{colName[15]}{row}/{colName[3]}{row} ,0)";
-                ws.Cell(row, 17).Style.NumberFormat.Format = "0.0%";
+                ws.Cell(row, 1).Value = dataRow.stt;
+                if(dataRow.type == ReportRowType.GROUP) ws.Cell(row, 2).Value = dataRow.DiemCtkh.Khoa;
+                if(dataRow.type == ReportRowType.ITEM) ws.Cell(row, 2).Value = dataRow.DiemCtkh.OfficerName;
+                if(dataRow.type == ReportRowType.GRAND_TOTAL) ws.Cell(row, 2).Value = "Tổng cộng";
+                var cellRow3Val = dataRow.DiemCtkh.DiemKeHoach; ws.Cell(row, 3).FormulaA1 = $"IF(RIGHT(TEXT({cellRow3Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow3Val},\"#,##0\"), TEXT({cellRow3Val},\"#,##0.0\"))"; // format tùy theo giá trị integer hay decimal
+                var cellRow4Val = dataRow.DiemCtkh.DiemCdKham; ws.Cell(row, 4).FormulaA1 = $"IF(RIGHT(TEXT({cellRow4Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow4Val},\"#,##0\"), TEXT({cellRow4Val},\"#,##0.0\"))";
+                var cellRow5Val = dataRow.DiemCtkh.DiemCDDieuTri; ws.Cell(row, 5).FormulaA1 = $"IF(RIGHT(TEXT({cellRow5Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow5Val},\"#,##0\"), TEXT({cellRow5Val},\"#,##0.0\"))";
+                var cellRow6Val = dataRow.DiemCtkh.DiemPTTCD; ws.Cell(row, 6).FormulaA1 = $"IF(RIGHT(TEXT({cellRow6Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow6Val},\"#,##0\"), TEXT({cellRow6Val},\"#,##0.0\"))";
+                var cellRow7Val = dataRow.DiemCtkh.DiemPTTTH; ws.Cell(row, 7).FormulaA1 = $"IF(RIGHT(TEXT({cellRow7Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow7Val},\"#,##0\"), TEXT({cellRow7Val},\"#,##0.0\"))";
+                var cellRow8Val = dataRow.DiemCtkh.DiemTangCuong; ws.Cell(row, 8).FormulaA1 = $"IF(RIGHT(TEXT({cellRow8Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow8Val},\"#,##0\"), TEXT({cellRow8Val},\"#,##0.0\"))";
+                var cellRow9Val = dataRow.DiemCtkh.DiemTruc; ws.Cell(row, 9).FormulaA1 = $"IF(RIGHT(TEXT({cellRow9Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow9Val},\"#,##0\"), TEXT({cellRow9Val},\"#,##0.0\"))";
+                var cellRow10Val = dataRow.DiemCtkh.DiemCongBANT; ws.Cell(row, 10).FormulaA1 = $"IF(RIGHT(TEXT({cellRow10Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow10Val},\"#,##0\"), TEXT({cellRow10Val},\"#,##0.0\"))";
+                var cellRow11Val = dataRow.diemPTTTHTheoDD; ws.Cell(row, 11).FormulaA1 = $"IF(RIGHT(TEXT({cellRow11Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow11Val},\"#,##0\"), TEXT({cellRow11Val},\"#,##0.0\"))";
+                var cellRow12Val = dataRow.DiemCtkh.DiemBNNDCD; ws.Cell(row, 12).FormulaA1 = $"IF(RIGHT(TEXT({cellRow12Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow12Val},\"#,##0\"), TEXT({cellRow12Val},\"#,##0.0\"))";
+                var cellRow13Val = dataRow.DiemCtkh.DiemBNNDTH; ws.Cell(row, 13).FormulaA1 = $"IF(RIGHT(TEXT({cellRow13Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow13Val},\"#,##0\"), TEXT({cellRow13Val},\"#,##0.0\"))";
+                var cellRow14Val = dataRow.DiemCtkh.DiemBNNDCDNhapVien; ws.Cell(row, 14).FormulaA1 = $"IF(RIGHT(TEXT({cellRow14Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow14Val},\"#,##0\"), TEXT({cellRow14Val},\"#,##0.0\"))";
+                var cellRow15Val = dataRow.tongCong; ws.Cell(row, 15).FormulaA1 = $"IF(RIGHT(TEXT({cellRow15Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow15Val},\"#,##0\"), TEXT({cellRow15Val},\"#,##0.0\"))";
+                var cellRow17Val = dataRow.datCtkh; ws.Cell(row, 17).FormulaA1 = $"CONCAT(IF(RIGHT(TEXT({cellRow17Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow17Val},\"#,##0\"), TEXT({cellRow17Val},\"#,##0.0\")),\"%\")";
+                if (dataRow.type == ReportRowType.GRAND_TOTAL)
+                {
+                    var cellRow18Val = dataRow.tongDiemKH; ws.Cell(row, 18).FormulaA1 = $"IF(RIGHT(TEXT({cellRow18Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow18Val},\"#,##0\"), TEXT({cellRow18Val},\"#,##0.0\"))";
+                    var cellRow19Val = dataRow.tongDiemTH; ws.Cell(row, 19).FormulaA1 = $"IF(RIGHT(TEXT({cellRow19Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow19Val},\"#,##0\"), TEXT({cellRow19Val},\"#,##0.0\"))";
+                    var cellRow20Val = dataRow.datCtkhTong*100; ws.Cell(row, 20).FormulaA1 = $"CONCAT(IF(RIGHT(TEXT({cellRow20Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow20Val},\"#,##0\"), TEXT({cellRow20Val},\"#,##0.0\")),\"%\")";
+                }
+                else if(dataRow.type == ReportRowType.GROUP)
+                {
+                    ws.Cell(row, 18).Value = "";
+                    ws.Cell(row, 19).Value = "";
+                    ws.Cell(row, 20).Value = "";
+                }
+                else if (dataRow.type == ReportRowType.ITEM && r >= 1 && data[r - 1].type == ReportRowType.GROUP)
+                {
+                    var cellRow18Val = data[r - 1].tongDiemKH; ws.Cell(row, 18).FormulaA1 = $"IF(RIGHT(TEXT({cellRow18Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow18Val},\"#,##0\"), TEXT({cellRow18Val},\"#,##0.0\"))";
+                    ws.Range(row, 18, row + data[r - 1].tongBS-1, 18).Merge();
+                    var cellRow19Val = data[r - 1].tongDiemTH; ws.Cell(row, 19).FormulaA1 = $"IF(RIGHT(TEXT({cellRow19Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow19Val},\"#,##0\"), TEXT({cellRow19Val},\"#,##0.0\"))";
+                    ws.Range(row, 19, row + data[r - 1].tongBS-1, 19).Merge();
+                    var cellRow20Val = data[r - 1].datCtkhTong * 100; ws.Cell(row, 20).FormulaA1 = $"CONCAT(IF(RIGHT(TEXT({cellRow20Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow20Val},\"#,##0\"), TEXT({cellRow20Val},\"#,##0.0\")),\"%\")";
+                    ws.Range(row, 20, row + data[r - 1].tongBS-1, 20).Merge();
+                }
+
+
                 //ws.Range($"{colName[3]}{row}:{colName[15]}{row}").Style.NumberFormat.Format = "#,##0.##";
                 row++;
-                int itemIndex = 0;
-
-                foreach (var item in group)
-                {
-                    itemIndex++;
-
-                    ws.Cell(row, 1).Value = $"{itemIndex}";
-                    var type = item.OfficerType == 4 ? "BS:" : "ĐD:";
-                    ws.Cell(row, 2).Value = $"{type}{item.OfficerName ?? ""}";
-                    var cell3ValItem = item.DiemKeHoach ?? 0; ws.Cell(row, 3).FormulaA1 = $"IF(MOD({cell3ValItem},1)=0, TEXT({cell3ValItem},\"#,##0\"), TEXT({cell3ValItem},\"#,##0.0\"))";
-                    var cell4ValItem = item.DiemCdKham ?? 0; ws.Cell(row, 4).FormulaA1 = $"IF(MOD({cell4ValItem},1)=0, TEXT({cell4ValItem},\"#,##0\"), TEXT({cell4ValItem},\"#,##0.0\"))";
-                    var cell5ValItem = item.DiemCDDieuTri ?? 0; ws.Cell(row, 5).FormulaA1 = $"IF(MOD({cell5ValItem},1)=0, TEXT({cell5ValItem},\"#,##0\"), TEXT({cell5ValItem},\"#,##0.0\"))";
-                    var cell6ValItem = item.DiemPTTCD ?? 0; ws.Cell(row, 6).FormulaA1 = $"IF(MOD({cell6ValItem},1)=0, TEXT({cell6ValItem},\"#,##0\"), TEXT({cell6ValItem},\"#,##0.0\"))";
-                    var cell7ValItem = item.DiemPTTTH ?? 0; ws.Cell(row, 7).FormulaA1 = $"IF(MOD({cell7ValItem},1)=0, TEXT({cell7ValItem},\"#,##0\"), TEXT({cell7ValItem},\"#,##0.0\"))";
-                    var cell8ValItem = item.DiemTangCuong ?? 0; ws.Cell(row, 8).FormulaA1 = $"IF(MOD({cell8ValItem},1)=0, TEXT({cell8ValItem},\"#,##0\"), TEXT({cell8ValItem},\"#,##0.0\"))";
-                    var cell9ValItem = item.DiemTruc ?? 0; ws.Cell(row, 9).FormulaA1 = $"IF(MOD({cell9ValItem},1)=0, TEXT({cell9ValItem},\"#,##0\"), TEXT({cell9ValItem},\"#,##0.0\"))";
-                    var cell10ValItem = item.DiemCongBANT ?? 0; ws.Cell(row, 10).FormulaA1 = $"IF(MOD({cell10ValItem},1)=0, TEXT({cell10ValItem},\"#,##0\"), TEXT({cell10ValItem},\"#,##0.0\"))";
-                    //var cell11ValItem = item.DiemTHPTTTheoDD ?? 0;  ws.Cell(row, 11).FormulaA1 = $"IF(MOD({cell11ValItem},1)=0, TEXT({cell11ValItem},\"#,##0\"), TEXT({cell11ValItem},\"#,##0.0\"))";
-                    var cell12ValItem = item.DiemBNNDCD ?? 0; ws.Cell(row, 12).FormulaA1 = $"IF(MOD({cell12ValItem},1)=0, TEXT({cell12ValItem},\"#,##0\"), TEXT({cell12ValItem},\"#,##0.0\"))";
-                    var cell13ValItem = item.DiemBNNDTH ?? 0; ws.Cell(row, 13).FormulaA1 = $"IF(MOD({cell13ValItem},1)=0, TEXT({cell13ValItem},\"#,##0\"), TEXT({cell13ValItem},\"#,##0.0\"))";
-                    var cell14ValItem = item.DiemBNNDCDNhapVien ?? 0; ws.Cell(row, 14).FormulaA1 = $"IF(MOD({cell14ValItem},1)=0, TEXT({cell14ValItem},\"#,##0\"), TEXT({cell14ValItem},\"#,##0.0\"))";
-                    var cell15ItemVal = $"SUM({colName[4]}{row}:{colName[14]}{row})"; ws.Cell(row, 15).FormulaA1 = $"IF(MOD({cell15ItemVal},1)=0, TEXT({cell15ItemVal},\"#,##0\"), TEXT({cell15ItemVal},\"#,##0.0\"))"; // tổng các cột trước
-                    ws.Cell(row, 17).FormulaA1 = $"IF({colName[3]}{row} > 0 ,{colName[15]}{row}/{colName[3]}{row},0)"; // tính %
-                    ws.Cell(row, 17).Style.NumberFormat.Format = "0.0%";
-                    // Căn lề
-                    ws.Cell(row, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-                    ws.Range($"{colName[3]}{row}:{colName[15]}{row}").Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
-
-                    // Định dạng số // Đã định dạng bằng công thức
-                    //ws.Range($"{colName[3]}{row}:{colName[15]}{row}").Style.NumberFormat.Format = "#,##0.##";
-
-                    ws.Range(row, 1, row, colCount).Style.Border.TopBorder = XLBorderStyleValues.Thin;
-                    ws.Range(row, 1, row, colCount).Style.Border.BottomBorder = XLBorderStyleValues.Thin;
-                    ws.Range(row, 1, row, colCount).Style.Border.LeftBorder = XLBorderStyleValues.Thin;
-                    ws.Range(row, 1, row, colCount).Style.Border.RightBorder = XLBorderStyleValues.Thin;
-                    ws.Range(row, 1, row, colCount).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
-                    ws.Range(row, 1, row, colCount).Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
-
-                    row++;
-                }
+               
             }
-
-            // ===== Dòng tổng cộng toàn bộ =====
-            ws.Cell(row, 2).Value = "Tổng cộng";
-            ws.Range(row, 1, row, colCount).Style.Font.Bold = true;
-            ws.Range(row, 1, row, colCount).Style.Fill.BackgroundColor = XLColor.FromArgb(242, 242, 242);
-            ws.Range(row, 1, row, colCount).Style.Border.TopBorder = XLBorderStyleValues.Thin;
-            ws.Range(row, 1, row, colCount).Style.Border.BottomBorder = XLBorderStyleValues.Thin;
-            ws.Range(row, 1, row, colCount).Style.Border.LeftBorder = XLBorderStyleValues.Thin;
-            ws.Range(row, 1, row, colCount).Style.Border.RightBorder = XLBorderStyleValues.Thin;
-            var cellRow3ValT = $"SUM({colName[3]}{8}:{colName[3]}{row - 1})/2"; ws.Cell(row, 3).FormulaA1 = $"IF(MOD({cellRow3ValT},1)=0, TEXT({cellRow3ValT},\"#,##0\"), TEXT({cellRow3ValT},\"#,##0.0\"))";
-            var cellRow4ValT = $"SUM({colName[4]}{8}:{colName[4]}{row - 1})/2"; ws.Cell(row, 4).FormulaA1 = $"IF(MOD({cellRow4ValT},1)=0, TEXT({cellRow4ValT},\"#,##0\"), TEXT({cellRow4ValT},\"#,##0.0\"))";
-            var cellRow5ValT = $"SUM({colName[5]}{8}:{colName[5]}{row - 1})/2"; ws.Cell(row, 5).FormulaA1 = $"IF(MOD({cellRow5ValT},1)=0, TEXT({cellRow5ValT},\"#,##0\"), TEXT({cellRow5ValT},\"#,##0.0\"))";
-            var cellRow6ValT = $"SUM({colName[6]}{8}:{colName[6]}{row - 1})/2"; ws.Cell(row, 6).FormulaA1 = $"IF(MOD({cellRow6ValT},1)=0, TEXT({cellRow6ValT},\"#,##0\"), TEXT({cellRow6ValT},\"#,##0.0\"))";
-            var cellRow7ValT = $"SUM({colName[7]}{8}:{colName[7]}{row - 1})/2"; ws.Cell(row, 7).FormulaA1 = $"IF(MOD({cellRow7ValT},1)=0, TEXT({cellRow7ValT},\"#,##0\"), TEXT({cellRow7ValT},\"#,##0.0\"))";
-            var cellRow8ValT = $"SUM({colName[8]}{8}:{colName[8]}{row - 1})/2"; ws.Cell(row, 8).FormulaA1 = $"IF(MOD({cellRow8ValT},1)=0, TEXT({cellRow8ValT},\"#,##0\"), TEXT({cellRow8ValT},\"#,##0.0\"))";
-            var cellRow9ValT = $"SUM({colName[9]}{8}:{colName[9]}{row - 1})/2"; ws.Cell(row, 9).FormulaA1 = $"IF(MOD({cellRow9ValT},1)=0, TEXT({cellRow9ValT},\"#,##0\"), TEXT({cellRow9ValT},\"#,##0.0\"))";
-            var cellRow10ValT = $"SUM({colName[10]}{8}:{colName[10]}{row - 1})/2"; ws.Cell(row, 10).FormulaA1 = $"IF(MOD({cellRow10ValT},1)=0, TEXT({cellRow10ValT},\"#,##0\"), TEXT({cellRow10ValT},\"#,##0.0\"))";
-            //var cellRow11ValT = $"SUM({colName[11]}{8}:{colName[11]}{row - 1})/2"; ws.Cell(row,11).FormulaA1 = $"IF(MOD({cellRow11ValT},1)=0, TEXT({cellRow11ValT},\"#,##0\"), TEXT({cellRow11ValT},\"#,##0.0\"))";
-            var cellRow12ValT = $"SUM({colName[12]}{8}:{colName[12]}{row - 1})/2"; ws.Cell(row, 12).FormulaA1 = $"IF(MOD({cellRow12ValT},1)=0, TEXT({cellRow12ValT},\"#,##0\"), TEXT({cellRow12ValT},\"#,##0.0\"))";
-            var cellRow13ValT = $"SUM({colName[13]}{8}:{colName[13]}{row - 1})/2"; ws.Cell(row, 13).FormulaA1 = $"IF(MOD({cellRow13ValT},1)=0, TEXT({cellRow13ValT},\"#,##0\"), TEXT({cellRow13ValT},\"#,##0.0\"))";
-            var cellRow14ValT = $"SUM({colName[14]}{8}:{colName[14]}{row - 1})/2"; ws.Cell(row, 14).FormulaA1 = $"IF(MOD({cellRow14ValT},1)=0, TEXT({cellRow14ValT},\"#,##0\"), TEXT({cellRow14ValT},\"#,##0.0\"))";
-            var cellRow15ValT = $"SUM({colName[15]}{8}:{colName[15]}{row - 1})/2"; ws.Cell(row, 15).FormulaA1 = $"IF(MOD({cellRow15ValT},1)=0, TEXT({cellRow15ValT},\"#,##0\"), TEXT({cellRow15ValT},\"#,##0.0\"))";
-            ws.Cell(row, 17).FormulaA1 = $"IF({colName[3]}{row} > 0 ,{colName[15]}{row}/{colName[3]}{row} ,0)";
-            ws.Cell(row, 17).Style.NumberFormat.Format = "0.0%";
-            //ws.Range($"{colName[3]}{row}:{colName[15]}{row}").Style.NumberFormat.Format = "#,##0.##";
-            row++;
-
             // ====== Style chung ======
             ws.SheetView.FreezeRows(6);
 
@@ -2494,7 +2509,7 @@ namespace API.Controllers
             usedRange.Style.Font.FontSize = 11;
             usedRange.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
         }
-        private void GenerateBcCtkhExcelDieuDuong(XLWorkbook wb, List<DiemCtkh>? dataRaw, BaoCaoDiemCtkhRequest req, BenhVien? benhVien)
+        private void GenerateBcCtkhExcelDieuDuong(XLWorkbook wb, List<ReportCtkhRow>? data, BaoCaoDiemCtkhRequest req, BenhVien? benhVien)
         {
             var ws = wb.Worksheets.Add("DIEU_DUONG");
             string[] colName = new string[30];
@@ -2598,38 +2613,15 @@ namespace API.Controllers
             header2Range.Style.Border.RightBorder = XLBorderStyleValues.Thin;
             row += 3;
 
-            //// ====== D ======
-
-            // ====== Dữ liệu theo nhóm KhoaId ======
-            var filteredData = new List<DiemCtkh>();
-            decimal diemTongTHBS = 0;
-            foreach (var d in dataRaw)
+            for (int r = 0; r < data.Count; r++)
             {
-                if (d.OfficerType != 4) filteredData.Add(d);
-            }
-            var groups = filteredData
-                .GroupBy(x => x.Khoa)
-                .ToList();
-
-            int groupIndex = 0;
-
-            for (int gCount = 0; gCount < groups.Count; gCount++)
-            {
-                var group = groups[gCount];
-                groupIndex++;
-                decimal diemTHTheoBSKhoa = 0;
-                foreach (var nv in dataRaw)
-                {
-                    if (nv.OfficerType == 4 && nv.Khoa == group.Key)
-                    {
-                        diemTHTheoBSKhoa = diemTHTheoBSKhoa +
-                            (nv.DiemCdKham ?? 0m) + (nv.DiemCDDieuTri ?? 0m) + (nv.DiemPTTCD ?? 0m) + (nv.DiemPTTTH ?? 0m) + (nv.DiemTangCuong ?? 0m) + (nv.DiemTruc ?? 0m) + (nv.DiemCongBANT ?? 0m)
-                            + (nv.DiemBNNDCDNhapVien ?? 0m);
-                    }
-                }
+                var dataRow = data[r];
                 // Dòng tên nhóm: cột STT + merge 9 cột còn lại
-                var tongDd = group.Count();
-                ws.Range(row, 1, row, colCount).Style.Font.Bold = true;
+                if (dataRow.type != ReportRowType.ITEM)
+                {
+                    ws.Range(row, 1, row, colCount).Style.Fill.BackgroundColor = XLColor.FromArgb(242, 242, 242);
+                    ws.Range(row, 1, row, colCount).Style.Font.Bold = true;
+                }
                 ws.Range(row, 1, row, colCount).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
                 ws.Range(row, 1, row, colCount).Style.Alignment.WrapText = true;
 
@@ -2639,81 +2631,28 @@ namespace API.Controllers
                 {
                     if (col == 1) ws.Cell(row, col).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
                     else if (col != 2) ws.Cell(row, col).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
-
                 }
-
-                ws.Range(row, 1, row, colCount).Style.Fill.BackgroundColor = XLColor.FromArgb(242, 242, 242);
+                //ws.Range(row, 1, row, colCount).Style.Fill.BackgroundColor = XLColor.FromArgb(242, 242, 242);
                 ws.Range(row, 1, row, colCount).Style.Border.TopBorder = XLBorderStyleValues.Thin;
                 ws.Range(row, 1, row, colCount).Style.Border.BottomBorder = XLBorderStyleValues.Thin;
                 ws.Range(row, 1, row, colCount).Style.Border.LeftBorder = XLBorderStyleValues.Thin;
                 ws.Range(row, 1, row, colCount).Style.Border.RightBorder = XLBorderStyleValues.Thin;
-                ws.Cell(row, 1).Value = ConvertToRoman(gCount + 1);
-                ws.Cell(row, 2).Value = group.Key ?? "";
-                var cellRow3Val = $"SUM({colName[3]}{row + 1}:{colName[3]}{row + tongDd})"; ws.Cell(row, 3).FormulaA1 = $"IF(MOD({cellRow3Val},1)=0, TEXT({cellRow3Val},\"#,##0\"), TEXT({cellRow3Val},\"#,##0.0\"))";
-                var cellRow4Val = $"SUM({colName[4]}{row + 1}:{colName[4]}{row + tongDd})"; ws.Cell(row, 4).FormulaA1 = $"IF(MOD({cellRow4Val},1)=0, TEXT({cellRow4Val},\"#,##0\"), TEXT({cellRow4Val},\"#,##0.0\"))";
-                var cellRow5Val = $"SUM({colName[5]}{row + 1}:{colName[5]}{row + tongDd})"; ws.Cell(row, 5).FormulaA1 = $"IF(MOD({cellRow5Val},1)=0, TEXT({cellRow5Val},\"#,##0\"), TEXT({cellRow5Val},\"#,##0.0\"))";
-                var cellRow6Val = $"SUM({colName[6]}{row + 1}:{colName[6]}{row + tongDd})"; ws.Cell(row, 6).FormulaA1 = $"IF(MOD({cellRow6Val},1)=0, TEXT({cellRow6Val},\"#,##0\"), TEXT({cellRow6Val},\"#,##0.0\"))";
-                var cellRow11Val = $"SUM({colName[11]}{row + 1}:{colName[11]}{row + tongDd})"; ws.Cell(row, 11).FormulaA1 = $"IF(MOD({cellRow11Val},1)=0, TEXT({cellRow11Val},\"#,##0\"), TEXT({cellRow11Val},\"#,##0.0\"))";
-                var cellRow15Val = $"SUM({colName[15]}{row + 1}:{colName[15]}{row + tongDd})"; ws.Cell(row, 15).FormulaA1 = $"IF(MOD({cellRow15Val},1)=0, TEXT({cellRow15Val},\"#,##0\"), TEXT({cellRow15Val},\"#,##0.0\"))";
 
-                ws.Cell(row, 17).FormulaA1 = $"IF({colName[3]}{row} > 0 ,{colName[15]}{row}/{colName[3]}{row} ,0)";
-                ws.Cell(row, 17).Style.NumberFormat.Format = "0.0%";
-                //ws.Range($"{colName[3]}{row}:{colName[15]}{row}").Style.NumberFormat.Format = "#,##0.##";
+                ws.Cell(row, 1).Value = dataRow.stt;
+                if (dataRow.type == ReportRowType.GROUP) ws.Cell(row, 2).Value = dataRow.DiemCtkh.Khoa;
+                if (dataRow.type == ReportRowType.ITEM) ws.Cell(row, 2).Value = dataRow.DiemCtkh.OfficerName;
+                if (dataRow.type == ReportRowType.GRAND_TOTAL) ws.Cell(row, 2).Value = "Tổng cộng";
+                var cellRow3Val = dataRow.DiemCtkh.DiemKeHoach; ws.Cell(row, 3).FormulaA1 = $"IF(RIGHT(TEXT({cellRow3Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow3Val},\"#,##0\"), TEXT({cellRow3Val},\"#,##0.0\"))";
+                var cellRow4Val = dataRow.diemTHTheoBS; ws.Cell(row, 4).FormulaA1 = $"IF(RIGHT(TEXT({cellRow4Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow4Val},\"#,##0\"), TEXT({cellRow4Val},\"#,##0.0\"))";
+                var cellRow5Val = dataRow.DiemCtkh.SoNgayTangCuong; ws.Cell(row, 5).FormulaA1 = $"IF(RIGHT(TEXT({cellRow5Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow5Val},\"#,##0\"), TEXT({cellRow5Val},\"#,##0.0\"))";
+                var cellRow6Val = dataRow.DiemCtkh.DiemTangCuong; ws.Cell(row, 6).FormulaA1 = $"IF(RIGHT(TEXT({cellRow6Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow6Val},\"#,##0\"), TEXT({cellRow6Val},\"#,##0.0\"))";
+                var cellRow11Val = dataRow.DiemCtkh.DiemTruc; ws.Cell(row, 11).FormulaA1 = $"IF(RIGHT(TEXT({cellRow11Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow11Val},\"#,##0\"), TEXT({cellRow11Val},\"#,##0.0\"))";
+                var cellRow12Val = dataRow.type == ReportRowType.ITEM ? dataRow.DiemCtkh.DiemPTTTH??0m/0.8m : dataRow.diemPTTTHTheoDD; ws.Cell(row, 12).FormulaA1 = $"IF(RIGHT(TEXT({cellRow12Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow12Val},\"#,##0\"), TEXT({cellRow12Val},\"#,##0.0\"))";
+                var cellRow13Val = dataRow.diemBNNDTheoBs; ws.Cell(row, 13).FormulaA1 = $"IF(RIGHT(TEXT({cellRow13Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow13Val},\"#,##0\"), TEXT({cellRow13Val},\"#,##0.0\"))";
+                var cellRow15Val = dataRow.tongCong; ws.Cell(row, 15).FormulaA1 = $"IF(RIGHT(TEXT({cellRow15Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow15Val},\"#,##0\"), TEXT({cellRow15Val},\"#,##0.0\"))";
+                var cellRow17Val = dataRow.datCtkh; ws.Cell(row, 17).FormulaA1 = $"CONCAT(IF(RIGHT(TEXT({cellRow17Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow17Val},\"#,##0\"), TEXT({cellRow17Val},\"#,##0.0\")),\"%\")";
                 row++;
-                int itemIndex = 0;
-
-                foreach (var item in group)
-                {
-                    itemIndex++;
-
-                    ws.Cell(row, 1).Value = $"{itemIndex}";
-                    var type = item.OfficerType == 4 ? "BS:" : "ĐD:";
-                    ws.Cell(row, 2).Value = $"{type}{item.OfficerName ?? ""}";
-                    var cell3ItemVal = item.DiemKeHoach ?? 0; ws.Cell(row, 3).FormulaA1 = $"IF(MOD({cell3ItemVal},1)=0, TEXT({cell3ItemVal},\"#,##0\"), TEXT({cell3ItemVal},\"#,##0.0\"))";
-                    var cell4ItemVal = diemTHTheoBSKhoa / tongDd; ws.Cell(row, 4).FormulaA1 = $"IF(MOD({cell4ItemVal},1)=0, TEXT({cell4ItemVal},\"#,##0\"), TEXT({cell4ItemVal},\"#,##0.0\"))";
-                    var cell5ItemVal = item.SoNgayTangCuong ?? 0; ws.Cell(row, 5).FormulaA1 = $"IF(MOD({cell5ItemVal},1)=0, TEXT({cell5ItemVal},\"#,##0\"), TEXT({cell5ItemVal},\"#,##0.0\"))";
-                    var cell6ItemVal = item.DiemTangCuong ?? 0; ws.Cell(row, 6).FormulaA1 = $"IF(MOD({cell6ItemVal},1)=0, TEXT({cell6ItemVal},\"#,##0\"), TEXT({cell6ItemVal},\"#,##0.0\"))";
-                    var cell11ItemVal = item.DiemTruc ?? 0; ws.Cell(row, 11).FormulaA1 = $"IF(MOD({cell11ItemVal},1)=0, TEXT({cell11ItemVal},\"#,##0\"), TEXT({cell11ItemVal},\"#,##0.0\"))";
-                    var cell15ItemVal = $"SUM({colName[4]}{row}:{colName[14]}{row})-{colName[5]}{row}-{colName[7]}{row}"; ws.Cell(row, 15).FormulaA1 = $"IF(MOD({cell15ItemVal},1)=0, TEXT({cell15ItemVal},\"#,##0\"), TEXT({cell15ItemVal},\"#,##0.0\"))";// tổng các cột trước
-                    ws.Cell(row, 17).FormulaA1 = $"IF({colName[3]}{row} > 0 ,{colName[15]}{row}/{colName[3]}{row},0)"; // tính %
-                    ws.Cell(row, 17).Style.NumberFormat.Format = "0.0%";
-                    // Căn lề
-                    ws.Cell(row, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-                    ws.Range($"{colName[3]}{row}:{colName[15]}{row}").Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
-
-                    // Định dạng số
-                    //ws.Range($"{colName[3]}{row}:{colName[15]}{row}").Style.NumberFormat.Format = "#,##0.##";
-
-                    ws.Range(row, 1, row, colCount).Style.Border.TopBorder = XLBorderStyleValues.Thin;
-                    ws.Range(row, 1, row, colCount).Style.Border.BottomBorder = XLBorderStyleValues.Thin;
-                    ws.Range(row, 1, row, colCount).Style.Border.LeftBorder = XLBorderStyleValues.Thin;
-                    ws.Range(row, 1, row, colCount).Style.Border.RightBorder = XLBorderStyleValues.Thin;
-                    ws.Range(row, 1, row, colCount).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
-                    ws.Range(row, 1, row, colCount).Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
-
-                    row++;
-                }
             }
-
-            // ===== Dòng tổng cộng toàn bộ =====
-            ws.Cell(row, 2).Value = "Tổng cộng";
-            ws.Range(row, 1, row, colCount).Style.Font.Bold = true;
-            ws.Range(row, 1, row, colCount).Style.Fill.BackgroundColor = XLColor.FromArgb(242, 242, 242);
-            ws.Range(row, 1, row, colCount).Style.Border.TopBorder = XLBorderStyleValues.Thin;
-            ws.Range(row, 1, row, colCount).Style.Border.BottomBorder = XLBorderStyleValues.Thin;
-            ws.Range(row, 1, row, colCount).Style.Border.LeftBorder = XLBorderStyleValues.Thin;
-            ws.Range(row, 1, row, colCount).Style.Border.RightBorder = XLBorderStyleValues.Thin;
-            var cell3TVal = $"SUM({colName[3]}{8}:{colName[3]}{row - 1})/2"; ws.Cell(row, 3).FormulaA1 = $"IF(MOD({cell3TVal},1)=0, TEXT({cell3TVal},\"#,##0\"), TEXT({cell3TVal},\"#,##0.0\"))";
-            var cell4TVal = $"SUM({colName[4]}{8}:{colName[4]}{row - 1})/2"; ws.Cell(row, 4).FormulaA1 = $"IF(MOD({cell4TVal},1)=0, TEXT({cell4TVal},\"#,##0\"), TEXT({cell4TVal},\"#,##0.0\"))";
-            var cell5TVal = $"SUM({colName[5]}{8}:{colName[5]}{row - 1})/2"; ws.Cell(row, 5).FormulaA1 = $"IF(MOD({cell5TVal},1)=0, TEXT({cell5TVal},\"#,##0\"), TEXT({cell5TVal},\"#,##0.0\"))";
-            var cell6TVal = $"SUM({colName[6]}{8}:{colName[6]}{row - 1})/2"; ws.Cell(row, 6).FormulaA1 = $"IF(MOD({cell6TVal},1)=0, TEXT({cell6TVal},\"#,##0\"), TEXT({cell6TVal},\"#,##0.0\"))";
-            var cell11TVal = $"SUM({colName[11]}{8}:{colName[11]}{row - 1})/2"; ws.Cell(row, 11).FormulaA1 = $"IF(MOD({cell11TVal},1)=0, TEXT({cell11TVal},\"#,##0\"), TEXT({cell11TVal},\"#,##0.0\"))";
-            var cell15TVal = $"SUM({colName[15]}{8}:{colName[15]}{row - 1})/2"; ws.Cell(row, 15).FormulaA1 = $"IF(MOD({cell15TVal},1)=0, TEXT({cell15TVal},\"#,##0\"), TEXT({cell15TVal},\"#,##0.0\"))";
-
-            ws.Cell(row, 17).FormulaA1 = $"IF({colName[3]}{row} > 0 ,{colName[15]}{row}/{colName[3]}{row} ,0)";
-            ws.Cell(row, 17).Style.NumberFormat.Format = "0.0%";
-            //ws.Range($"{colName[3]}{row}:{colName[15]}{row}").Style.NumberFormat.Format = "#,##0.##";
-            row++;
 
             // ====== Style chung ======
             ws.SheetView.FreezeRows(6);
@@ -2896,19 +2835,19 @@ namespace API.Controllers
                 ws.Range(row, 1, row, colCount).Style.Border.RightBorder = XLBorderStyleValues.Thin;
                 ws.Cell(row,1).Value = ConvertToRoman(gCount + 1);
                 ws.Cell(row, 2).Value = group.Key ?? "";
-                var cellRow3Val = $"SUM({colName[3]}{row + 1}:{colName[3]}{row + tongBs})"; ws.Cell(row, 3).FormulaA1 = $"IF(MOD({cellRow3Val},1)=0, TEXT({cellRow3Val},\"#,##0\"), TEXT({cellRow3Val},\"#,##0.0\"))" ; // format tùy theo giá trị integer hay decimal
-                var cellRow4Val = $"SUM({colName[4]}{row + 1}:{colName[4]}{row + tongBs})"; ws.Cell(row, 4).FormulaA1 = $"IF(MOD({cellRow4Val},1)=0, TEXT({cellRow4Val},\"#,##0\"), TEXT({cellRow4Val},\"#,##0.0\"))";
-                var cellRow5Val = $"SUM({colName[5]}{row + 1}:{colName[5]}{row + tongBs})"; ws.Cell(row, 5).FormulaA1 = $"IF(MOD({cellRow5Val},1)=0, TEXT({cellRow5Val},\"#,##0\"), TEXT({cellRow5Val},\"#,##0.0\"))";
-                var cellRow6Val = $"SUM({colName[6]}{row + 1}:{colName[6]}{row + tongBs})"; ws.Cell(row, 6).FormulaA1 = $"IF(MOD({cellRow6Val},1)=0, TEXT({cellRow6Val},\"#,##0\"), TEXT({cellRow6Val},\"#,##0.0\"))";
-                var cellRow7Val = $"SUM({colName[7]}{row + 1}:{colName[7]}{row + tongBs})"; ws.Cell(row, 7).FormulaA1 = $"IF(MOD({cellRow7Val},1)=0, TEXT({cellRow7Val},\"#,##0\"), TEXT({cellRow7Val},\"#,##0.0\"))";
-                var cellRow8Val = $"SUM({colName[8]}{row + 1}:{colName[8]}{row + tongBs})"; ws.Cell(row, 8).FormulaA1 = $"IF(MOD({cellRow8Val},1)=0, TEXT({cellRow8Val},\"#,##0\"), TEXT({cellRow8Val},\"#,##0.0\"))";
-                var cellRow9Val = $"SUM({colName[9]}{row + 1}:{colName[9]}{row + tongBs})"; ws.Cell(row, 9).FormulaA1 = $"IF(MOD({cellRow9Val},1)=0, TEXT({cellRow9Val},\"#,##0\"), TEXT({cellRow9Val},\"#,##0.0\"))";
-                var cellRow10Val = $"SUM({colName[10]}{row + 1}:{colName[10]}{row + tongBs})"; ws.Cell(row, 10).FormulaA1 = $"IF(MOD({cellRow10Val},1)=0, TEXT({cellRow10Val},\"#,##0\"), TEXT({cellRow10Val},\"#,##0.0\"))";
-                //var cellRow11Val = $"SUM({colName[11]}{row + 1}:{colName[11]}{row + tongBs})"; ws.Cell(row, 11).FormulaA1 = $"IF(MOD({cellRow11Val},1)=0, TEXT({cellRow11Val},\"#,##0\"), TEXT({cellRow11Val},\"#,##0.0\"))";
-                var cellRow12Val = $"SUM({colName[12]}{row + 1}:{colName[12]}{row + tongBs})"; ws.Cell(row, 12).FormulaA1 = $"IF(MOD({cellRow12Val},1)=0, TEXT({cellRow12Val},\"#,##0\"), TEXT({cellRow12Val},\"#,##0.0\"))";
-                var cellRow13Val = $"SUM({colName[13]}{row + 1}:{colName[13]}{row + tongBs})"; ws.Cell(row, 13).FormulaA1 = $"IF(MOD({cellRow13Val},1)=0, TEXT({cellRow13Val},\"#,##0\"), TEXT({cellRow13Val},\"#,##0.0\"))";
-                var cellRow14Val = $"SUM({colName[14]}{row + 1}:{colName[14]}{row + tongBs})"; ws.Cell(row, 14).FormulaA1 = $"IF(MOD({cellRow14Val},1)=0, TEXT({cellRow14Val},\"#,##0\"), TEXT({cellRow14Val},\"#,##0.0\"))";
-                var cellRow15Val = $"SUM({colName[15]}{row + 1}:{colName[15]}{row + tongBs})"; ws.Cell(row, 15).FormulaA1 = $"IF(MOD({cellRow15Val},1)=0, TEXT({cellRow15Val},\"#,##0\"), TEXT({cellRow15Val},\"#,##0.0\"))";
+                var cellRow3Val = $"SUM({colName[3]}{row + 1}:{colName[3]}{row + tongBs})"; ws.Cell(row, 3).FormulaA1 = $"IF(RIGHT(TEXT({cellRow3Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow3Val},\"#,##0\"), TEXT({cellRow3Val},\"#,##0.0\"))" ; // format tùy theo giá trị integer hay decimal
+                var cellRow4Val = $"SUM({colName[4]}{row + 1}:{colName[4]}{row + tongBs})"; ws.Cell(row, 4).FormulaA1 = $"IF(RIGHT(TEXT({cellRow4Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow4Val},\"#,##0\"), TEXT({cellRow4Val},\"#,##0.0\"))";
+                var cellRow5Val = $"SUM({colName[5]}{row + 1}:{colName[5]}{row + tongBs})"; ws.Cell(row, 5).FormulaA1 = $"IF(RIGHT(TEXT({cellRow5Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow5Val},\"#,##0\"), TEXT({cellRow5Val},\"#,##0.0\"))";
+                var cellRow6Val = $"SUM({colName[6]}{row + 1}:{colName[6]}{row + tongBs})"; ws.Cell(row, 6).FormulaA1 = $"IF(RIGHT(TEXT({cellRow6Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow6Val},\"#,##0\"), TEXT({cellRow6Val},\"#,##0.0\"))";
+                var cellRow7Val = $"SUM({colName[7]}{row + 1}:{colName[7]}{row + tongBs})"; ws.Cell(row, 7).FormulaA1 = $"IF(RIGHT(TEXT({cellRow7Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow7Val},\"#,##0\"), TEXT({cellRow7Val},\"#,##0.0\"))";
+                var cellRow8Val = $"SUM({colName[8]}{row + 1}:{colName[8]}{row + tongBs})"; ws.Cell(row, 8).FormulaA1 = $"IF(RIGHT(TEXT({cellRow8Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow8Val},\"#,##0\"), TEXT({cellRow8Val},\"#,##0.0\"))";
+                var cellRow9Val = $"SUM({colName[9]}{row + 1}:{colName[9]}{row + tongBs})"; ws.Cell(row, 9).FormulaA1 = $"IF(RIGHT(TEXT({cellRow9Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow9Val},\"#,##0\"), TEXT({cellRow9Val},\"#,##0.0\"))";
+                var cellRow10Val = $"SUM({colName[10]}{row + 1}:{colName[10]}{row + tongBs})"; ws.Cell(row, 10).FormulaA1 = $"IF(RIGHT(TEXT({cellRow10Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow10Val},\"#,##0\"), TEXT({cellRow10Val},\"#,##0.0\"))";
+                //var cellRow11Val = $"SUM({colName[11]}{row + 1}:{colName[11]}{row + tongBs})"; ws.Cell(row, 11).FormulaA1 = $"IF(RIGHT(TEXT({cellRow11Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow11Val},\"#,##0\"), TEXT({cellRow11Val},\"#,##0.0\"))";
+                var cellRow12Val = $"SUM({colName[12]}{row + 1}:{colName[12]}{row + tongBs})"; ws.Cell(row, 12).FormulaA1 = $"IF(RIGHT(TEXT({cellRow12Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow12Val},\"#,##0\"), TEXT({cellRow12Val},\"#,##0.0\"))";
+                var cellRow13Val = $"SUM({colName[13]}{row + 1}:{colName[13]}{row + tongBs})"; ws.Cell(row, 13).FormulaA1 = $"IF(RIGHT(TEXT({cellRow13Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow13Val},\"#,##0\"), TEXT({cellRow13Val},\"#,##0.0\"))";
+                var cellRow14Val = $"SUM({colName[14]}{row + 1}:{colName[14]}{row + tongBs})"; ws.Cell(row, 14).FormulaA1 = $"IF(RIGHT(TEXT({cellRow14Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow14Val},\"#,##0\"), TEXT({cellRow14Val},\"#,##0.0\"))";
+                var cellRow15Val = $"SUM({colName[15]}{row + 1}:{colName[15]}{row + tongBs})"; ws.Cell(row, 15).FormulaA1 = $"IF(RIGHT(TEXT({cellRow15Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow15Val},\"#,##0\"), TEXT({cellRow15Val},\"#,##0.0\"))";
                 
                 ws.Cell(row, 17).FormulaA1 = $"IF({colName[3]}{row} > 0 ,{colName[15]}{row}/{colName[3]}{row} ,0)";
                 ws.Cell(row, 17).Style.NumberFormat.Format = "0.0%";
@@ -2923,19 +2862,19 @@ namespace API.Controllers
                     ws.Cell(row, 1).Value = $"{itemIndex}";
                     var type = item.OfficerType == 4 ? "BS:" : "ĐD:";
                     ws.Cell(row, 2).Value = $"{type}{item.OfficerName ?? ""}";
-                    var cell3ValItem = item.DiemKeHoach ?? 0;  ws.Cell(row, 3).FormulaA1 = $"IF(MOD({cell3ValItem},1)=0, TEXT({cell3ValItem},\"#,##0\"), TEXT({cell3ValItem},\"#,##0.0\"))";
-                    var cell4ValItem = item.DiemCdKham ?? 0; ws.Cell(row, 4).FormulaA1 = $"IF(MOD({cell4ValItem},1)=0, TEXT({cell4ValItem},\"#,##0\"), TEXT({cell4ValItem},\"#,##0.0\"))";
-                    var cell5ValItem = item.DiemCDDieuTri ?? 0; ws.Cell(row, 5).FormulaA1 = $"IF(MOD({cell5ValItem},1)=0, TEXT({cell5ValItem},\"#,##0\"), TEXT({cell5ValItem},\"#,##0.0\"))";
-                    var cell6ValItem = item.DiemPTTCD ?? 0; ws.Cell(row, 6).FormulaA1 = $"IF(MOD({cell6ValItem},1)=0, TEXT({cell6ValItem},\"#,##0\"), TEXT({cell6ValItem},\"#,##0.0\"))";
-                    var cell7ValItem = item.DiemPTTTH ?? 0; ws.Cell(row, 7).FormulaA1 = $"IF(MOD({cell7ValItem},1)=0, TEXT({cell7ValItem},\"#,##0\"), TEXT({cell7ValItem},\"#,##0.0\"))";
-                    var cell8ValItem = item.DiemTangCuong ?? 0; ws.Cell(row, 8).FormulaA1 = $"IF(MOD({cell8ValItem},1)=0, TEXT({cell8ValItem},\"#,##0\"), TEXT({cell8ValItem},\"#,##0.0\"))";
-                    var cell9ValItem = item.DiemTruc ?? 0; ws.Cell(row, 9).FormulaA1 = $"IF(MOD({cell9ValItem},1)=0, TEXT({cell9ValItem},\"#,##0\"), TEXT({cell9ValItem},\"#,##0.0\"))";
-                    var cell10ValItem = item.DiemCongBANT ?? 0; ws.Cell(row, 10).FormulaA1 = $"IF(MOD({cell10ValItem},1)=0, TEXT({cell10ValItem},\"#,##0\"), TEXT({cell10ValItem},\"#,##0.0\"))";
-                    //var cell11ValItem = item.DiemTHPTTTheoDD ?? 0;  ws.Cell(row, 11).FormulaA1 = $"IF(MOD({cell11ValItem},1)=0, TEXT({cell11ValItem},\"#,##0\"), TEXT({cell11ValItem},\"#,##0.0\"))";
-                    var cell12ValItem = item.DiemBNNDCD ?? 0; ws.Cell(row, 12).FormulaA1 = $"IF(MOD({cell12ValItem},1)=0, TEXT({cell12ValItem},\"#,##0\"), TEXT({cell12ValItem},\"#,##0.0\"))";
-                    var cell13ValItem = item.DiemBNNDTH ?? 0; ws.Cell(row, 13).FormulaA1 = $"IF(MOD({cell13ValItem},1)=0, TEXT({cell13ValItem},\"#,##0\"), TEXT({cell13ValItem},\"#,##0.0\"))";
-                    var cell14ValItem = item.DiemBNNDCDNhapVien ?? 0; ws.Cell(row, 14).FormulaA1 = $"IF(MOD({cell14ValItem},1)=0, TEXT({cell14ValItem},\"#,##0\"), TEXT({cell14ValItem},\"#,##0.0\"))";
-                    var cell15ItemVal = $"SUM({colName[4]}{row}:{colName[14]}{row})"; ws.Cell(row, 15).FormulaA1 = $"IF(MOD({cell15ItemVal},1)=0, TEXT({cell15ItemVal},\"#,##0\"), TEXT({cell15ItemVal},\"#,##0.0\"))"; // tổng các cột trước
+                    var cell3ValItem = item.DiemKeHoach ?? 0;  ws.Cell(row, 3).FormulaA1 = $"IF(RIGHT(TEXT({cell3ValItem},\"#,##0.0\"),1)=\"0\", TEXT({cell3ValItem},\"#,##0\"), TEXT({cell3ValItem},\"#,##0.0\"))";
+                    var cell4ValItem = item.DiemCdKham ?? 0; ws.Cell(row, 4).FormulaA1 = $"IF(RIGHT(TEXT({cell4ValItem},\"#,##0.0\"),1)=\"0\", TEXT({cell4ValItem},\"#,##0\"), TEXT({cell4ValItem},\"#,##0.0\"))";
+                    var cell5ValItem = item.DiemCDDieuTri ?? 0; ws.Cell(row, 5).FormulaA1 = $"IF(RIGHT(TEXT({cell5ValItem},\"#,##0.0\"),1)=\"0\", TEXT({cell5ValItem},\"#,##0\"), TEXT({cell5ValItem},\"#,##0.0\"))";
+                    var cell6ValItem = item.DiemPTTCD ?? 0; ws.Cell(row, 6).FormulaA1 = $"IF(RIGHT(TEXT({cell6ValItem},\"#,##0.0\"),1)=\"0\", TEXT({cell6ValItem},\"#,##0\"), TEXT({cell6ValItem},\"#,##0.0\"))";
+                    var cell7ValItem = item.DiemPTTTH ?? 0; ws.Cell(row, 7).FormulaA1 = $"IF(RIGHT(TEXT({cell7ValItem},\"#,##0.0\"),1)=\"0\", TEXT({cell7ValItem},\"#,##0\"), TEXT({cell7ValItem},\"#,##0.0\"))";
+                    var cell8ValItem = item.DiemTangCuong ?? 0; ws.Cell(row, 8).FormulaA1 = $"IF(RIGHT(TEXT({cell8ValItem},\"#,##0.0\"),1)=\"0\", TEXT({cell8ValItem},\"#,##0\"), TEXT({cell8ValItem},\"#,##0.0\"))";
+                    var cell9ValItem = item.DiemTruc ?? 0; ws.Cell(row, 9).FormulaA1 = $"IF(RIGHT(TEXT({cell9ValItem},\"#,##0.0\"),1)=\"0\", TEXT({cell9ValItem},\"#,##0\"), TEXT({cell9ValItem},\"#,##0.0\"))";
+                    var cell10ValItem = item.DiemCongBANT ?? 0; ws.Cell(row, 10).FormulaA1 = $"IF(RIGHT(TEXT({cell10ValItem},\"#,##0.0\"),1)=\"0\", TEXT({cell10ValItem},\"#,##0\"), TEXT({cell10ValItem},\"#,##0.0\"))";
+                    //var cell11ValItem = item.DiemTHPTTTheoDD ?? 0;  ws.Cell(row, 11).FormulaA1 = $"IF(RIGHT(TEXT({cell11ValItem},\"#,##0.0\"),1)=\"0\", TEXT({cell11ValItem},\"#,##0\"), TEXT({cell11ValItem},\"#,##0.0\"))";
+                    var cell12ValItem = item.DiemBNNDCD ?? 0; ws.Cell(row, 12).FormulaA1 = $"IF(RIGHT(TEXT({cell12ValItem},\"#,##0.0\"),1)=\"0\", TEXT({cell12ValItem},\"#,##0\"), TEXT({cell12ValItem},\"#,##0.0\"))";
+                    var cell13ValItem = item.DiemBNNDTH ?? 0; ws.Cell(row, 13).FormulaA1 = $"IF(RIGHT(TEXT({cell13ValItem},\"#,##0.0\"),1)=\"0\", TEXT({cell13ValItem},\"#,##0\"), TEXT({cell13ValItem},\"#,##0.0\"))";
+                    var cell14ValItem = item.DiemBNNDCDNhapVien ?? 0; ws.Cell(row, 14).FormulaA1 = $"IF(RIGHT(TEXT({cell14ValItem},\"#,##0.0\"),1)=\"0\", TEXT({cell14ValItem},\"#,##0\"), TEXT({cell14ValItem},\"#,##0.0\"))";
+                    var cell15ItemVal = $"SUM({colName[4]}{row}:{colName[14]}{row})"; ws.Cell(row, 15).FormulaA1 = $"IF(RIGHT(TEXT({cell15ItemVal},\"#,##0.0\"),1)=\"0\", TEXT({cell15ItemVal},\"#,##0\"), TEXT({cell15ItemVal},\"#,##0.0\"))"; // tổng các cột trước
                     ws.Cell(row, 17).FormulaA1 = $"IF({colName[3]}{row} > 0 ,{colName[15]}{row}/{colName[3]}{row},0)"; // tính %
                     ws.Cell(row, 17).Style.NumberFormat.Format = "0.0%";
                     // Căn lề
@@ -2964,19 +2903,19 @@ namespace API.Controllers
             ws.Range(row, 1, row, colCount).Style.Border.BottomBorder = XLBorderStyleValues.Thin;
             ws.Range(row, 1, row, colCount).Style.Border.LeftBorder = XLBorderStyleValues.Thin;
             ws.Range(row, 1, row, colCount).Style.Border.RightBorder = XLBorderStyleValues.Thin;
-            var cellRow3ValT = $"SUM({colName[3]}{8}:{colName[3]}{row - 1})/2"; ws.Cell(row,3).FormulaA1 = $"IF(MOD({cellRow3ValT},1)=0, TEXT({cellRow3ValT},\"#,##0\"), TEXT({cellRow3ValT},\"#,##0.0\"))";
-            var cellRow4ValT = $"SUM({colName[4]}{8}:{colName[4]}{row - 1})/2"; ws.Cell(row,4).FormulaA1 = $"IF(MOD({cellRow4ValT},1)=0, TEXT({cellRow4ValT},\"#,##0\"), TEXT({cellRow4ValT},\"#,##0.0\"))";
-            var cellRow5ValT = $"SUM({colName[5]}{8}:{colName[5]}{row - 1})/2"; ws.Cell(row,5).FormulaA1 = $"IF(MOD({cellRow5ValT},1)=0, TEXT({cellRow5ValT},\"#,##0\"), TEXT({cellRow5ValT},\"#,##0.0\"))";
-            var cellRow6ValT = $"SUM({colName[6]}{8}:{colName[6]}{row - 1})/2"; ws.Cell(row,6).FormulaA1 = $"IF(MOD({cellRow6ValT},1)=0, TEXT({cellRow6ValT},\"#,##0\"), TEXT({cellRow6ValT},\"#,##0.0\"))";
-            var cellRow7ValT = $"SUM({colName[7]}{8}:{colName[7]}{row - 1})/2"; ws.Cell(row,7).FormulaA1 = $"IF(MOD({cellRow7ValT},1)=0, TEXT({cellRow7ValT},\"#,##0\"), TEXT({cellRow7ValT},\"#,##0.0\"))";
-            var cellRow8ValT = $"SUM({colName[8]}{8}:{colName[8]}{row - 1})/2"; ws.Cell(row,8).FormulaA1 = $"IF(MOD({cellRow8ValT},1)=0, TEXT({cellRow8ValT},\"#,##0\"), TEXT({cellRow8ValT},\"#,##0.0\"))";
-            var cellRow9ValT = $"SUM({colName[9]}{8}:{colName[9]}{row - 1})/2"; ws.Cell(row,9).FormulaA1 = $"IF(MOD({cellRow9ValT},1)=0, TEXT({cellRow9ValT},\"#,##0\"), TEXT({cellRow9ValT},\"#,##0.0\"))";
-            var cellRow10ValT = $"SUM({colName[10]}{8}:{colName[10]}{row - 1})/2"; ws.Cell(row,10).FormulaA1 = $"IF(MOD({cellRow10ValT},1)=0, TEXT({cellRow10ValT},\"#,##0\"), TEXT({cellRow10ValT},\"#,##0.0\"))";
-            //var cellRow11ValT = $"SUM({colName[11]}{8}:{colName[11]}{row - 1})/2"; ws.Cell(row,11).FormulaA1 = $"IF(MOD({cellRow11ValT},1)=0, TEXT({cellRow11ValT},\"#,##0\"), TEXT({cellRow11ValT},\"#,##0.0\"))";
-            var cellRow12ValT = $"SUM({colName[12]}{8}:{colName[12]}{row - 1})/2"; ws.Cell(row,12).FormulaA1 = $"IF(MOD({cellRow12ValT},1)=0, TEXT({cellRow12ValT},\"#,##0\"), TEXT({cellRow12ValT},\"#,##0.0\"))";
-            var cellRow13ValT = $"SUM({colName[13]}{8}:{colName[13]}{row - 1})/2"; ws.Cell(row,13).FormulaA1 = $"IF(MOD({cellRow13ValT},1)=0, TEXT({cellRow13ValT},\"#,##0\"), TEXT({cellRow13ValT},\"#,##0.0\"))";
-            var cellRow14ValT = $"SUM({colName[14]}{8}:{colName[14]}{row - 1})/2"; ws.Cell(row,14).FormulaA1 = $"IF(MOD({cellRow14ValT},1)=0, TEXT({cellRow14ValT},\"#,##0\"), TEXT({cellRow14ValT},\"#,##0.0\"))";
-            var cellRow15ValT = $"SUM({colName[15]}{8}:{colName[15]}{row - 1})/2"; ws.Cell(row,15).FormulaA1 = $"IF(MOD({cellRow15ValT},1)=0, TEXT({cellRow15ValT},\"#,##0\"), TEXT({cellRow15ValT},\"#,##0.0\"))";
+            var cellRow3ValT = $"SUM({colName[3]}{8}:{colName[3]}{row - 1})/2"; ws.Cell(row,3).FormulaA1 = $"IF(RIGHT(TEXT({cellRow3ValT},\"#,##0.0\"),1)=\"0\", TEXT({cellRow3ValT},\"#,##0\"), TEXT({cellRow3ValT},\"#,##0.0\"))";
+            var cellRow4ValT = $"SUM({colName[4]}{8}:{colName[4]}{row - 1})/2"; ws.Cell(row,4).FormulaA1 = $"IF(RIGHT(TEXT({cellRow4ValT},\"#,##0.0\"),1)=\"0\", TEXT({cellRow4ValT},\"#,##0\"), TEXT({cellRow4ValT},\"#,##0.0\"))";
+            var cellRow5ValT = $"SUM({colName[5]}{8}:{colName[5]}{row - 1})/2"; ws.Cell(row,5).FormulaA1 = $"IF(RIGHT(TEXT({cellRow5ValT},\"#,##0.0\"),1)=\"0\", TEXT({cellRow5ValT},\"#,##0\"), TEXT({cellRow5ValT},\"#,##0.0\"))";
+            var cellRow6ValT = $"SUM({colName[6]}{8}:{colName[6]}{row - 1})/2"; ws.Cell(row,6).FormulaA1 = $"IF(RIGHT(TEXT({cellRow6ValT},\"#,##0.0\"),1)=\"0\", TEXT({cellRow6ValT},\"#,##0\"), TEXT({cellRow6ValT},\"#,##0.0\"))";
+            var cellRow7ValT = $"SUM({colName[7]}{8}:{colName[7]}{row - 1})/2"; ws.Cell(row,7).FormulaA1 = $"IF(RIGHT(TEXT({cellRow7ValT},\"#,##0.0\"),1)=\"0\", TEXT({cellRow7ValT},\"#,##0\"), TEXT({cellRow7ValT},\"#,##0.0\"))";
+            var cellRow8ValT = $"SUM({colName[8]}{8}:{colName[8]}{row - 1})/2"; ws.Cell(row,8).FormulaA1 = $"IF(RIGHT(TEXT({cellRow8ValT},\"#,##0.0\"),1)=\"0\", TEXT({cellRow8ValT},\"#,##0\"), TEXT({cellRow8ValT},\"#,##0.0\"))";
+            var cellRow9ValT = $"SUM({colName[9]}{8}:{colName[9]}{row - 1})/2"; ws.Cell(row,9).FormulaA1 = $"IF(RIGHT(TEXT({cellRow9ValT},\"#,##0.0\"),1)=\"0\", TEXT({cellRow9ValT},\"#,##0\"), TEXT({cellRow9ValT},\"#,##0.0\"))";
+            var cellRow10ValT = $"SUM({colName[10]}{8}:{colName[10]}{row - 1})/2"; ws.Cell(row,10).FormulaA1 = $"IF(RIGHT(TEXT({cellRow10ValT},\"#,##0.0\"),1)=\"0\", TEXT({cellRow10ValT},\"#,##0\"), TEXT({cellRow10ValT},\"#,##0.0\"))";
+            //var cellRow11ValT = $"SUM({colName[11]}{8}:{colName[11]}{row - 1})/2"; ws.Cell(row,11).FormulaA1 = $"IF(RIGHT(TEXT({cellRow11ValT},\"#,##0.0\"),1)=\"0\", TEXT({cellRow11ValT},\"#,##0\"), TEXT({cellRow11ValT},\"#,##0.0\"))";
+            var cellRow12ValT = $"SUM({colName[12]}{8}:{colName[12]}{row - 1})/2"; ws.Cell(row,12).FormulaA1 = $"IF(RIGHT(TEXT({cellRow12ValT},\"#,##0.0\"),1)=\"0\", TEXT({cellRow12ValT},\"#,##0\"), TEXT({cellRow12ValT},\"#,##0.0\"))";
+            var cellRow13ValT = $"SUM({colName[13]}{8}:{colName[13]}{row - 1})/2"; ws.Cell(row,13).FormulaA1 = $"IF(RIGHT(TEXT({cellRow13ValT},\"#,##0.0\"),1)=\"0\", TEXT({cellRow13ValT},\"#,##0\"), TEXT({cellRow13ValT},\"#,##0.0\"))";
+            var cellRow14ValT = $"SUM({colName[14]}{8}:{colName[14]}{row - 1})/2"; ws.Cell(row,14).FormulaA1 = $"IF(RIGHT(TEXT({cellRow14ValT},\"#,##0.0\"),1)=\"0\", TEXT({cellRow14ValT},\"#,##0\"), TEXT({cellRow14ValT},\"#,##0.0\"))";
+            var cellRow15ValT = $"SUM({colName[15]}{8}:{colName[15]}{row - 1})/2"; ws.Cell(row,15).FormulaA1 = $"IF(RIGHT(TEXT({cellRow15ValT},\"#,##0.0\"),1)=\"0\", TEXT({cellRow15ValT},\"#,##0\"), TEXT({cellRow15ValT},\"#,##0.0\"))";
             ws.Cell(row, 17).FormulaA1 = $"IF({colName[3]}{row} > 0 ,{colName[15]}{row}/{colName[3]}{row} ,0)";
             ws.Cell(row, 17).Style.NumberFormat.Format = "0.0%";
             //ws.Range($"{colName[3]}{row}:{colName[15]}{row}").Style.NumberFormat.Format = "#,##0.##";
@@ -3172,12 +3111,12 @@ namespace API.Controllers
                 ws.Range(row, 1, row, colCount).Style.Border.RightBorder = XLBorderStyleValues.Thin;
                 ws.Cell(row, 1).Value = ConvertToRoman(gCount + 1);
                 ws.Cell(row, 2).Value = group.Key ?? "";
-                var cellRow3Val = $"SUM({colName[3]}{row + 1}:{colName[3]}{row + tongDd})"; ws.Cell(row, 3).FormulaA1 = $"IF(MOD({cellRow3Val},1)=0, TEXT({cellRow3Val},\"#,##0\"), TEXT({cellRow3Val},\"#,##0.0\"))";
-                var cellRow4Val = $"SUM({colName[4]}{row + 1}:{colName[4]}{row + tongDd})"; ws.Cell(row, 4).FormulaA1 = $"IF(MOD({cellRow4Val},1)=0, TEXT({cellRow4Val},\"#,##0\"), TEXT({cellRow4Val},\"#,##0.0\"))";
-                var cellRow5Val = $"SUM({colName[5]}{row + 1}:{colName[5]}{row + tongDd})"; ws.Cell(row, 5).FormulaA1 = $"IF(MOD({cellRow5Val},1)=0, TEXT({cellRow5Val},\"#,##0\"), TEXT({cellRow5Val},\"#,##0.0\"))";
-                var cellRow6Val = $"SUM({colName[6]}{row + 1}:{colName[6]}{row + tongDd})"; ws.Cell(row, 6).FormulaA1 = $"IF(MOD({cellRow6Val},1)=0, TEXT({cellRow6Val},\"#,##0\"), TEXT({cellRow6Val},\"#,##0.0\"))";
-                var cellRow11Val = $"SUM({colName[11]}{row + 1}:{colName[11]}{row + tongDd})"; ws.Cell(row, 11).FormulaA1 = $"IF(MOD({cellRow11Val},1)=0, TEXT({cellRow11Val},\"#,##0\"), TEXT({cellRow11Val},\"#,##0.0\"))";
-                var cellRow15Val = $"SUM({colName[15]}{row + 1}:{colName[15]}{row + tongDd})"; ws.Cell(row, 15).FormulaA1 = $"IF(MOD({cellRow15Val},1)=0, TEXT({cellRow15Val},\"#,##0\"), TEXT({cellRow15Val},\"#,##0.0\"))";
+                var cellRow3Val = $"SUM({colName[3]}{row + 1}:{colName[3]}{row + tongDd})"; ws.Cell(row, 3).FormulaA1 = $"IF(RIGHT(TEXT({cellRow3Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow3Val},\"#,##0\"), TEXT({cellRow3Val},\"#,##0.0\"))";
+                var cellRow4Val = $"SUM({colName[4]}{row + 1}:{colName[4]}{row + tongDd})"; ws.Cell(row, 4).FormulaA1 = $"IF(RIGHT(TEXT({cellRow4Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow4Val},\"#,##0\"), TEXT({cellRow4Val},\"#,##0.0\"))";
+                var cellRow5Val = $"SUM({colName[5]}{row + 1}:{colName[5]}{row + tongDd})"; ws.Cell(row, 5).FormulaA1 = $"IF(RIGHT(TEXT({cellRow5Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow5Val},\"#,##0\"), TEXT({cellRow5Val},\"#,##0.0\"))";
+                var cellRow6Val = $"SUM({colName[6]}{row + 1}:{colName[6]}{row + tongDd})"; ws.Cell(row, 6).FormulaA1 = $"IF(RIGHT(TEXT({cellRow6Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow6Val},\"#,##0\"), TEXT({cellRow6Val},\"#,##0.0\"))";
+                var cellRow11Val = $"SUM({colName[11]}{row + 1}:{colName[11]}{row + tongDd})"; ws.Cell(row, 11).FormulaA1 = $"IF(RIGHT(TEXT({cellRow11Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow11Val},\"#,##0\"), TEXT({cellRow11Val},\"#,##0.0\"))";
+                var cellRow15Val = $"SUM({colName[15]}{row + 1}:{colName[15]}{row + tongDd})"; ws.Cell(row, 15).FormulaA1 = $"IF(RIGHT(TEXT({cellRow15Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow15Val},\"#,##0\"), TEXT({cellRow15Val},\"#,##0.0\"))";
                 
                 ws.Cell(row, 17).FormulaA1 = $"IF({colName[3]}{row} > 0 ,{colName[15]}{row}/{colName[3]}{row} ,0)";
                 ws.Cell(row, 17).Style.NumberFormat.Format = "0.0%";
@@ -3192,12 +3131,12 @@ namespace API.Controllers
                     ws.Cell(row, 1).Value = $"{itemIndex}";
                     var type = item.OfficerType == 4 ? "BS:" : "ĐD:";
                     ws.Cell(row, 2).Value = $"{type}{item.OfficerName ?? ""}";
-                    var cell3ItemVal = item.DiemKeHoach ?? 0; ws.Cell(row, 3).FormulaA1 = $"IF(MOD({cell3ItemVal},1)=0, TEXT({cell3ItemVal},\"#,##0\"), TEXT({cell3ItemVal},\"#,##0.0\"))";
-                    var cell4ItemVal = diemTHTheoBSKhoa / tongDd; ws.Cell(row, 4).FormulaA1 = $"IF(MOD({cell4ItemVal},1)=0, TEXT({cell4ItemVal},\"#,##0\"), TEXT({cell4ItemVal},\"#,##0.0\"))";
-                    var cell5ItemVal = item.SoNgayTangCuong ?? 0; ws.Cell(row, 5).FormulaA1 = $"IF(MOD({cell5ItemVal},1)=0, TEXT({cell5ItemVal},\"#,##0\"), TEXT({cell5ItemVal},\"#,##0.0\"))";
-                    var cell6ItemVal = item.DiemTangCuong ?? 0; ws.Cell(row, 6).FormulaA1 = $"IF(MOD({cell6ItemVal},1)=0, TEXT({cell6ItemVal},\"#,##0\"), TEXT({cell6ItemVal},\"#,##0.0\"))";
-                    var cell11ItemVal = item.DiemTruc ?? 0; ws.Cell(row, 11).FormulaA1 = $"IF(MOD({cell11ItemVal},1)=0, TEXT({cell11ItemVal},\"#,##0\"), TEXT({cell11ItemVal},\"#,##0.0\"))";
-                    var cell15ItemVal = $"SUM({colName[4]}{row}:{colName[14]}{row})-{colName[5]}{row}-{colName[7]}{row}"; ws.Cell(row, 15).FormulaA1 = $"IF(MOD({cell15ItemVal},1)=0, TEXT({cell15ItemVal},\"#,##0\"), TEXT({cell15ItemVal},\"#,##0.0\"))";// tổng các cột trước
+                    var cell3ItemVal = item.DiemKeHoach ?? 0; ws.Cell(row, 3).FormulaA1 = $"IF(RIGHT(TEXT({cell3ItemVal},\"#,##0.0\"),1)=\"0\", TEXT({cell3ItemVal},\"#,##0\"), TEXT({cell3ItemVal},\"#,##0.0\"))";
+                    var cell4ItemVal = diemTHTheoBSKhoa / tongDd; ws.Cell(row, 4).FormulaA1 = $"IF(RIGHT(TEXT({cell4ItemVal},\"#,##0.0\"),1)=\"0\", TEXT({cell4ItemVal},\"#,##0\"), TEXT({cell4ItemVal},\"#,##0.0\"))";
+                    var cell5ItemVal = item.SoNgayTangCuong ?? 0; ws.Cell(row, 5).FormulaA1 = $"IF(RIGHT(TEXT({cell5ItemVal},\"#,##0.0\"),1)=\"0\", TEXT({cell5ItemVal},\"#,##0\"), TEXT({cell5ItemVal},\"#,##0.0\"))";
+                    var cell6ItemVal = item.DiemTangCuong ?? 0; ws.Cell(row, 6).FormulaA1 = $"IF(RIGHT(TEXT({cell6ItemVal},\"#,##0.0\"),1)=\"0\", TEXT({cell6ItemVal},\"#,##0\"), TEXT({cell6ItemVal},\"#,##0.0\"))";
+                    var cell11ItemVal = item.DiemTruc ?? 0; ws.Cell(row, 11).FormulaA1 = $"IF(RIGHT(TEXT({cell11ItemVal},\"#,##0.0\"),1)=\"0\", TEXT({cell11ItemVal},\"#,##0\"), TEXT({cell11ItemVal},\"#,##0.0\"))";
+                    var cell15ItemVal = $"SUM({colName[4]}{row}:{colName[14]}{row})-{colName[5]}{row}-{colName[7]}{row}"; ws.Cell(row, 15).FormulaA1 = $"IF(RIGHT(TEXT({cell15ItemVal},\"#,##0.0\"),1)=\"0\", TEXT({cell15ItemVal},\"#,##0\"), TEXT({cell15ItemVal},\"#,##0.0\"))";// tổng các cột trước
                     ws.Cell(row, 17).FormulaA1 = $"IF({colName[3]}{row} > 0 ,{colName[15]}{row}/{colName[3]}{row},0)"; // tính %
                     ws.Cell(row, 17).Style.NumberFormat.Format = "0.0%";
                     // Căn lề
@@ -3226,12 +3165,12 @@ namespace API.Controllers
             ws.Range(row, 1, row, colCount).Style.Border.BottomBorder = XLBorderStyleValues.Thin;
             ws.Range(row, 1, row, colCount).Style.Border.LeftBorder = XLBorderStyleValues.Thin;
             ws.Range(row, 1, row, colCount).Style.Border.RightBorder = XLBorderStyleValues.Thin;
-            var cell3TVal = $"SUM({colName[3]}{8}:{colName[3]}{row - 1})/2"; ws.Cell(row, 3).FormulaA1 = $"IF(MOD({cell3TVal},1)=0, TEXT({cell3TVal},\"#,##0\"), TEXT({cell3TVal},\"#,##0.0\"))";
-            var cell4TVal = $"SUM({colName[4]}{8}:{colName[4]}{row - 1})/2"; ws.Cell(row, 4).FormulaA1 = $"IF(MOD({cell4TVal},1)=0, TEXT({cell4TVal},\"#,##0\"), TEXT({cell4TVal},\"#,##0.0\"))";
-            var cell5TVal = $"SUM({colName[5]}{8}:{colName[5]}{row - 1})/2"; ws.Cell(row, 5).FormulaA1 = $"IF(MOD({cell5TVal},1)=0, TEXT({cell5TVal},\"#,##0\"), TEXT({cell5TVal},\"#,##0.0\"))";
-            var cell6TVal = $"SUM({colName[6]}{8}:{colName[6]}{row - 1})/2"; ws.Cell(row, 6).FormulaA1 = $"IF(MOD({cell6TVal},1)=0, TEXT({cell6TVal},\"#,##0\"), TEXT({cell6TVal},\"#,##0.0\"))";
-            var cell11TVal = $"SUM({colName[11]}{8}:{colName[11]}{row - 1})/2"; ws.Cell(row, 11).FormulaA1 = $"IF(MOD({cell11TVal},1)=0, TEXT({cell11TVal},\"#,##0\"), TEXT({cell11TVal},\"#,##0.0\"))";
-            var cell15TVal = $"SUM({colName[15]}{8}:{colName[15]}{row - 1})/2"; ws.Cell(row, 15).FormulaA1 = $"IF(MOD({cell15TVal},1)=0, TEXT({cell15TVal},\"#,##0\"), TEXT({cell15TVal},\"#,##0.0\"))";
+            var cell3TVal = $"SUM({colName[3]}{8}:{colName[3]}{row - 1})/2"; ws.Cell(row, 3).FormulaA1 = $"IF(RIGHT(TEXT({cell3TVal},\"#,##0.0\"),1)=\"0\", TEXT({cell3TVal},\"#,##0\"), TEXT({cell3TVal},\"#,##0.0\"))";
+            var cell4TVal = $"SUM({colName[4]}{8}:{colName[4]}{row - 1})/2"; ws.Cell(row, 4).FormulaA1 = $"IF(RIGHT(TEXT({cell4TVal},\"#,##0.0\"),1)=\"0\", TEXT({cell4TVal},\"#,##0\"), TEXT({cell4TVal},\"#,##0.0\"))";
+            var cell5TVal = $"SUM({colName[5]}{8}:{colName[5]}{row - 1})/2"; ws.Cell(row, 5).FormulaA1 = $"IF(RIGHT(TEXT({cell5TVal},\"#,##0.0\"),1)=\"0\", TEXT({cell5TVal},\"#,##0\"), TEXT({cell5TVal},\"#,##0.0\"))";
+            var cell6TVal = $"SUM({colName[6]}{8}:{colName[6]}{row - 1})/2"; ws.Cell(row, 6).FormulaA1 = $"IF(RIGHT(TEXT({cell6TVal},\"#,##0.0\"),1)=\"0\", TEXT({cell6TVal},\"#,##0\"), TEXT({cell6TVal},\"#,##0.0\"))";
+            var cell11TVal = $"SUM({colName[11]}{8}:{colName[11]}{row - 1})/2"; ws.Cell(row, 11).FormulaA1 = $"IF(RIGHT(TEXT({cell11TVal},\"#,##0.0\"),1)=\"0\", TEXT({cell11TVal},\"#,##0\"), TEXT({cell11TVal},\"#,##0.0\"))";
+            var cell15TVal = $"SUM({colName[15]}{8}:{colName[15]}{row - 1})/2"; ws.Cell(row, 15).FormulaA1 = $"IF(RIGHT(TEXT({cell15TVal},\"#,##0.0\"),1)=\"0\", TEXT({cell15TVal},\"#,##0\"), TEXT({cell15TVal},\"#,##0.0\"))";
 
             ws.Cell(row, 17).FormulaA1 = $"IF({colName[3]}{row} > 0 ,{colName[15]}{row}/{colName[3]}{row} ,0)";
             ws.Cell(row, 17).Style.NumberFormat.Format = "0.0%";
