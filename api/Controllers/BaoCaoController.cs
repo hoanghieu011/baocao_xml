@@ -1,3 +1,4 @@
+using api.Models;
 using API.Common;
 using API.Data;
 using API.DTO;
@@ -287,13 +288,13 @@ namespace API.Controllers
                     ws.Cell(row, 8).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
                     ws.Cell(row, 9).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
 
-                    ws.Cell(row, 3).Style.NumberFormat.Format = "#,##0.##";
-                    ws.Cell(row, 4).Style.NumberFormat.Format = "#,##0.##";
-                    ws.Cell(row, 5).Style.NumberFormat.Format = "#,##0.##";
-                    ws.Cell(row, 6).Style.NumberFormat.Format = "#,##0.##";
-                    ws.Cell(row, 7).Style.NumberFormat.Format = "#,##0.##";
-                    ws.Cell(row, 8).Style.NumberFormat.Format = "#,##0.##";
-                    ws.Cell(row, 9).Style.NumberFormat.Format = "#,##0.##";
+                    ws.Cell(row, 3).Style.NumberFormat.Format = "###0.##";
+                    ws.Cell(row, 4).Style.NumberFormat.Format = "###0.##";
+                    ws.Cell(row, 5).Style.NumberFormat.Format = "###0.##";
+                    ws.Cell(row, 6).Style.NumberFormat.Format = "###0.##";
+                    ws.Cell(row, 7).Style.NumberFormat.Format = "###0.##";
+                    ws.Cell(row, 8).Style.NumberFormat.Format = "###0.##";
+                    ws.Cell(row, 9).Style.NumberFormat.Format = "###0.##";
 
                     ws.Range(row, 1, row, 10).Style.Border.TopBorder = XLBorderStyleValues.Thin;
                     ws.Range(row, 1, row, 10).Style.Border.BottomBorder = XLBorderStyleValues.Thin;
@@ -320,10 +321,10 @@ namespace API.Controllers
                 ws.Cell(row, 7).Value = tongConLai;
                 ws.Cell(row, 9).Value = tongDiem;
 
-                ws.Cell(row, 5).Style.NumberFormat.Format = "#,##0.##";
-                ws.Cell(row, 6).Style.NumberFormat.Format = "#,##0.##";
-                ws.Cell(row, 7).Style.NumberFormat.Format = "#,##0.##";
-                ws.Cell(row, 9).Style.NumberFormat.Format = "#,##0.##";
+                ws.Cell(row, 5).Style.NumberFormat.Format = "###0.##";
+                ws.Cell(row, 6).Style.NumberFormat.Format = "###0.##";
+                ws.Cell(row, 7).Style.NumberFormat.Format = "###0.##";
+                ws.Cell(row, 9).Style.NumberFormat.Format = "###0.##";
 
                 ws.Range(row, 1, row, 10).Style.Font.Bold = true;
                 ws.Range(row, 1, row, 10).Style.Fill.BackgroundColor = XLColor.FromArgb(230, 230, 230);
@@ -338,10 +339,10 @@ namespace API.Controllers
             ws.Cell(row, 7).Value = tongAllConLai;
             ws.Cell(row, 9).Value = tongAllDiem;
 
-            ws.Cell(row, 5).Style.NumberFormat.Format = "#,##0.##";
-            ws.Cell(row, 6).Style.NumberFormat.Format = "#,##0.##";
-            ws.Cell(row, 7).Style.NumberFormat.Format = "#,##0.##";
-            ws.Cell(row, 9).Style.NumberFormat.Format = "#,##0.##";
+            ws.Cell(row, 5).Style.NumberFormat.Format = "###0.##";
+            ws.Cell(row, 6).Style.NumberFormat.Format = "###0.##";
+            ws.Cell(row, 7).Style.NumberFormat.Format = "###0.##";
+            ws.Cell(row, 9).Style.NumberFormat.Format = "###0.##";
 
             ws.Range(row, 1, row, 10).Style.Font.Bold = true;
             ws.Range(row, 1, row, 10).Style.Fill.BackgroundColor = XLColor.FromArgb(200, 200, 200);
@@ -643,13 +644,13 @@ namespace API.Controllers
                         ws.Cell(row, 9).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
 
                         // Định dạng số
-                        ws.Cell(row, 3).Style.NumberFormat.Format = "#,##0.##";
-                        ws.Cell(row, 4).Style.NumberFormat.Format = "#,##0.##";
-                        ws.Cell(row, 5).Style.NumberFormat.Format = "#,##0.##";
-                        ws.Cell(row, 6).Style.NumberFormat.Format = "#,##0.##";
-                        ws.Cell(row, 7).Style.NumberFormat.Format = "#,##0.##";
-                        ws.Cell(row, 8).Style.NumberFormat.Format = "#,##0.##";
-                        ws.Cell(row, 9).Style.NumberFormat.Format = "#,##0.##";
+                        ws.Cell(row, 3).Style.NumberFormat.Format = "###0.##";
+                        ws.Cell(row, 4).Style.NumberFormat.Format = "###0.##";
+                        ws.Cell(row, 5).Style.NumberFormat.Format = "###0.##";
+                        ws.Cell(row, 6).Style.NumberFormat.Format = "###0.##";
+                        ws.Cell(row, 7).Style.NumberFormat.Format = "###0.##";
+                        ws.Cell(row, 8).Style.NumberFormat.Format = "###0.##";
+                        ws.Cell(row, 9).Style.NumberFormat.Format = "###0.##";
 
                         ws.Range(row, 1, row, 10).Style.Border.TopBorder = XLBorderStyleValues.Thin;
                         ws.Range(row, 1, row, 10).Style.Border.BottomBorder = XLBorderStyleValues.Thin;
@@ -680,10 +681,10 @@ namespace API.Controllers
                     ws.Cell(row, 9).Value = tongDiem;
 
                     // format
-                    ws.Cell(row, 5).Style.NumberFormat.Format = "#,##0.##";
-                    ws.Cell(row, 6).Style.NumberFormat.Format = "#,##0.##";
-                    ws.Cell(row, 7).Style.NumberFormat.Format = "#,##0.##";
-                    ws.Cell(row, 9).Style.NumberFormat.Format = "#,##0.##";
+                    ws.Cell(row, 5).Style.NumberFormat.Format = "###0.##";
+                    ws.Cell(row, 6).Style.NumberFormat.Format = "###0.##";
+                    ws.Cell(row, 7).Style.NumberFormat.Format = "###0.##";
+                    ws.Cell(row, 9).Style.NumberFormat.Format = "###0.##";
 
                     ws.Range(row, 1, row, 10).Style.Font.Bold = true;
                     ws.Range(row, 1, row, 10).Style.Fill.BackgroundColor = XLColor.FromArgb(230, 230, 230);
@@ -700,10 +701,10 @@ namespace API.Controllers
                 ws.Cell(row, 7).Value = tongAllConLai;
                 ws.Cell(row, 9).Value = tongAllDiem;
 
-                ws.Cell(row, 5).Style.NumberFormat.Format = "#,##0.##";
-                ws.Cell(row, 6).Style.NumberFormat.Format = "#,##0.##";
-                ws.Cell(row, 7).Style.NumberFormat.Format = "#,##0.##";
-                ws.Cell(row, 9).Style.NumberFormat.Format = "#,##0.##";
+                ws.Cell(row, 5).Style.NumberFormat.Format = "###0.##";
+                ws.Cell(row, 6).Style.NumberFormat.Format = "###0.##";
+                ws.Cell(row, 7).Style.NumberFormat.Format = "###0.##";
+                ws.Cell(row, 9).Style.NumberFormat.Format = "###0.##";
 
                 ws.Range(row, 1, row, 10).Style.Font.Bold = true;
                 ws.Range(row, 1, row, 10).Style.Fill.BackgroundColor = XLColor.FromArgb(200, 200, 200);
@@ -1147,13 +1148,13 @@ namespace API.Controllers
                             ws.Cell(row, 10).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
 
                             // Định dạng số
-                            ws.Cell(row, 3).Style.NumberFormat.Format = "#,##0.##";
-                            ws.Cell(row, 4).Style.NumberFormat.Format = "#,##0.##";
-                            ws.Cell(row, 5).Style.NumberFormat.Format = "#,##0.##";
-                            ws.Cell(row, 6).Style.NumberFormat.Format = "#,##0.##";
-                            ws.Cell(row, 7).Style.NumberFormat.Format = "#,##0.##";
-                            ws.Cell(row, 8).Style.NumberFormat.Format = "#,##0.##";
-                            ws.Cell(row, 9).Style.NumberFormat.Format = "#,##0.##";
+                            ws.Cell(row, 3).Style.NumberFormat.Format = "###0.##";
+                            ws.Cell(row, 4).Style.NumberFormat.Format = "###0.##";
+                            ws.Cell(row, 5).Style.NumberFormat.Format = "###0.##";
+                            ws.Cell(row, 6).Style.NumberFormat.Format = "###0.##";
+                            ws.Cell(row, 7).Style.NumberFormat.Format = "###0.##";
+                            ws.Cell(row, 8).Style.NumberFormat.Format = "###0.##";
+                            ws.Cell(row, 9).Style.NumberFormat.Format = "###0.##";
 
                             ws.Range(row, 1, row, 10).Style.Border.TopBorder = XLBorderStyleValues.Thin;
                             ws.Range(row, 1, row, 10).Style.Border.BottomBorder = XLBorderStyleValues.Thin;
@@ -1179,10 +1180,10 @@ namespace API.Controllers
                             ws.Cell(row, 9).Value = tongDiemGroup;
 
                             // format
-                            ws.Cell(row, 5).Style.NumberFormat.Format = "#,##0.##";
-                            ws.Cell(row, 6).Style.NumberFormat.Format = "#,##0.##";
-                            ws.Cell(row, 7).Style.NumberFormat.Format = "#,##0.##";
-                            ws.Cell(row, 9).Style.NumberFormat.Format = "#,##0.##";
+                            ws.Cell(row, 5).Style.NumberFormat.Format = "###0.##";
+                            ws.Cell(row, 6).Style.NumberFormat.Format = "###0.##";
+                            ws.Cell(row, 7).Style.NumberFormat.Format = "###0.##";
+                            ws.Cell(row, 9).Style.NumberFormat.Format = "###0.##";
 
                             ws.Range(row, 1, row, 10).Style.Font.Bold = true;
                             ws.Range(row, 1, row, 10).Style.Fill.BackgroundColor = XLColor.FromArgb(230, 230, 230);
@@ -1204,10 +1205,10 @@ namespace API.Controllers
                     ws.Cell(row, 9).Value = tongDiemOrg;
 
                     // format
-                    ws.Cell(row, 5).Style.NumberFormat.Format = "#,##0.##";
-                    ws.Cell(row, 6).Style.NumberFormat.Format = "#,##0.##";
-                    ws.Cell(row, 7).Style.NumberFormat.Format = "#,##0.##";
-                    ws.Cell(row, 9).Style.NumberFormat.Format = "#,##0.##";
+                    ws.Cell(row, 5).Style.NumberFormat.Format = "###0.##";
+                    ws.Cell(row, 6).Style.NumberFormat.Format = "###0.##";
+                    ws.Cell(row, 7).Style.NumberFormat.Format = "###0.##";
+                    ws.Cell(row, 9).Style.NumberFormat.Format = "###0.##";
 
                     ws.Range(row, 1, row, 10).Style.Font.Bold = true;
                     ws.Range(row, 1, row, 10).Style.Fill.BackgroundColor = XLColor.FromArgb(230, 230, 230);
@@ -1234,10 +1235,10 @@ namespace API.Controllers
                 ws.Cell(row, 9).Value = tongAllDiem;
 
                 // format
-                ws.Cell(row, 5).Style.NumberFormat.Format = "#,##0.##";
-                ws.Cell(row, 6).Style.NumberFormat.Format = "#,##0.##";
-                ws.Cell(row, 7).Style.NumberFormat.Format = "#,##0.##";
-                ws.Cell(row, 9).Style.NumberFormat.Format = "#,##0.##";
+                ws.Cell(row, 5).Style.NumberFormat.Format = "###0.##";
+                ws.Cell(row, 6).Style.NumberFormat.Format = "###0.##";
+                ws.Cell(row, 7).Style.NumberFormat.Format = "###0.##";
+                ws.Cell(row, 9).Style.NumberFormat.Format = "###0.##";
 
                 ws.Range(row, 1, row, 10).Style.Font.Bold = true;
                 ws.Range(row, 1, row, 10).Style.Fill.BackgroundColor = XLColor.FromArgb(200, 200, 200);
@@ -1534,13 +1535,13 @@ namespace API.Controllers
                     ws.Cell(row, 7).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
 
                     // Định dạng số
-                    ws.Cell(row, 3).Style.NumberFormat.Format = "#,##0.##";
-                    ws.Cell(row, 4).Style.NumberFormat.Format = "#,##0.##";
-                    ws.Cell(row, 5).Style.NumberFormat.Format = "#,##0.##";
-                    ws.Cell(row, 6).Style.NumberFormat.Format = "#,##0.##";
-                    ws.Cell(row, 7).Style.NumberFormat.Format = "#,##0.##";
-                    ws.Cell(row, 8).Style.NumberFormat.Format = "#,##0.##";
-                    ws.Cell(row, 9).Style.NumberFormat.Format = "#,##0.##";
+                    ws.Cell(row, 3).Style.NumberFormat.Format = "###0.##";
+                    ws.Cell(row, 4).Style.NumberFormat.Format = "###0.##";
+                    ws.Cell(row, 5).Style.NumberFormat.Format = "###0.##";
+                    ws.Cell(row, 6).Style.NumberFormat.Format = "###0.##";
+                    ws.Cell(row, 7).Style.NumberFormat.Format = "###0.##";
+                    ws.Cell(row, 8).Style.NumberFormat.Format = "###0.##";
+                    ws.Cell(row, 9).Style.NumberFormat.Format = "###0.##";
 
                     ws.Range(row, 1, row, headers.Length).Style.Border.TopBorder = XLBorderStyleValues.Thin;
                     ws.Range(row, 1, row, headers.Length).Style.Border.BottomBorder = XLBorderStyleValues.Thin;
@@ -1564,9 +1565,9 @@ namespace API.Controllers
                 ws.Cell(row, 6).Value = tongAllSoTienConLai;
 
                 // format
-                ws.Cell(row, 4).Style.NumberFormat.Format = "#,##0.##";
-                ws.Cell(row, 5).Style.NumberFormat.Format = "#,##0.##";
-                ws.Cell(row, 6).Style.NumberFormat.Format = "#,##0.##";
+                ws.Cell(row, 4).Style.NumberFormat.Format = "###0.##";
+                ws.Cell(row, 5).Style.NumberFormat.Format = "###0.##";
+                ws.Cell(row, 6).Style.NumberFormat.Format = "###0.##";
 
                 ws.Range(row, 1, row, headers.Length).Style.Font.Bold = true;
                 ws.Range(row, 1, row, headers.Length).Style.Fill.BackgroundColor = XLColor.FromArgb(200, 200, 200);
@@ -1666,82 +1667,39 @@ namespace API.Controllers
         private async Task<List<DiemCtkh>> GetBcDiemCtkhFunc(DateTime tuNgay, DateTime denNgay, List<int>? arrThangNam, string dbName)
         {
 
-            var sql = $"SELECT officer.OFFICER_NAME, officer.OFFICER_TYPE, officer.BACSIID, t1.DIEMTHUCHIEN, t2.KHOAID, t2.DIEM_KEHOACH, org.ORG_NAME KHOA, t2.DIEM_TRUC, t2.DIEMTANGCUONG, t2.SONGAYTANGCUONG, t3.DIEMCDNHAPVIEN*6.4 DIEMCDNHAPVIEN, t3.DIEMCDNHAPVIENBNND*19.2 DIEMCDNHAPVIENBNND, t1.DIEMPTTCD*0.2 DIEMPTTCHIDINH, t5.DIEMPTTTHUCHIEN*0.8 DIEMPTTTHUCHIEN, t4.DIEMBANT, t6.DIEMBNNDCD, t7.DIEMBNNDTH  FROM " +
-                $"(select dkh.KHOAID, IFNULL(sum(dkh.DIEM_KEHOACH), 0) as DIEM_KEHOACH, dkh.BACSIID, IFNULL(sum(dkh.DIEM_TRUC), 0) as DIEM_TRUC, IFNULL(sum(tcSum.DIEMTANGCUONG), 0) as DIEMTANGCUONG, IFNULL(sum(tcSum.SONGAYTANGCUONG), 0) as SONGAYTANGCUONG  from `{dbName}`.bc_diemkehoach dkh " +
-                $"LEFT JOIN ( SELECT DIEMKEHOACHID, IFNULL(SUM(tc.DIEM),0) DIEMTANGCUONG, IFNULL(SUM(tc.SONGAY),0) SONGAYTANGCUONG " +
-                $"FROM `{dbName}`.bc_tangcuong tc " +
-                $"GROUP BY DIEMKEHOACHID ) tcSum " +
-                $"ON  tcSum.DIEMKEHOACHID= dkh.DIEMKEHOACHID WHERE THANGNAM in (" + GenerateDynamicParamThangNam(arrThangNam) + ") " +
-                $"GROUP BY KHOAID , BACSIID) t2 " +
-                $"LEFT JOIN  (SELECT t.DIEMTHUCHIEN, activeUsers.BACSIID, t.DIEMPTTCD " +
-                $"FROM (SELECT  MA_BAC_SI, SUM(HESO) as DIEMTHUCHIEN, SUM(CASE WHEN NHOM_MABHYT_ID IN(6,26) THEN HESO ELSE 0 END ) DIEMPTTCD  " +
-                $"FROM (SELECT  " +
-                $"nhom.NHOM_MABHYT_ID,IFNULL(b.MA_DICH_VU,b.MA_VAT_TU) MA_DICH_VU,IFNULL(b.TEN_DICH_VU,b.TEN_VAT_TU) TEN_DICH_VU,nhom.TENNHOM,IFNULL(b.SO_LUONG,0) SO_LUONG,IFNULL(b.DON_GIA_BH, 0) DON_GIA_BH ,IFNULL(dv.HESO,0) HESO, IFNULL(dv.CHIPHI,0) CHIPHI, b.MA_BAC_SI " +
-                $"FROM   `{dbName}`.xml1 a,  `{dbName}`.xml3 b LEFT JOIN his_common.dmc_dichvu dv on IFNULL(b.MA_DICH_VU,b.MA_VAT_TU) = dv.MA_DICHVU AND IFNULL(b.TEN_DICH_VU,b.TEN_VAT_TU) = dv.TEN_DICHVU, " +
-                $"his_common.dmc_nhom_mabhyt nhom " +
-                $"WHERE a.ma_lk = b.ma_lk " +
-                $"AND b.ma_nhom = nhom.MANHOM_BHYT " +
-                $"AND a.NGAY_RA >= @tuNgay " +
-                $"AND a.NGAY_RA <= @denNgay ) x  " +
-                $"group by MA_BAC_SI) t " +
-                $"LEFT JOIN (SELECT * from his_common.org_officer WHERE STATUS = 1 AND MA_BAC_SI IS NOT NULL AND MA_BAC_SI <> \"\") activeUsers  " +
-                $"ON t.MA_BAC_SI = activeUsers.MA_BAC_SI) t1 " +
-                $"ON t2.BACSIID = t1.BACSIID " +
-                $"LEFT JOIN ( SELECT BACSIID, SUM(CASE WHEN BHYT = 1 THEN SOLUONG ELSE 0 END) DIEMCDNHAPVIEN, SUM(CASE WHEN BHYT = 2 THEN SOLUONG ELSE 0 END) DIEMCDNHAPVIENBNND FROM `{dbName}`.bc_benhnhan_nhapvien WHERE THANGNAM IN (" + GenerateDynamicParamThangNam(arrThangNam) + ")  " +
-                $"GROUP BY BACSIID ) t3 " +
-                $"ON t2.BACSIID = t3.BACSIID " +
-                $"LEFT JOIN ( SELECT BACSIID, SUM(SOLUONG) DIEMBANT FROM `{dbName}`.bc_benhnhan_15t WHERE THANGNAM IN (" + GenerateDynamicParamThangNam(arrThangNam) + ") AND BHYT = 1 " +
-                $"GROUP BY BACSIID ) t4 " +
-                $"ON t2.BACSIID = t4.BACSIID " +
-                $"LEFT JOIN  (SELECT pttTHSum.*,  org.BACSIID, org.OFFICER_NAME " +
-                $"FROM  (SELECT NGUOI_THUC_HIEN, SUM(SO_LUONG*HESO) DIEMPTTTHUCHIEN  " +
-                $"FROM (SELECT tPtt.NHOM_MABHYT_ID, tPtt.SO_LUONG, tPtt.HESO,jt.NGUOI_THUC_HIEN " +
-                $"FROM (SELECT nhom.NHOM_MABHYT_ID,IFNULL(b.SO_LUONG,0) SO_LUONG,IFNULL(dv.HESO,0) HESO, b.NGUOI_THUC_HIEN " +
-                $"FROM  `{dbName}`.xml1 a, " +
-                $"`{dbName}`.xml3 b " +
-                $"LEFT JOIN his_common.dmc_dichvu dv " +
-                $"on IFNULL(b.MA_DICH_VU,b.MA_VAT_TU) = dv.MA_DICHVU AND IFNULL(b.TEN_DICH_VU,b.TEN_VAT_TU) = dv.TEN_DICHVU, " +
-                $"his_common.dmc_nhom_mabhyt nhom " +
-                $"WHERE a.ma_lk = b.ma_lk " +
-                $"AND b.ma_nhom = nhom.MANHOM_BHYT " +
-                $"AND a.NGAY_RA >= @tuNgay " +
-                $"AND a.NGAY_RA <= @denNgay AND nhom.NHOM_MABHYT_ID IN (6,26) ) tPtt " +
-                $"JOIN JSON_TABLE( " +
-                $"CONCAT('[\"', REPLACE(tPtt.NGUOI_THUC_HIEN, ';', '\",\"'), '\"]'), " +
-                $"'$[*]' COLUMNS( NGUOI_THUC_HIEN VARCHAR(255) PATH '$' )) AS jt) tPttSplit GROUP BY NGUOI_THUC_HIEN) pttTHSum " +
-                $"LEFT JOIN his_common.org_officer org " +
-                $"ON org.MA_BAC_SI = pttTHSum.NGUOI_THUC_HIEN) t5 " +
-                $"ON t5.BACSIID = t2.BACSIID " +
-                $"LEFT JOIN( " +
-                $"SELECT BACSIID_CD, SUM(DIEMBNNDCD) DIEMBNNDCD " +
-                $"FROM (SELECT  xml_bnnd.MADICHVU, dv.DICHVUID, xml_bnnd.TENDICHVU, NGUOIDUNGID BACSIID_CD, IFNULL(HESO,0), IFNULL(SOLUONG,0) SOLUONG, IFNULL(HESO*SOLUONG,0) DIEMBNNDCD , LOAIPHIEUMAUBENHPHAM " +
-                $"FROM `{dbName}`.xml_bnnd  " +
-                $"LEFT JOIN his_common.dmc_dichvu dv  " +
-                $"ON xml_bnnd.MADICHVU = dv.MA_DICHVU AND xml_bnnd.TENDICHVU = dv.TEN_DICHVU " +
-                $"WHERE LOAIPHIEUMAUBENHPHAM<>7  " +
-                $"AND LOAIPHIEUMAUBENHPHAM<>8 " +
-                $"        AND xml_bnnd.NGAY_RAVIEN >= @tuNgay " +
-                $"       AND xml_bnnd.NGAY_RAVIEN <= @denNgay " +
-                $"GROUP BY MADICHVU, DICHVUID, TENDICHVU, NGUOIDUNGID, HESO,  SOLUONG, LOAIPHIEUMAUBENHPHAM) t " +
-                $"GROUP BY BACSIID_CD ) t6 " +
-                $"ON t6.BACSIID_CD = t2.BACSIID " +
+            var sql = $"SELECT officer.OFFICER_NAME  ,officer.OFFICER_TYPE  ,officer.BACSIID  ,t1.DIEMTHUCHIEN  ,t2.KHOAID  ,t2.DIEM_KEHOACH  ,org.ORG_NAME KHOA  ,t2.DIEM_TRUC  ,(IFNULL(t2.DIEMTANGCUONG,0)+IFNULL(t1.DIEMDTCD,0))  DIEMTANGCUONG  ,t2.SONGAYTANGCUONG  ,t3.DIEMCDNHAPVIEN * 6.4 DIEMCDNHAPVIEN  ,t3.DIEMCDNHAPVIENBNND * 19.2 DIEMCDNHAPVIENBNND  ,t1.DIEMPTTCD * 0.2 DIEMPTTCHIDINH  ,t5.DIEMPTTTHUCHIEN * 0.8 DIEMPTTTHUCHIEN  ,t4.DIEMBANT  ,t6.DIEMBNNDCD  ,t7.DIEMBNNDTH " +
+                $"FROM (  " +
+                $"SELECT dkh.KHOAID   ,IFNULL(sum(dkh.DIEM_KEHOACH), 0) AS DIEM_KEHOACH   ,dkh.BACSIID   ,IFNULL(sum(dkh.DIEM_TRUC), 0) AS DIEM_TRUC   ,IFNULL(sum(tcSum.DIEMTANGCUONG), 0) AS DIEMTANGCUONG   ,IFNULL(sum(tcSum.SONGAYTANGCUONG), 0) AS SONGAYTANGCUONG  FROM {dbName}.bc_diemkehoach dkh  " +
+                $"LEFT JOIN (   SELECT DIEMKEHOACHID    ,IFNULL(SUM(tc.DIEM), 0) DIEMTANGCUONG    ,IFNULL(SUM(tc.SONGAY), 0) SONGAYTANGCUONG   FROM {dbName}.bc_tangcuong tc   GROUP BY DIEMKEHOACHID   ) tcSum ON tcSum.DIEMKEHOACHID = dkh.DIEMKEHOACHID  WHERE THANGNAM IN (    "+GenerateDynamicParamThangNam(arrThangNam)+"    )  GROUP BY KHOAID   ,BACSIID  ) t2 LEFT JOIN ( " +
+                $"SELECT t.DIEMTHUCHIEN, t.DIEMDTCD   ,activeUsers.BACSIID   ,t.DIEMPTTCD  FROM (   SELECT MA_BAC_SI    ,SUM(HESO) AS DIEMTHUCHIEN    ,SUM(CASE       WHEN NHOM_MABHYT_ID IN (        6        ,26        )       THEN HESO      ELSE 0      END) DIEMPTTCD, SUM(CASE WHEN MA_DICH_VU='21.0014.1778' THEN HESO  ELSE 0  END  ) DIEMDTCD   FROM ( " +
+                $"SELECT nhom.NHOM_MABHYT_ID     ,IFNULL(b.MA_DICH_VU, b.MA_VAT_TU) MA_DICH_VU     ,IFNULL(b.TEN_DICH_VU, b.TEN_VAT_TU) TEN_DICH_VU     ,nhom.TENNHOM     ,IFNULL(b.SO_LUONG, 0) SO_LUONG     ,IFNULL(b.DON_GIA_BH, 0) DON_GIA_BH     ,IFNULL(IF(IFNULL(dv.HESO_CLS_CD,0) > 0, dv.HESO_CLS_CD, IF(IFNULL(dv.HESO,0) >0, dv.HESO,0) ), 0) HESO     ,IFNULL(dv.CHIPHI, 0) CHIPHI     ,b.MA_BAC_SI    FROM {dbName}.xml1 a     ,{dbName}.xml3 b  " +
+                $"LEFT JOIN his_common.dmc_dichvu dv ON IFNULL(b.MA_DICH_VU, b.MA_VAT_TU) = dv.MA_DICHVU     AND IFNULL(b.TEN_DICH_VU, b.TEN_VAT_TU) = dv.TEN_DICHVU     ,his_common.dmc_nhom_mabhyt nhom    WHERE a.ma_lk = b.ma_lk     AND b.ma_nhom = nhom.MANHOM_BHYT     AND a.NGAY_RA >= @tuNgay     AND a.NGAY_RA <= @denNgay   ) x   GROUP BY MA_BAC_SI   ) t  LEFT JOIN (   SELECT *   FROM his_common.org_officer   WHERE STATUS = 1    AND MA_BAC_SI IS NOT NULL    AND MA_BAC_SI <> \"\"   ) activeUsers ON t.MA_BAC_SI = activeUsers.MA_BAC_SI  ) t1 ON t2.BACSIID = t1.BACSIID LEFT JOIN (   " +
+                $"SELECT BACSIID   ,SUM(CASE      WHEN BHYT = 1      THEN SOLUONG     ELSE 0     END) DIEMCDNHAPVIEN   ,SUM(CASE      WHEN BHYT = 2      THEN SOLUONG     ELSE 0     END) DIEMCDNHAPVIENBNND  FROM {dbName}.bc_benhnhan_nhapvien  WHERE THANGNAM IN (    "+GenerateDynamicParamThangNam(arrThangNam)+"    )  GROUP BY BACSIID  ) t3 ON t2.BACSIID = t3.BACSIID LEFT JOIN (   " +
+                $"SELECT BACSIID   ,SUM(SOLUONG) DIEMBANT  FROM {dbName}.bc_benhnhan_15t  WHERE THANGNAM IN (    " +GenerateDynamicParamThangNam(arrThangNam)+"   )   AND BHYT = 1  GROUP BY BACSIID  ) t4 ON t2.BACSIID = t4.BACSIID LEFT JOIN ( " +
+                $"SELECT pttTHSum.*   ,org.BACSIID   ,org.OFFICER_NAME  FROM (   SELECT NGUOI_THUC_HIEN    ,SUM(SO_LUONG * HESO) DIEMPTTTHUCHIEN   FROM (    SELECT tPtt.NHOM_MABHYT_ID     ,tPtt.SO_LUONG     ,tPtt.HESO     ,jt.NGUOI_THUC_HIEN    FROM (     SELECT nhom.NHOM_MABHYT_ID      ,IFNULL(b.SO_LUONG, 0) SO_LUONG      ,IFNULL(dv.HESO, 0) HESO      ,b.NGUOI_THUC_HIEN     FROM {dbName}.xml1 a      ,{dbName}.xml3 b     LEFT JOIN his_common.dmc_dichvu dv ON IFNULL(b.MA_DICH_VU, b.MA_VAT_TU) = dv.MA_DICHVU      AND IFNULL(b.TEN_DICH_VU, b.TEN_VAT_TU) = dv.TEN_DICHVU      ,his_common.dmc_nhom_mabhyt nhom     WHERE a.ma_lk = b.ma_lk      AND b.ma_nhom = nhom.MANHOM_BHYT      AND a.NGAY_RA >= @tuNgay      AND a.NGAY_RA <= @denNgay      AND nhom.NHOM_MABHYT_ID IN (       6       ,26       )     ) tPtt    JOIN JSON_TABLE(CONCAT (       '[\"'       ,REPLACE(tPtt.NGUOI_THUC_HIEN, ';', '\",\"')       ,'\"]'       ), '$[*]' COLUMNS(NGUOI_THUC_HIEN VARCHAR(255) PATH '$')) AS jt    ) tPttSplit   GROUP BY NGUOI_THUC_HIEN   ) pttTHSum  LEFT JOIN " +
+                $"his_common.org_officer org ON org.MA_BAC_SI = pttTHSum.NGUOI_THUC_HIEN ) t5 ON t5.BACSIID = t2.BACSIID " +
                 $"LEFT JOIN ( " +
-                $"SELECT BACSIID_TH, SUM(DIEMBNNDTH) DIEMBNNDTH " +
-                $"FROM (SELECT  xml_bnnd.MADICHVU, dv.DICHVUID, xml_bnnd.TENDICHVU, NGUOITRAKETQUA BACSIID_TH, IFNULL(HESO,0), IFNULL(SOLUONG,0) SOLUONG, IFNULL(HESO*SOLUONG,0) DIEMBNNDTH , LOAIPHIEUMAUBENHPHAM " +
-                $"FROM `{dbName}`.xml_bnnd  " +
-                $"LEFT JOIN his_common.dmc_dichvu dv  " +
-                $"ON xml_bnnd.MADICHVU = dv.MA_DICHVU AND xml_bnnd.TENDICHVU = dv.TEN_DICHVU " +
-                $"WHERE LOAIPHIEUMAUBENHPHAM<>7  " +
-                $"        AND LOAIPHIEUMAUBENHPHAM<>8  " +
-                $"        AND NGUOITRAKETQUA IS NOT NULL " +
-                $"        AND xml_bnnd.NGAY_RAVIEN >= @tuNgay        " +
-                $"        AND xml_bnnd.NGAY_RAVIEN <= @denNgay " +
-                $"GROUP BY MADICHVU, DICHVUID, TENDICHVU, NGUOITRAKETQUA, HESO,  SOLUONG, LOAIPHIEUMAUBENHPHAM) t " +
-                $"GROUP BY BACSIID_TH ) t7 " +
-                $"ON t7.BACSIID_TH = t2.BACSIID "+
+                $"SELECT BACSIID_CD ,SUM(DIEMBNNDCD) DIEMBNNDCD FROM ( " +
+                $"SELECT xml_bnnd.MADICHVU ,dv.DICHVUID ,xml_bnnd.TENDICHVU ,NGUOIDUNGID BACSIID_CD ,IF(IFNULL(HESO_CLS_CD,0) > 0, HESO_CLS_CD, IF(IFNULL(HESO,0) >0, HESO,0) ) HESO ,IFNULL(SOLUONG, 0) SOLUONG ,IFNULL(IF(IFNULL(HESO_CLS_CD,0) > 0, HESO_CLS_CD, IF(IFNULL(HESO,0) >0, HESO,0) ) * SOLUONG, 0) DIEMBNNDCD " +
+                $",LOAIPHIEUMAUBENHPHAM " +
+                $"FROM {dbName}.xml_bnnd " +
+                $"LEFT JOIN his_common.dmc_dichvu dv ON xml_bnnd.MADICHVU = dv.MA_DICHVU " +
+                $"AND xml_bnnd.TENDICHVU = dv.TEN_DICHVU " +
+                $"WHERE LOAIPHIEUMAUBENHPHAM <> 7 " +
+                $"AND LOAIPHIEUMAUBENHPHAM <> 8 " +
+                $"AND xml_bnnd.NGAY_RAVIEN >= @tuNgay AND xml_bnnd.NGAY_RAVIEN <= @denNgay GROUP BY MADICHVU ,DICHVUID ,TENDICHVU ,NGUOIDUNGID ,HESO ,SOLUONG ,LOAIPHIEUMAUBENHPHAM ) t " +
+                $"GROUP BY BACSIID_CD ) t6 ON t6.BACSIID_CD = t2.BACSIID " +
+                $"LEFT JOIN (  " +
+                $"SELECT BACSIID_TH ,SUM(DIEMBNNDTH) DIEMBNNDTH " +
+                $"FROM ( SELECT xml_bnnd.MADICHVU ,dv.DICHVUID ,xml_bnnd.TENDICHVU ,NGUOITRAKETQUA BACSIID_TH ,IF(IFNULL(HESO_CLS_TH,0) >0, HESO_CLS_TH, (IF(IFNULL(HESO_CLS_CD,0) > 0, HESO_CLS_CD, IF(IFNULL(HESO,0) >0, HESO,0)) )) HESO ,IFNULL(SOLUONG, 0) SOLUONG " +
+                $",IFNULL(IF(IFNULL(HESO_CLS_TH,0) >0, HESO_CLS_TH, (IF(IFNULL(HESO_CLS_CD,0) > 0, HESO_CLS_CD, IF(IFNULL(HESO,0) >0, HESO,0)) )) * SOLUONG, 0) DIEMBNNDTH ,LOAIPHIEUMAUBENHPHAM " +
+                $"FROM {dbName}.xml_bnnd " +
+                $"LEFT JOIN his_common.dmc_dichvu dv ON xml_bnnd.MADICHVU = dv.MA_DICHVU AND xml_bnnd.TENDICHVU = dv.TEN_DICHVU WHERE LOAIPHIEUMAUBENHPHAM <> 7 AND LOAIPHIEUMAUBENHPHAM <> 8 AND NGUOITRAKETQUA IS NOT NULL AND xml_bnnd.NGAY_RAVIEN >=  @tuNgay AND xml_bnnd.NGAY_RAVIEN <=  @denNgay GROUP BY MADICHVU ,DICHVUID ,TENDICHVU ,NGUOITRAKETQUA ,HESO ,SOLUONG ,LOAIPHIEUMAUBENHPHAM ) t " +
+                $"GROUP BY BACSIID_TH " +
+                $") t7 ON t7.BACSIID_TH = t2.BACSIID " +
                 $"LEFT JOIN his_common.org_organization org ON org.ORG_ID = t2.KHOAID " +
                 $"LEFT JOIN his_common.org_officer officer ON officer.BACSIID = t2.BACSIID " +
-                $"order by t2.KHOAID;";
+                $"ORDER BY t2.KHOAID;";
             var conn = _context.Database.GetDbConnection();
             using var cmd = conn.CreateCommand();
             var paramList = new List<DbParameter>();
@@ -2432,25 +2390,25 @@ namespace API.Controllers
                 if(dataRow.type == ReportRowType.GROUP) ws.Cell(row, 2).Value = dataRow.DiemCtkh.Khoa;
                 if(dataRow.type == ReportRowType.ITEM) ws.Cell(row, 2).Value = dataRow.DiemCtkh.OfficerName;
                 if(dataRow.type == ReportRowType.GRAND_TOTAL) ws.Cell(row, 2).Value = "Tổng cộng";
-                var cellRow3Val = dataRow.DiemCtkh.DiemKeHoach; ws.Cell(row, 3).FormulaA1 = $"IF(RIGHT(TEXT({cellRow3Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow3Val},\"#,##0\"), TEXT({cellRow3Val},\"#,##0.0\"))"; // format tùy theo giá trị integer hay decimal
-                var cellRow4Val = dataRow.DiemCtkh.DiemCdKham; ws.Cell(row, 4).FormulaA1 = $"IF(RIGHT(TEXT({cellRow4Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow4Val},\"#,##0\"), TEXT({cellRow4Val},\"#,##0.0\"))";
-                var cellRow5Val = dataRow.DiemCtkh.DiemCDDieuTri; ws.Cell(row, 5).FormulaA1 = $"IF(RIGHT(TEXT({cellRow5Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow5Val},\"#,##0\"), TEXT({cellRow5Val},\"#,##0.0\"))";
-                var cellRow6Val = dataRow.DiemCtkh.DiemPTTCD; ws.Cell(row, 6).FormulaA1 = $"IF(RIGHT(TEXT({cellRow6Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow6Val},\"#,##0\"), TEXT({cellRow6Val},\"#,##0.0\"))";
-                var cellRow7Val = dataRow.DiemCtkh.DiemPTTTH; ws.Cell(row, 7).FormulaA1 = $"IF(RIGHT(TEXT({cellRow7Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow7Val},\"#,##0\"), TEXT({cellRow7Val},\"#,##0.0\"))";
-                var cellRow8Val = dataRow.DiemCtkh.DiemTangCuong; ws.Cell(row, 8).FormulaA1 = $"IF(RIGHT(TEXT({cellRow8Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow8Val},\"#,##0\"), TEXT({cellRow8Val},\"#,##0.0\"))";
-                var cellRow9Val = dataRow.DiemCtkh.DiemTruc; ws.Cell(row, 9).FormulaA1 = $"IF(RIGHT(TEXT({cellRow9Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow9Val},\"#,##0\"), TEXT({cellRow9Val},\"#,##0.0\"))";
-                var cellRow10Val = dataRow.DiemCtkh.DiemCongBANT; ws.Cell(row, 10).FormulaA1 = $"IF(RIGHT(TEXT({cellRow10Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow10Val},\"#,##0\"), TEXT({cellRow10Val},\"#,##0.0\"))";
-                var cellRow11Val = dataRow.diemPTTTHTheoDD; ws.Cell(row, 11).FormulaA1 = $"IF(RIGHT(TEXT({cellRow11Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow11Val},\"#,##0\"), TEXT({cellRow11Val},\"#,##0.0\"))";
-                var cellRow12Val = dataRow.DiemCtkh.DiemBNNDCD; ws.Cell(row, 12).FormulaA1 = $"IF(RIGHT(TEXT({cellRow12Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow12Val},\"#,##0\"), TEXT({cellRow12Val},\"#,##0.0\"))";
-                var cellRow13Val = dataRow.DiemCtkh.DiemBNNDTH; ws.Cell(row, 13).FormulaA1 = $"IF(RIGHT(TEXT({cellRow13Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow13Val},\"#,##0\"), TEXT({cellRow13Val},\"#,##0.0\"))";
-                var cellRow14Val = dataRow.DiemCtkh.DiemBNNDCDNhapVien; ws.Cell(row, 14).FormulaA1 = $"IF(RIGHT(TEXT({cellRow14Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow14Val},\"#,##0\"), TEXT({cellRow14Val},\"#,##0.0\"))";
-                var cellRow15Val = dataRow.tongCong; ws.Cell(row, 15).FormulaA1 = $"IF(RIGHT(TEXT({cellRow15Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow15Val},\"#,##0\"), TEXT({cellRow15Val},\"#,##0.0\"))";
-                var cellRow17Val = dataRow.datCtkh; ws.Cell(row, 17).FormulaA1 = $"CONCAT(IF(RIGHT(TEXT({cellRow17Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow17Val},\"#,##0\"), TEXT({cellRow17Val},\"#,##0.0\")),\"%\")";
+                var cellRow3Val = dataRow.DiemCtkh.DiemKeHoach; ws.Cell(row, 3).FormulaA1 = $"IF(RIGHT(TEXT({cellRow3Val},\"###0.0\"),1)=\"0\", TEXT({cellRow3Val},\"###0\"), TEXT({cellRow3Val},\"###0.0\"))"; // format tùy theo giá trị integer hay decimal
+                var cellRow4Val = dataRow.DiemCtkh.DiemCdKham; ws.Cell(row, 4).FormulaA1 = $"IF(RIGHT(TEXT({cellRow4Val},\"###0.0\"),1)=\"0\", TEXT({cellRow4Val},\"###0\"), TEXT({cellRow4Val},\"###0.0\"))";
+                var cellRow5Val = dataRow.DiemCtkh.DiemCDDieuTri; ws.Cell(row, 5).FormulaA1 = $"IF(RIGHT(TEXT({cellRow5Val},\"###0.0\"),1)=\"0\", TEXT({cellRow5Val},\"###0\"), TEXT({cellRow5Val},\"###0.0\"))";
+                var cellRow6Val = dataRow.DiemCtkh.DiemPTTCD; ws.Cell(row, 6).FormulaA1 = $"IF(RIGHT(TEXT({cellRow6Val},\"###0.0\"),1)=\"0\", TEXT({cellRow6Val},\"###0\"), TEXT({cellRow6Val},\"###0.0\"))";
+                var cellRow7Val = dataRow.DiemCtkh.DiemPTTTH; ws.Cell(row, 7).FormulaA1 = $"IF(RIGHT(TEXT({cellRow7Val},\"###0.0\"),1)=\"0\", TEXT({cellRow7Val},\"###0\"), TEXT({cellRow7Val},\"###0.0\"))";
+                var cellRow8Val = dataRow.DiemCtkh.DiemTangCuong; ws.Cell(row, 8).FormulaA1 = $"IF(RIGHT(TEXT({cellRow8Val},\"###0.0\"),1)=\"0\", TEXT({cellRow8Val},\"###0\"), TEXT({cellRow8Val},\"###0.0\"))";
+                var cellRow9Val = dataRow.DiemCtkh.DiemTruc; ws.Cell(row, 9).FormulaA1 = $"IF(RIGHT(TEXT({cellRow9Val},\"###0.0\"),1)=\"0\", TEXT({cellRow9Val},\"###0\"), TEXT({cellRow9Val},\"###0.0\"))";
+                var cellRow10Val = dataRow.DiemCtkh.DiemCongBANT; ws.Cell(row, 10).FormulaA1 = $"IF(RIGHT(TEXT({cellRow10Val},\"###0.0\"),1)=\"0\", TEXT({cellRow10Val},\"###0\"), TEXT({cellRow10Val},\"###0.0\"))";
+                var cellRow11Val = dataRow.diemPTTTHTheoDD; ws.Cell(row, 11).FormulaA1 = $"IF(RIGHT(TEXT({cellRow11Val},\"###0.0\"),1)=\"0\", TEXT({cellRow11Val},\"###0\"), TEXT({cellRow11Val},\"###0.0\"))";
+                var cellRow12Val = dataRow.DiemCtkh.DiemBNNDCD; ws.Cell(row, 12).FormulaA1 = $"IF(RIGHT(TEXT({cellRow12Val},\"###0.0\"),1)=\"0\", TEXT({cellRow12Val},\"###0\"), TEXT({cellRow12Val},\"###0.0\"))";
+                var cellRow13Val = dataRow.DiemCtkh.DiemBNNDTH; ws.Cell(row, 13).FormulaA1 = $"IF(RIGHT(TEXT({cellRow13Val},\"###0.0\"),1)=\"0\", TEXT({cellRow13Val},\"###0\"), TEXT({cellRow13Val},\"###0.0\"))";
+                var cellRow14Val = dataRow.DiemCtkh.DiemBNNDCDNhapVien; ws.Cell(row, 14).FormulaA1 = $"IF(RIGHT(TEXT({cellRow14Val},\"###0.0\"),1)=\"0\", TEXT({cellRow14Val},\"###0\"), TEXT({cellRow14Val},\"###0.0\"))";
+                var cellRow15Val = dataRow.tongCong; ws.Cell(row, 15).FormulaA1 = $"IF(RIGHT(TEXT({cellRow15Val},\"###0.0\"),1)=\"0\", TEXT({cellRow15Val},\"###0\"), TEXT({cellRow15Val},\"###0.0\"))";
+                var cellRow17Val = dataRow.datCtkh; ws.Cell(row, 17).FormulaA1 = $"CONCAT(IF(RIGHT(TEXT({cellRow17Val},\"###0.0\"),1)=\"0\", TEXT({cellRow17Val},\"###0\"), TEXT({cellRow17Val},\"###0.0\")),\"%\")";
                 if (dataRow.type == ReportRowType.GRAND_TOTAL)
                 {
-                    var cellRow18Val = dataRow.tongDiemKH; ws.Cell(row, 18).FormulaA1 = $"IF(RIGHT(TEXT({cellRow18Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow18Val},\"#,##0\"), TEXT({cellRow18Val},\"#,##0.0\"))";
-                    var cellRow19Val = dataRow.tongDiemTH; ws.Cell(row, 19).FormulaA1 = $"IF(RIGHT(TEXT({cellRow19Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow19Val},\"#,##0\"), TEXT({cellRow19Val},\"#,##0.0\"))";
-                    var cellRow20Val = dataRow.datCtkhTong*100; ws.Cell(row, 20).FormulaA1 = $"CONCAT(IF(RIGHT(TEXT({cellRow20Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow20Val},\"#,##0\"), TEXT({cellRow20Val},\"#,##0.0\")),\"%\")";
+                    var cellRow18Val = dataRow.tongDiemKH; ws.Cell(row, 18).FormulaA1 = $"IF(RIGHT(TEXT({cellRow18Val},\"###0.0\"),1)=\"0\", TEXT({cellRow18Val},\"###0\"), TEXT({cellRow18Val},\"###0.0\"))";
+                    var cellRow19Val = dataRow.tongDiemTH; ws.Cell(row, 19).FormulaA1 = $"IF(RIGHT(TEXT({cellRow19Val},\"###0.0\"),1)=\"0\", TEXT({cellRow19Val},\"###0\"), TEXT({cellRow19Val},\"###0.0\"))";
+                    var cellRow20Val = dataRow.datCtkhTong*100; ws.Cell(row, 20).FormulaA1 = $"CONCAT(IF(RIGHT(TEXT({cellRow20Val},\"###0.0\"),1)=\"0\", TEXT({cellRow20Val},\"###0\"), TEXT({cellRow20Val},\"###0.0\")),\"%\")";
                 }
                 else if(dataRow.type == ReportRowType.GROUP)
                 {
@@ -2460,16 +2418,16 @@ namespace API.Controllers
                 }
                 else if (dataRow.type == ReportRowType.ITEM && r >= 1 && data[r - 1].type == ReportRowType.GROUP)
                 {
-                    var cellRow18Val = data[r - 1].tongDiemKH; ws.Cell(row, 18).FormulaA1 = $"IF(RIGHT(TEXT({cellRow18Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow18Val},\"#,##0\"), TEXT({cellRow18Val},\"#,##0.0\"))";
+                    var cellRow18Val = data[r - 1].tongDiemKH; ws.Cell(row, 18).FormulaA1 = $"IF(RIGHT(TEXT({cellRow18Val},\"###0.0\"),1)=\"0\", TEXT({cellRow18Val},\"###0\"), TEXT({cellRow18Val},\"###0.0\"))";
                     ws.Range(row, 18, row + data[r - 1].tongBS-1, 18).Merge();
-                    var cellRow19Val = data[r - 1].tongDiemTH; ws.Cell(row, 19).FormulaA1 = $"IF(RIGHT(TEXT({cellRow19Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow19Val},\"#,##0\"), TEXT({cellRow19Val},\"#,##0.0\"))";
+                    var cellRow19Val = data[r - 1].tongDiemTH; ws.Cell(row, 19).FormulaA1 = $"IF(RIGHT(TEXT({cellRow19Val},\"###0.0\"),1)=\"0\", TEXT({cellRow19Val},\"###0\"), TEXT({cellRow19Val},\"###0.0\"))";
                     ws.Range(row, 19, row + data[r - 1].tongBS-1, 19).Merge();
-                    var cellRow20Val = data[r - 1].datCtkhTong * 100; ws.Cell(row, 20).FormulaA1 = $"CONCAT(IF(RIGHT(TEXT({cellRow20Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow20Val},\"#,##0\"), TEXT({cellRow20Val},\"#,##0.0\")),\"%\")";
+                    var cellRow20Val = data[r - 1].datCtkhTong * 100; ws.Cell(row, 20).FormulaA1 = $"CONCAT(IF(RIGHT(TEXT({cellRow20Val},\"###0.0\"),1)=\"0\", TEXT({cellRow20Val},\"###0\"), TEXT({cellRow20Val},\"###0.0\")),\"%\")";
                     ws.Range(row, 20, row + data[r - 1].tongBS-1, 20).Merge();
                 }
 
 
-                //ws.Range($"{colName[3]}{row}:{colName[15]}{row}").Style.NumberFormat.Format = "#,##0.##";
+                //ws.Range($"{colName[3]}{row}:{colName[15]}{row}").Style.NumberFormat.Format = "###0.##";
                 row++;
                
             }
@@ -2642,15 +2600,15 @@ namespace API.Controllers
                 if (dataRow.type == ReportRowType.GROUP) ws.Cell(row, 2).Value = dataRow.DiemCtkh.Khoa;
                 if (dataRow.type == ReportRowType.ITEM) ws.Cell(row, 2).Value = dataRow.DiemCtkh.OfficerName;
                 if (dataRow.type == ReportRowType.GRAND_TOTAL) ws.Cell(row, 2).Value = "Tổng cộng";
-                var cellRow3Val = dataRow.DiemCtkh.DiemKeHoach; ws.Cell(row, 3).FormulaA1 = $"IF(RIGHT(TEXT({cellRow3Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow3Val},\"#,##0\"), TEXT({cellRow3Val},\"#,##0.0\"))";
-                var cellRow4Val = dataRow.diemTHTheoBS; ws.Cell(row, 4).FormulaA1 = $"IF(RIGHT(TEXT({cellRow4Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow4Val},\"#,##0\"), TEXT({cellRow4Val},\"#,##0.0\"))";
-                var cellRow5Val = dataRow.DiemCtkh.SoNgayTangCuong; ws.Cell(row, 5).FormulaA1 = $"IF(RIGHT(TEXT({cellRow5Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow5Val},\"#,##0\"), TEXT({cellRow5Val},\"#,##0.0\"))";
-                var cellRow6Val = dataRow.DiemCtkh.DiemTangCuong; ws.Cell(row, 6).FormulaA1 = $"IF(RIGHT(TEXT({cellRow6Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow6Val},\"#,##0\"), TEXT({cellRow6Val},\"#,##0.0\"))";
-                var cellRow11Val = dataRow.DiemCtkh.DiemTruc; ws.Cell(row, 11).FormulaA1 = $"IF(RIGHT(TEXT({cellRow11Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow11Val},\"#,##0\"), TEXT({cellRow11Val},\"#,##0.0\"))";
-                var cellRow12Val = dataRow.type == ReportRowType.ITEM ? dataRow.DiemCtkh.DiemPTTTH??0m/0.8m : dataRow.diemPTTTHTheoDD; ws.Cell(row, 12).FormulaA1 = $"IF(RIGHT(TEXT({cellRow12Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow12Val},\"#,##0\"), TEXT({cellRow12Val},\"#,##0.0\"))";
-                var cellRow13Val = dataRow.diemBNNDTheoBs; ws.Cell(row, 13).FormulaA1 = $"IF(RIGHT(TEXT({cellRow13Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow13Val},\"#,##0\"), TEXT({cellRow13Val},\"#,##0.0\"))";
-                var cellRow15Val = dataRow.tongCong; ws.Cell(row, 15).FormulaA1 = $"IF(RIGHT(TEXT({cellRow15Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow15Val},\"#,##0\"), TEXT({cellRow15Val},\"#,##0.0\"))";
-                var cellRow17Val = dataRow.datCtkh; ws.Cell(row, 17).FormulaA1 = $"CONCAT(IF(RIGHT(TEXT({cellRow17Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow17Val},\"#,##0\"), TEXT({cellRow17Val},\"#,##0.0\")),\"%\")";
+                var cellRow3Val = dataRow.DiemCtkh.DiemKeHoach; ws.Cell(row, 3).FormulaA1 = $"IF(RIGHT(TEXT({cellRow3Val},\"###0.0\"),1)=\"0\", TEXT({cellRow3Val},\"###0\"), TEXT({cellRow3Val},\"###0.0\"))";
+                var cellRow4Val = dataRow.diemTHTheoBS; ws.Cell(row, 4).FormulaA1 = $"IF(RIGHT(TEXT({cellRow4Val},\"###0.0\"),1)=\"0\", TEXT({cellRow4Val},\"###0\"), TEXT({cellRow4Val},\"###0.0\"))";
+                var cellRow5Val = dataRow.DiemCtkh.SoNgayTangCuong; ws.Cell(row, 5).FormulaA1 = $"IF(RIGHT(TEXT({cellRow5Val},\"###0.0\"),1)=\"0\", TEXT({cellRow5Val},\"###0\"), TEXT({cellRow5Val},\"###0.0\"))";
+                var cellRow6Val = dataRow.DiemCtkh.DiemTangCuong; ws.Cell(row, 6).FormulaA1 = $"IF(RIGHT(TEXT({cellRow6Val},\"###0.0\"),1)=\"0\", TEXT({cellRow6Val},\"###0\"), TEXT({cellRow6Val},\"###0.0\"))";
+                var cellRow11Val = dataRow.DiemCtkh.DiemTruc; ws.Cell(row, 11).FormulaA1 = $"IF(RIGHT(TEXT({cellRow11Val},\"###0.0\"),1)=\"0\", TEXT({cellRow11Val},\"###0\"), TEXT({cellRow11Val},\"###0.0\"))";
+                var cellRow12Val = dataRow.type == ReportRowType.ITEM ? dataRow.DiemCtkh.DiemPTTTH??0m/0.8m : dataRow.diemPTTTHTheoDD; ws.Cell(row, 12).FormulaA1 = $"IF(RIGHT(TEXT({cellRow12Val},\"###0.0\"),1)=\"0\", TEXT({cellRow12Val},\"###0\"), TEXT({cellRow12Val},\"###0.0\"))";
+                var cellRow13Val = dataRow.diemBNNDTheoBs; ws.Cell(row, 13).FormulaA1 = $"IF(RIGHT(TEXT({cellRow13Val},\"###0.0\"),1)=\"0\", TEXT({cellRow13Val},\"###0\"), TEXT({cellRow13Val},\"###0.0\"))";
+                var cellRow15Val = dataRow.tongCong; ws.Cell(row, 15).FormulaA1 = $"IF(RIGHT(TEXT({cellRow15Val},\"###0.0\"),1)=\"0\", TEXT({cellRow15Val},\"###0\"), TEXT({cellRow15Val},\"###0.0\"))";
+                var cellRow17Val = dataRow.datCtkh; ws.Cell(row, 17).FormulaA1 = $"CONCAT(IF(RIGHT(TEXT({cellRow17Val},\"###0.0\"),1)=\"0\", TEXT({cellRow17Val},\"###0\"), TEXT({cellRow17Val},\"###0.0\")),\"%\")";
                 row++;
             }
 
@@ -2835,23 +2793,23 @@ namespace API.Controllers
                 ws.Range(row, 1, row, colCount).Style.Border.RightBorder = XLBorderStyleValues.Thin;
                 ws.Cell(row,1).Value = ConvertToRoman(gCount + 1);
                 ws.Cell(row, 2).Value = group.Key ?? "";
-                var cellRow3Val = $"SUM({colName[3]}{row + 1}:{colName[3]}{row + tongBs})"; ws.Cell(row, 3).FormulaA1 = $"IF(RIGHT(TEXT({cellRow3Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow3Val},\"#,##0\"), TEXT({cellRow3Val},\"#,##0.0\"))" ; // format tùy theo giá trị integer hay decimal
-                var cellRow4Val = $"SUM({colName[4]}{row + 1}:{colName[4]}{row + tongBs})"; ws.Cell(row, 4).FormulaA1 = $"IF(RIGHT(TEXT({cellRow4Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow4Val},\"#,##0\"), TEXT({cellRow4Val},\"#,##0.0\"))";
-                var cellRow5Val = $"SUM({colName[5]}{row + 1}:{colName[5]}{row + tongBs})"; ws.Cell(row, 5).FormulaA1 = $"IF(RIGHT(TEXT({cellRow5Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow5Val},\"#,##0\"), TEXT({cellRow5Val},\"#,##0.0\"))";
-                var cellRow6Val = $"SUM({colName[6]}{row + 1}:{colName[6]}{row + tongBs})"; ws.Cell(row, 6).FormulaA1 = $"IF(RIGHT(TEXT({cellRow6Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow6Val},\"#,##0\"), TEXT({cellRow6Val},\"#,##0.0\"))";
-                var cellRow7Val = $"SUM({colName[7]}{row + 1}:{colName[7]}{row + tongBs})"; ws.Cell(row, 7).FormulaA1 = $"IF(RIGHT(TEXT({cellRow7Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow7Val},\"#,##0\"), TEXT({cellRow7Val},\"#,##0.0\"))";
-                var cellRow8Val = $"SUM({colName[8]}{row + 1}:{colName[8]}{row + tongBs})"; ws.Cell(row, 8).FormulaA1 = $"IF(RIGHT(TEXT({cellRow8Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow8Val},\"#,##0\"), TEXT({cellRow8Val},\"#,##0.0\"))";
-                var cellRow9Val = $"SUM({colName[9]}{row + 1}:{colName[9]}{row + tongBs})"; ws.Cell(row, 9).FormulaA1 = $"IF(RIGHT(TEXT({cellRow9Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow9Val},\"#,##0\"), TEXT({cellRow9Val},\"#,##0.0\"))";
-                var cellRow10Val = $"SUM({colName[10]}{row + 1}:{colName[10]}{row + tongBs})"; ws.Cell(row, 10).FormulaA1 = $"IF(RIGHT(TEXT({cellRow10Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow10Val},\"#,##0\"), TEXT({cellRow10Val},\"#,##0.0\"))";
-                //var cellRow11Val = $"SUM({colName[11]}{row + 1}:{colName[11]}{row + tongBs})"; ws.Cell(row, 11).FormulaA1 = $"IF(RIGHT(TEXT({cellRow11Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow11Val},\"#,##0\"), TEXT({cellRow11Val},\"#,##0.0\"))";
-                var cellRow12Val = $"SUM({colName[12]}{row + 1}:{colName[12]}{row + tongBs})"; ws.Cell(row, 12).FormulaA1 = $"IF(RIGHT(TEXT({cellRow12Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow12Val},\"#,##0\"), TEXT({cellRow12Val},\"#,##0.0\"))";
-                var cellRow13Val = $"SUM({colName[13]}{row + 1}:{colName[13]}{row + tongBs})"; ws.Cell(row, 13).FormulaA1 = $"IF(RIGHT(TEXT({cellRow13Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow13Val},\"#,##0\"), TEXT({cellRow13Val},\"#,##0.0\"))";
-                var cellRow14Val = $"SUM({colName[14]}{row + 1}:{colName[14]}{row + tongBs})"; ws.Cell(row, 14).FormulaA1 = $"IF(RIGHT(TEXT({cellRow14Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow14Val},\"#,##0\"), TEXT({cellRow14Val},\"#,##0.0\"))";
-                var cellRow15Val = $"SUM({colName[15]}{row + 1}:{colName[15]}{row + tongBs})"; ws.Cell(row, 15).FormulaA1 = $"IF(RIGHT(TEXT({cellRow15Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow15Val},\"#,##0\"), TEXT({cellRow15Val},\"#,##0.0\"))";
+                var cellRow3Val = $"SUM({colName[3]}{row + 1}:{colName[3]}{row + tongBs})"; ws.Cell(row, 3).FormulaA1 = $"IF(RIGHT(TEXT({cellRow3Val},\"###0.0\"),1)=\"0\", TEXT({cellRow3Val},\"###0\"), TEXT({cellRow3Val},\"###0.0\"))" ; // format tùy theo giá trị integer hay decimal
+                var cellRow4Val = $"SUM({colName[4]}{row + 1}:{colName[4]}{row + tongBs})"; ws.Cell(row, 4).FormulaA1 = $"IF(RIGHT(TEXT({cellRow4Val},\"###0.0\"),1)=\"0\", TEXT({cellRow4Val},\"###0\"), TEXT({cellRow4Val},\"###0.0\"))";
+                var cellRow5Val = $"SUM({colName[5]}{row + 1}:{colName[5]}{row + tongBs})"; ws.Cell(row, 5).FormulaA1 = $"IF(RIGHT(TEXT({cellRow5Val},\"###0.0\"),1)=\"0\", TEXT({cellRow5Val},\"###0\"), TEXT({cellRow5Val},\"###0.0\"))";
+                var cellRow6Val = $"SUM({colName[6]}{row + 1}:{colName[6]}{row + tongBs})"; ws.Cell(row, 6).FormulaA1 = $"IF(RIGHT(TEXT({cellRow6Val},\"###0.0\"),1)=\"0\", TEXT({cellRow6Val},\"###0\"), TEXT({cellRow6Val},\"###0.0\"))";
+                var cellRow7Val = $"SUM({colName[7]}{row + 1}:{colName[7]}{row + tongBs})"; ws.Cell(row, 7).FormulaA1 = $"IF(RIGHT(TEXT({cellRow7Val},\"###0.0\"),1)=\"0\", TEXT({cellRow7Val},\"###0\"), TEXT({cellRow7Val},\"###0.0\"))";
+                var cellRow8Val = $"SUM({colName[8]}{row + 1}:{colName[8]}{row + tongBs})"; ws.Cell(row, 8).FormulaA1 = $"IF(RIGHT(TEXT({cellRow8Val},\"###0.0\"),1)=\"0\", TEXT({cellRow8Val},\"###0\"), TEXT({cellRow8Val},\"###0.0\"))";
+                var cellRow9Val = $"SUM({colName[9]}{row + 1}:{colName[9]}{row + tongBs})"; ws.Cell(row, 9).FormulaA1 = $"IF(RIGHT(TEXT({cellRow9Val},\"###0.0\"),1)=\"0\", TEXT({cellRow9Val},\"###0\"), TEXT({cellRow9Val},\"###0.0\"))";
+                var cellRow10Val = $"SUM({colName[10]}{row + 1}:{colName[10]}{row + tongBs})"; ws.Cell(row, 10).FormulaA1 = $"IF(RIGHT(TEXT({cellRow10Val},\"###0.0\"),1)=\"0\", TEXT({cellRow10Val},\"###0\"), TEXT({cellRow10Val},\"###0.0\"))";
+                //var cellRow11Val = $"SUM({colName[11]}{row + 1}:{colName[11]}{row + tongBs})"; ws.Cell(row, 11).FormulaA1 = $"IF(RIGHT(TEXT({cellRow11Val},\"###0.0\"),1)=\"0\", TEXT({cellRow11Val},\"###0\"), TEXT({cellRow11Val},\"###0.0\"))";
+                var cellRow12Val = $"SUM({colName[12]}{row + 1}:{colName[12]}{row + tongBs})"; ws.Cell(row, 12).FormulaA1 = $"IF(RIGHT(TEXT({cellRow12Val},\"###0.0\"),1)=\"0\", TEXT({cellRow12Val},\"###0\"), TEXT({cellRow12Val},\"###0.0\"))";
+                var cellRow13Val = $"SUM({colName[13]}{row + 1}:{colName[13]}{row + tongBs})"; ws.Cell(row, 13).FormulaA1 = $"IF(RIGHT(TEXT({cellRow13Val},\"###0.0\"),1)=\"0\", TEXT({cellRow13Val},\"###0\"), TEXT({cellRow13Val},\"###0.0\"))";
+                var cellRow14Val = $"SUM({colName[14]}{row + 1}:{colName[14]}{row + tongBs})"; ws.Cell(row, 14).FormulaA1 = $"IF(RIGHT(TEXT({cellRow14Val},\"###0.0\"),1)=\"0\", TEXT({cellRow14Val},\"###0\"), TEXT({cellRow14Val},\"###0.0\"))";
+                var cellRow15Val = $"SUM({colName[15]}{row + 1}:{colName[15]}{row + tongBs})"; ws.Cell(row, 15).FormulaA1 = $"IF(RIGHT(TEXT({cellRow15Val},\"###0.0\"),1)=\"0\", TEXT({cellRow15Val},\"###0\"), TEXT({cellRow15Val},\"###0.0\"))";
                 
                 ws.Cell(row, 17).FormulaA1 = $"IF({colName[3]}{row} > 0 ,{colName[15]}{row}/{colName[3]}{row} ,0)";
                 ws.Cell(row, 17).Style.NumberFormat.Format = "0.0%";
-                //ws.Range($"{colName[3]}{row}:{colName[15]}{row}").Style.NumberFormat.Format = "#,##0.##";
+                //ws.Range($"{colName[3]}{row}:{colName[15]}{row}").Style.NumberFormat.Format = "###0.##";
                 row++;
                 int itemIndex = 0;
 
@@ -2862,19 +2820,19 @@ namespace API.Controllers
                     ws.Cell(row, 1).Value = $"{itemIndex}";
                     var type = item.OfficerType == 4 ? "BS:" : "ĐD:";
                     ws.Cell(row, 2).Value = $"{type}{item.OfficerName ?? ""}";
-                    var cell3ValItem = item.DiemKeHoach ?? 0;  ws.Cell(row, 3).FormulaA1 = $"IF(RIGHT(TEXT({cell3ValItem},\"#,##0.0\"),1)=\"0\", TEXT({cell3ValItem},\"#,##0\"), TEXT({cell3ValItem},\"#,##0.0\"))";
-                    var cell4ValItem = item.DiemCdKham ?? 0; ws.Cell(row, 4).FormulaA1 = $"IF(RIGHT(TEXT({cell4ValItem},\"#,##0.0\"),1)=\"0\", TEXT({cell4ValItem},\"#,##0\"), TEXT({cell4ValItem},\"#,##0.0\"))";
-                    var cell5ValItem = item.DiemCDDieuTri ?? 0; ws.Cell(row, 5).FormulaA1 = $"IF(RIGHT(TEXT({cell5ValItem},\"#,##0.0\"),1)=\"0\", TEXT({cell5ValItem},\"#,##0\"), TEXT({cell5ValItem},\"#,##0.0\"))";
-                    var cell6ValItem = item.DiemPTTCD ?? 0; ws.Cell(row, 6).FormulaA1 = $"IF(RIGHT(TEXT({cell6ValItem},\"#,##0.0\"),1)=\"0\", TEXT({cell6ValItem},\"#,##0\"), TEXT({cell6ValItem},\"#,##0.0\"))";
-                    var cell7ValItem = item.DiemPTTTH ?? 0; ws.Cell(row, 7).FormulaA1 = $"IF(RIGHT(TEXT({cell7ValItem},\"#,##0.0\"),1)=\"0\", TEXT({cell7ValItem},\"#,##0\"), TEXT({cell7ValItem},\"#,##0.0\"))";
-                    var cell8ValItem = item.DiemTangCuong ?? 0; ws.Cell(row, 8).FormulaA1 = $"IF(RIGHT(TEXT({cell8ValItem},\"#,##0.0\"),1)=\"0\", TEXT({cell8ValItem},\"#,##0\"), TEXT({cell8ValItem},\"#,##0.0\"))";
-                    var cell9ValItem = item.DiemTruc ?? 0; ws.Cell(row, 9).FormulaA1 = $"IF(RIGHT(TEXT({cell9ValItem},\"#,##0.0\"),1)=\"0\", TEXT({cell9ValItem},\"#,##0\"), TEXT({cell9ValItem},\"#,##0.0\"))";
-                    var cell10ValItem = item.DiemCongBANT ?? 0; ws.Cell(row, 10).FormulaA1 = $"IF(RIGHT(TEXT({cell10ValItem},\"#,##0.0\"),1)=\"0\", TEXT({cell10ValItem},\"#,##0\"), TEXT({cell10ValItem},\"#,##0.0\"))";
-                    //var cell11ValItem = item.DiemTHPTTTheoDD ?? 0;  ws.Cell(row, 11).FormulaA1 = $"IF(RIGHT(TEXT({cell11ValItem},\"#,##0.0\"),1)=\"0\", TEXT({cell11ValItem},\"#,##0\"), TEXT({cell11ValItem},\"#,##0.0\"))";
-                    var cell12ValItem = item.DiemBNNDCD ?? 0; ws.Cell(row, 12).FormulaA1 = $"IF(RIGHT(TEXT({cell12ValItem},\"#,##0.0\"),1)=\"0\", TEXT({cell12ValItem},\"#,##0\"), TEXT({cell12ValItem},\"#,##0.0\"))";
-                    var cell13ValItem = item.DiemBNNDTH ?? 0; ws.Cell(row, 13).FormulaA1 = $"IF(RIGHT(TEXT({cell13ValItem},\"#,##0.0\"),1)=\"0\", TEXT({cell13ValItem},\"#,##0\"), TEXT({cell13ValItem},\"#,##0.0\"))";
-                    var cell14ValItem = item.DiemBNNDCDNhapVien ?? 0; ws.Cell(row, 14).FormulaA1 = $"IF(RIGHT(TEXT({cell14ValItem},\"#,##0.0\"),1)=\"0\", TEXT({cell14ValItem},\"#,##0\"), TEXT({cell14ValItem},\"#,##0.0\"))";
-                    var cell15ItemVal = $"SUM({colName[4]}{row}:{colName[14]}{row})"; ws.Cell(row, 15).FormulaA1 = $"IF(RIGHT(TEXT({cell15ItemVal},\"#,##0.0\"),1)=\"0\", TEXT({cell15ItemVal},\"#,##0\"), TEXT({cell15ItemVal},\"#,##0.0\"))"; // tổng các cột trước
+                    var cell3ValItem = item.DiemKeHoach ?? 0;  ws.Cell(row, 3).FormulaA1 = $"IF(RIGHT(TEXT({cell3ValItem},\"###0.0\"),1)=\"0\", TEXT({cell3ValItem},\"###0\"), TEXT({cell3ValItem},\"###0.0\"))";
+                    var cell4ValItem = item.DiemCdKham ?? 0; ws.Cell(row, 4).FormulaA1 = $"IF(RIGHT(TEXT({cell4ValItem},\"###0.0\"),1)=\"0\", TEXT({cell4ValItem},\"###0\"), TEXT({cell4ValItem},\"###0.0\"))";
+                    var cell5ValItem = item.DiemCDDieuTri ?? 0; ws.Cell(row, 5).FormulaA1 = $"IF(RIGHT(TEXT({cell5ValItem},\"###0.0\"),1)=\"0\", TEXT({cell5ValItem},\"###0\"), TEXT({cell5ValItem},\"###0.0\"))";
+                    var cell6ValItem = item.DiemPTTCD ?? 0; ws.Cell(row, 6).FormulaA1 = $"IF(RIGHT(TEXT({cell6ValItem},\"###0.0\"),1)=\"0\", TEXT({cell6ValItem},\"###0\"), TEXT({cell6ValItem},\"###0.0\"))";
+                    var cell7ValItem = item.DiemPTTTH ?? 0; ws.Cell(row, 7).FormulaA1 = $"IF(RIGHT(TEXT({cell7ValItem},\"###0.0\"),1)=\"0\", TEXT({cell7ValItem},\"###0\"), TEXT({cell7ValItem},\"###0.0\"))";
+                    var cell8ValItem = item.DiemTangCuong ?? 0; ws.Cell(row, 8).FormulaA1 = $"IF(RIGHT(TEXT({cell8ValItem},\"###0.0\"),1)=\"0\", TEXT({cell8ValItem},\"###0\"), TEXT({cell8ValItem},\"###0.0\"))";
+                    var cell9ValItem = item.DiemTruc ?? 0; ws.Cell(row, 9).FormulaA1 = $"IF(RIGHT(TEXT({cell9ValItem},\"###0.0\"),1)=\"0\", TEXT({cell9ValItem},\"###0\"), TEXT({cell9ValItem},\"###0.0\"))";
+                    var cell10ValItem = item.DiemCongBANT ?? 0; ws.Cell(row, 10).FormulaA1 = $"IF(RIGHT(TEXT({cell10ValItem},\"###0.0\"),1)=\"0\", TEXT({cell10ValItem},\"###0\"), TEXT({cell10ValItem},\"###0.0\"))";
+                    //var cell11ValItem = item.DiemTHPTTTheoDD ?? 0;  ws.Cell(row, 11).FormulaA1 = $"IF(RIGHT(TEXT({cell11ValItem},\"###0.0\"),1)=\"0\", TEXT({cell11ValItem},\"###0\"), TEXT({cell11ValItem},\"###0.0\"))";
+                    var cell12ValItem = item.DiemBNNDCD ?? 0; ws.Cell(row, 12).FormulaA1 = $"IF(RIGHT(TEXT({cell12ValItem},\"###0.0\"),1)=\"0\", TEXT({cell12ValItem},\"###0\"), TEXT({cell12ValItem},\"###0.0\"))";
+                    var cell13ValItem = item.DiemBNNDTH ?? 0; ws.Cell(row, 13).FormulaA1 = $"IF(RIGHT(TEXT({cell13ValItem},\"###0.0\"),1)=\"0\", TEXT({cell13ValItem},\"###0\"), TEXT({cell13ValItem},\"###0.0\"))";
+                    var cell14ValItem = item.DiemBNNDCDNhapVien ?? 0; ws.Cell(row, 14).FormulaA1 = $"IF(RIGHT(TEXT({cell14ValItem},\"###0.0\"),1)=\"0\", TEXT({cell14ValItem},\"###0\"), TEXT({cell14ValItem},\"###0.0\"))";
+                    var cell15ItemVal = $"SUM({colName[4]}{row}:{colName[14]}{row})"; ws.Cell(row, 15).FormulaA1 = $"IF(RIGHT(TEXT({cell15ItemVal},\"###0.0\"),1)=\"0\", TEXT({cell15ItemVal},\"###0\"), TEXT({cell15ItemVal},\"###0.0\"))"; // tổng các cột trước
                     ws.Cell(row, 17).FormulaA1 = $"IF({colName[3]}{row} > 0 ,{colName[15]}{row}/{colName[3]}{row},0)"; // tính %
                     ws.Cell(row, 17).Style.NumberFormat.Format = "0.0%";
                     // Căn lề
@@ -2882,7 +2840,7 @@ namespace API.Controllers
                     ws.Range($"{colName[3]}{row}:{colName[15]}{row}").Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
 
                     // Định dạng số // Đã định dạng bằng công thức
-                    //ws.Range($"{colName[3]}{row}:{colName[15]}{row}").Style.NumberFormat.Format = "#,##0.##";
+                    //ws.Range($"{colName[3]}{row}:{colName[15]}{row}").Style.NumberFormat.Format = "###0.##";
 
                     ws.Range(row, 1, row, colCount).Style.Border.TopBorder = XLBorderStyleValues.Thin;
                     ws.Range(row, 1, row, colCount).Style.Border.BottomBorder = XLBorderStyleValues.Thin;
@@ -2903,22 +2861,22 @@ namespace API.Controllers
             ws.Range(row, 1, row, colCount).Style.Border.BottomBorder = XLBorderStyleValues.Thin;
             ws.Range(row, 1, row, colCount).Style.Border.LeftBorder = XLBorderStyleValues.Thin;
             ws.Range(row, 1, row, colCount).Style.Border.RightBorder = XLBorderStyleValues.Thin;
-            var cellRow3ValT = $"SUM({colName[3]}{8}:{colName[3]}{row - 1})/2"; ws.Cell(row,3).FormulaA1 = $"IF(RIGHT(TEXT({cellRow3ValT},\"#,##0.0\"),1)=\"0\", TEXT({cellRow3ValT},\"#,##0\"), TEXT({cellRow3ValT},\"#,##0.0\"))";
-            var cellRow4ValT = $"SUM({colName[4]}{8}:{colName[4]}{row - 1})/2"; ws.Cell(row,4).FormulaA1 = $"IF(RIGHT(TEXT({cellRow4ValT},\"#,##0.0\"),1)=\"0\", TEXT({cellRow4ValT},\"#,##0\"), TEXT({cellRow4ValT},\"#,##0.0\"))";
-            var cellRow5ValT = $"SUM({colName[5]}{8}:{colName[5]}{row - 1})/2"; ws.Cell(row,5).FormulaA1 = $"IF(RIGHT(TEXT({cellRow5ValT},\"#,##0.0\"),1)=\"0\", TEXT({cellRow5ValT},\"#,##0\"), TEXT({cellRow5ValT},\"#,##0.0\"))";
-            var cellRow6ValT = $"SUM({colName[6]}{8}:{colName[6]}{row - 1})/2"; ws.Cell(row,6).FormulaA1 = $"IF(RIGHT(TEXT({cellRow6ValT},\"#,##0.0\"),1)=\"0\", TEXT({cellRow6ValT},\"#,##0\"), TEXT({cellRow6ValT},\"#,##0.0\"))";
-            var cellRow7ValT = $"SUM({colName[7]}{8}:{colName[7]}{row - 1})/2"; ws.Cell(row,7).FormulaA1 = $"IF(RIGHT(TEXT({cellRow7ValT},\"#,##0.0\"),1)=\"0\", TEXT({cellRow7ValT},\"#,##0\"), TEXT({cellRow7ValT},\"#,##0.0\"))";
-            var cellRow8ValT = $"SUM({colName[8]}{8}:{colName[8]}{row - 1})/2"; ws.Cell(row,8).FormulaA1 = $"IF(RIGHT(TEXT({cellRow8ValT},\"#,##0.0\"),1)=\"0\", TEXT({cellRow8ValT},\"#,##0\"), TEXT({cellRow8ValT},\"#,##0.0\"))";
-            var cellRow9ValT = $"SUM({colName[9]}{8}:{colName[9]}{row - 1})/2"; ws.Cell(row,9).FormulaA1 = $"IF(RIGHT(TEXT({cellRow9ValT},\"#,##0.0\"),1)=\"0\", TEXT({cellRow9ValT},\"#,##0\"), TEXT({cellRow9ValT},\"#,##0.0\"))";
-            var cellRow10ValT = $"SUM({colName[10]}{8}:{colName[10]}{row - 1})/2"; ws.Cell(row,10).FormulaA1 = $"IF(RIGHT(TEXT({cellRow10ValT},\"#,##0.0\"),1)=\"0\", TEXT({cellRow10ValT},\"#,##0\"), TEXT({cellRow10ValT},\"#,##0.0\"))";
-            //var cellRow11ValT = $"SUM({colName[11]}{8}:{colName[11]}{row - 1})/2"; ws.Cell(row,11).FormulaA1 = $"IF(RIGHT(TEXT({cellRow11ValT},\"#,##0.0\"),1)=\"0\", TEXT({cellRow11ValT},\"#,##0\"), TEXT({cellRow11ValT},\"#,##0.0\"))";
-            var cellRow12ValT = $"SUM({colName[12]}{8}:{colName[12]}{row - 1})/2"; ws.Cell(row,12).FormulaA1 = $"IF(RIGHT(TEXT({cellRow12ValT},\"#,##0.0\"),1)=\"0\", TEXT({cellRow12ValT},\"#,##0\"), TEXT({cellRow12ValT},\"#,##0.0\"))";
-            var cellRow13ValT = $"SUM({colName[13]}{8}:{colName[13]}{row - 1})/2"; ws.Cell(row,13).FormulaA1 = $"IF(RIGHT(TEXT({cellRow13ValT},\"#,##0.0\"),1)=\"0\", TEXT({cellRow13ValT},\"#,##0\"), TEXT({cellRow13ValT},\"#,##0.0\"))";
-            var cellRow14ValT = $"SUM({colName[14]}{8}:{colName[14]}{row - 1})/2"; ws.Cell(row,14).FormulaA1 = $"IF(RIGHT(TEXT({cellRow14ValT},\"#,##0.0\"),1)=\"0\", TEXT({cellRow14ValT},\"#,##0\"), TEXT({cellRow14ValT},\"#,##0.0\"))";
-            var cellRow15ValT = $"SUM({colName[15]}{8}:{colName[15]}{row - 1})/2"; ws.Cell(row,15).FormulaA1 = $"IF(RIGHT(TEXT({cellRow15ValT},\"#,##0.0\"),1)=\"0\", TEXT({cellRow15ValT},\"#,##0\"), TEXT({cellRow15ValT},\"#,##0.0\"))";
+            var cellRow3ValT = $"SUM({colName[3]}{8}:{colName[3]}{row - 1})/2"; ws.Cell(row,3).FormulaA1 = $"IF(RIGHT(TEXT({cellRow3ValT},\"###0.0\"),1)=\"0\", TEXT({cellRow3ValT},\"###0\"), TEXT({cellRow3ValT},\"###0.0\"))";
+            var cellRow4ValT = $"SUM({colName[4]}{8}:{colName[4]}{row - 1})/2"; ws.Cell(row,4).FormulaA1 = $"IF(RIGHT(TEXT({cellRow4ValT},\"###0.0\"),1)=\"0\", TEXT({cellRow4ValT},\"###0\"), TEXT({cellRow4ValT},\"###0.0\"))";
+            var cellRow5ValT = $"SUM({colName[5]}{8}:{colName[5]}{row - 1})/2"; ws.Cell(row,5).FormulaA1 = $"IF(RIGHT(TEXT({cellRow5ValT},\"###0.0\"),1)=\"0\", TEXT({cellRow5ValT},\"###0\"), TEXT({cellRow5ValT},\"###0.0\"))";
+            var cellRow6ValT = $"SUM({colName[6]}{8}:{colName[6]}{row - 1})/2"; ws.Cell(row,6).FormulaA1 = $"IF(RIGHT(TEXT({cellRow6ValT},\"###0.0\"),1)=\"0\", TEXT({cellRow6ValT},\"###0\"), TEXT({cellRow6ValT},\"###0.0\"))";
+            var cellRow7ValT = $"SUM({colName[7]}{8}:{colName[7]}{row - 1})/2"; ws.Cell(row,7).FormulaA1 = $"IF(RIGHT(TEXT({cellRow7ValT},\"###0.0\"),1)=\"0\", TEXT({cellRow7ValT},\"###0\"), TEXT({cellRow7ValT},\"###0.0\"))";
+            var cellRow8ValT = $"SUM({colName[8]}{8}:{colName[8]}{row - 1})/2"; ws.Cell(row,8).FormulaA1 = $"IF(RIGHT(TEXT({cellRow8ValT},\"###0.0\"),1)=\"0\", TEXT({cellRow8ValT},\"###0\"), TEXT({cellRow8ValT},\"###0.0\"))";
+            var cellRow9ValT = $"SUM({colName[9]}{8}:{colName[9]}{row - 1})/2"; ws.Cell(row,9).FormulaA1 = $"IF(RIGHT(TEXT({cellRow9ValT},\"###0.0\"),1)=\"0\", TEXT({cellRow9ValT},\"###0\"), TEXT({cellRow9ValT},\"###0.0\"))";
+            var cellRow10ValT = $"SUM({colName[10]}{8}:{colName[10]}{row - 1})/2"; ws.Cell(row,10).FormulaA1 = $"IF(RIGHT(TEXT({cellRow10ValT},\"###0.0\"),1)=\"0\", TEXT({cellRow10ValT},\"###0\"), TEXT({cellRow10ValT},\"###0.0\"))";
+            //var cellRow11ValT = $"SUM({colName[11]}{8}:{colName[11]}{row - 1})/2"; ws.Cell(row,11).FormulaA1 = $"IF(RIGHT(TEXT({cellRow11ValT},\"###0.0\"),1)=\"0\", TEXT({cellRow11ValT},\"###0\"), TEXT({cellRow11ValT},\"###0.0\"))";
+            var cellRow12ValT = $"SUM({colName[12]}{8}:{colName[12]}{row - 1})/2"; ws.Cell(row,12).FormulaA1 = $"IF(RIGHT(TEXT({cellRow12ValT},\"###0.0\"),1)=\"0\", TEXT({cellRow12ValT},\"###0\"), TEXT({cellRow12ValT},\"###0.0\"))";
+            var cellRow13ValT = $"SUM({colName[13]}{8}:{colName[13]}{row - 1})/2"; ws.Cell(row,13).FormulaA1 = $"IF(RIGHT(TEXT({cellRow13ValT},\"###0.0\"),1)=\"0\", TEXT({cellRow13ValT},\"###0\"), TEXT({cellRow13ValT},\"###0.0\"))";
+            var cellRow14ValT = $"SUM({colName[14]}{8}:{colName[14]}{row - 1})/2"; ws.Cell(row,14).FormulaA1 = $"IF(RIGHT(TEXT({cellRow14ValT},\"###0.0\"),1)=\"0\", TEXT({cellRow14ValT},\"###0\"), TEXT({cellRow14ValT},\"###0.0\"))";
+            var cellRow15ValT = $"SUM({colName[15]}{8}:{colName[15]}{row - 1})/2"; ws.Cell(row,15).FormulaA1 = $"IF(RIGHT(TEXT({cellRow15ValT},\"###0.0\"),1)=\"0\", TEXT({cellRow15ValT},\"###0\"), TEXT({cellRow15ValT},\"###0.0\"))";
             ws.Cell(row, 17).FormulaA1 = $"IF({colName[3]}{row} > 0 ,{colName[15]}{row}/{colName[3]}{row} ,0)";
             ws.Cell(row, 17).Style.NumberFormat.Format = "0.0%";
-            //ws.Range($"{colName[3]}{row}:{colName[15]}{row}").Style.NumberFormat.Format = "#,##0.##";
+            //ws.Range($"{colName[3]}{row}:{colName[15]}{row}").Style.NumberFormat.Format = "###0.##";
             row++;
 
             // ====== Style chung ======
@@ -3111,16 +3069,16 @@ namespace API.Controllers
                 ws.Range(row, 1, row, colCount).Style.Border.RightBorder = XLBorderStyleValues.Thin;
                 ws.Cell(row, 1).Value = ConvertToRoman(gCount + 1);
                 ws.Cell(row, 2).Value = group.Key ?? "";
-                var cellRow3Val = $"SUM({colName[3]}{row + 1}:{colName[3]}{row + tongDd})"; ws.Cell(row, 3).FormulaA1 = $"IF(RIGHT(TEXT({cellRow3Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow3Val},\"#,##0\"), TEXT({cellRow3Val},\"#,##0.0\"))";
-                var cellRow4Val = $"SUM({colName[4]}{row + 1}:{colName[4]}{row + tongDd})"; ws.Cell(row, 4).FormulaA1 = $"IF(RIGHT(TEXT({cellRow4Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow4Val},\"#,##0\"), TEXT({cellRow4Val},\"#,##0.0\"))";
-                var cellRow5Val = $"SUM({colName[5]}{row + 1}:{colName[5]}{row + tongDd})"; ws.Cell(row, 5).FormulaA1 = $"IF(RIGHT(TEXT({cellRow5Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow5Val},\"#,##0\"), TEXT({cellRow5Val},\"#,##0.0\"))";
-                var cellRow6Val = $"SUM({colName[6]}{row + 1}:{colName[6]}{row + tongDd})"; ws.Cell(row, 6).FormulaA1 = $"IF(RIGHT(TEXT({cellRow6Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow6Val},\"#,##0\"), TEXT({cellRow6Val},\"#,##0.0\"))";
-                var cellRow11Val = $"SUM({colName[11]}{row + 1}:{colName[11]}{row + tongDd})"; ws.Cell(row, 11).FormulaA1 = $"IF(RIGHT(TEXT({cellRow11Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow11Val},\"#,##0\"), TEXT({cellRow11Val},\"#,##0.0\"))";
-                var cellRow15Val = $"SUM({colName[15]}{row + 1}:{colName[15]}{row + tongDd})"; ws.Cell(row, 15).FormulaA1 = $"IF(RIGHT(TEXT({cellRow15Val},\"#,##0.0\"),1)=\"0\", TEXT({cellRow15Val},\"#,##0\"), TEXT({cellRow15Val},\"#,##0.0\"))";
+                var cellRow3Val = $"SUM({colName[3]}{row + 1}:{colName[3]}{row + tongDd})"; ws.Cell(row, 3).FormulaA1 = $"IF(RIGHT(TEXT({cellRow3Val},\"###0.0\"),1)=\"0\", TEXT({cellRow3Val},\"###0\"), TEXT({cellRow3Val},\"###0.0\"))";
+                var cellRow4Val = $"SUM({colName[4]}{row + 1}:{colName[4]}{row + tongDd})"; ws.Cell(row, 4).FormulaA1 = $"IF(RIGHT(TEXT({cellRow4Val},\"###0.0\"),1)=\"0\", TEXT({cellRow4Val},\"###0\"), TEXT({cellRow4Val},\"###0.0\"))";
+                var cellRow5Val = $"SUM({colName[5]}{row + 1}:{colName[5]}{row + tongDd})"; ws.Cell(row, 5).FormulaA1 = $"IF(RIGHT(TEXT({cellRow5Val},\"###0.0\"),1)=\"0\", TEXT({cellRow5Val},\"###0\"), TEXT({cellRow5Val},\"###0.0\"))";
+                var cellRow6Val = $"SUM({colName[6]}{row + 1}:{colName[6]}{row + tongDd})"; ws.Cell(row, 6).FormulaA1 = $"IF(RIGHT(TEXT({cellRow6Val},\"###0.0\"),1)=\"0\", TEXT({cellRow6Val},\"###0\"), TEXT({cellRow6Val},\"###0.0\"))";
+                var cellRow11Val = $"SUM({colName[11]}{row + 1}:{colName[11]}{row + tongDd})"; ws.Cell(row, 11).FormulaA1 = $"IF(RIGHT(TEXT({cellRow11Val},\"###0.0\"),1)=\"0\", TEXT({cellRow11Val},\"###0\"), TEXT({cellRow11Val},\"###0.0\"))";
+                var cellRow15Val = $"SUM({colName[15]}{row + 1}:{colName[15]}{row + tongDd})"; ws.Cell(row, 15).FormulaA1 = $"IF(RIGHT(TEXT({cellRow15Val},\"###0.0\"),1)=\"0\", TEXT({cellRow15Val},\"###0\"), TEXT({cellRow15Val},\"###0.0\"))";
                 
                 ws.Cell(row, 17).FormulaA1 = $"IF({colName[3]}{row} > 0 ,{colName[15]}{row}/{colName[3]}{row} ,0)";
                 ws.Cell(row, 17).Style.NumberFormat.Format = "0.0%";
-                //ws.Range($"{colName[3]}{row}:{colName[15]}{row}").Style.NumberFormat.Format = "#,##0.##";
+                //ws.Range($"{colName[3]}{row}:{colName[15]}{row}").Style.NumberFormat.Format = "###0.##";
                 row++;
                 int itemIndex = 0;
 
@@ -3131,12 +3089,12 @@ namespace API.Controllers
                     ws.Cell(row, 1).Value = $"{itemIndex}";
                     var type = item.OfficerType == 4 ? "BS:" : "ĐD:";
                     ws.Cell(row, 2).Value = $"{type}{item.OfficerName ?? ""}";
-                    var cell3ItemVal = item.DiemKeHoach ?? 0; ws.Cell(row, 3).FormulaA1 = $"IF(RIGHT(TEXT({cell3ItemVal},\"#,##0.0\"),1)=\"0\", TEXT({cell3ItemVal},\"#,##0\"), TEXT({cell3ItemVal},\"#,##0.0\"))";
-                    var cell4ItemVal = diemTHTheoBSKhoa / tongDd; ws.Cell(row, 4).FormulaA1 = $"IF(RIGHT(TEXT({cell4ItemVal},\"#,##0.0\"),1)=\"0\", TEXT({cell4ItemVal},\"#,##0\"), TEXT({cell4ItemVal},\"#,##0.0\"))";
-                    var cell5ItemVal = item.SoNgayTangCuong ?? 0; ws.Cell(row, 5).FormulaA1 = $"IF(RIGHT(TEXT({cell5ItemVal},\"#,##0.0\"),1)=\"0\", TEXT({cell5ItemVal},\"#,##0\"), TEXT({cell5ItemVal},\"#,##0.0\"))";
-                    var cell6ItemVal = item.DiemTangCuong ?? 0; ws.Cell(row, 6).FormulaA1 = $"IF(RIGHT(TEXT({cell6ItemVal},\"#,##0.0\"),1)=\"0\", TEXT({cell6ItemVal},\"#,##0\"), TEXT({cell6ItemVal},\"#,##0.0\"))";
-                    var cell11ItemVal = item.DiemTruc ?? 0; ws.Cell(row, 11).FormulaA1 = $"IF(RIGHT(TEXT({cell11ItemVal},\"#,##0.0\"),1)=\"0\", TEXT({cell11ItemVal},\"#,##0\"), TEXT({cell11ItemVal},\"#,##0.0\"))";
-                    var cell15ItemVal = $"SUM({colName[4]}{row}:{colName[14]}{row})-{colName[5]}{row}-{colName[7]}{row}"; ws.Cell(row, 15).FormulaA1 = $"IF(RIGHT(TEXT({cell15ItemVal},\"#,##0.0\"),1)=\"0\", TEXT({cell15ItemVal},\"#,##0\"), TEXT({cell15ItemVal},\"#,##0.0\"))";// tổng các cột trước
+                    var cell3ItemVal = item.DiemKeHoach ?? 0; ws.Cell(row, 3).FormulaA1 = $"IF(RIGHT(TEXT({cell3ItemVal},\"###0.0\"),1)=\"0\", TEXT({cell3ItemVal},\"###0\"), TEXT({cell3ItemVal},\"###0.0\"))";
+                    var cell4ItemVal = diemTHTheoBSKhoa / tongDd; ws.Cell(row, 4).FormulaA1 = $"IF(RIGHT(TEXT({cell4ItemVal},\"###0.0\"),1)=\"0\", TEXT({cell4ItemVal},\"###0\"), TEXT({cell4ItemVal},\"###0.0\"))";
+                    var cell5ItemVal = item.SoNgayTangCuong ?? 0; ws.Cell(row, 5).FormulaA1 = $"IF(RIGHT(TEXT({cell5ItemVal},\"###0.0\"),1)=\"0\", TEXT({cell5ItemVal},\"###0\"), TEXT({cell5ItemVal},\"###0.0\"))";
+                    var cell6ItemVal = item.DiemTangCuong ?? 0; ws.Cell(row, 6).FormulaA1 = $"IF(RIGHT(TEXT({cell6ItemVal},\"###0.0\"),1)=\"0\", TEXT({cell6ItemVal},\"###0\"), TEXT({cell6ItemVal},\"###0.0\"))";
+                    var cell11ItemVal = item.DiemTruc ?? 0; ws.Cell(row, 11).FormulaA1 = $"IF(RIGHT(TEXT({cell11ItemVal},\"###0.0\"),1)=\"0\", TEXT({cell11ItemVal},\"###0\"), TEXT({cell11ItemVal},\"###0.0\"))";
+                    var cell15ItemVal = $"SUM({colName[4]}{row}:{colName[14]}{row})-{colName[5]}{row}-{colName[7]}{row}"; ws.Cell(row, 15).FormulaA1 = $"IF(RIGHT(TEXT({cell15ItemVal},\"###0.0\"),1)=\"0\", TEXT({cell15ItemVal},\"###0\"), TEXT({cell15ItemVal},\"###0.0\"))";// tổng các cột trước
                     ws.Cell(row, 17).FormulaA1 = $"IF({colName[3]}{row} > 0 ,{colName[15]}{row}/{colName[3]}{row},0)"; // tính %
                     ws.Cell(row, 17).Style.NumberFormat.Format = "0.0%";
                     // Căn lề
@@ -3144,7 +3102,7 @@ namespace API.Controllers
                     ws.Range($"{colName[3]}{row}:{colName[15]}{row}").Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
 
                     // Định dạng số
-                    //ws.Range($"{colName[3]}{row}:{colName[15]}{row}").Style.NumberFormat.Format = "#,##0.##";
+                    //ws.Range($"{colName[3]}{row}:{colName[15]}{row}").Style.NumberFormat.Format = "###0.##";
 
                     ws.Range(row, 1, row, colCount).Style.Border.TopBorder = XLBorderStyleValues.Thin;
                     ws.Range(row, 1, row, colCount).Style.Border.BottomBorder = XLBorderStyleValues.Thin;
@@ -3165,16 +3123,16 @@ namespace API.Controllers
             ws.Range(row, 1, row, colCount).Style.Border.BottomBorder = XLBorderStyleValues.Thin;
             ws.Range(row, 1, row, colCount).Style.Border.LeftBorder = XLBorderStyleValues.Thin;
             ws.Range(row, 1, row, colCount).Style.Border.RightBorder = XLBorderStyleValues.Thin;
-            var cell3TVal = $"SUM({colName[3]}{8}:{colName[3]}{row - 1})/2"; ws.Cell(row, 3).FormulaA1 = $"IF(RIGHT(TEXT({cell3TVal},\"#,##0.0\"),1)=\"0\", TEXT({cell3TVal},\"#,##0\"), TEXT({cell3TVal},\"#,##0.0\"))";
-            var cell4TVal = $"SUM({colName[4]}{8}:{colName[4]}{row - 1})/2"; ws.Cell(row, 4).FormulaA1 = $"IF(RIGHT(TEXT({cell4TVal},\"#,##0.0\"),1)=\"0\", TEXT({cell4TVal},\"#,##0\"), TEXT({cell4TVal},\"#,##0.0\"))";
-            var cell5TVal = $"SUM({colName[5]}{8}:{colName[5]}{row - 1})/2"; ws.Cell(row, 5).FormulaA1 = $"IF(RIGHT(TEXT({cell5TVal},\"#,##0.0\"),1)=\"0\", TEXT({cell5TVal},\"#,##0\"), TEXT({cell5TVal},\"#,##0.0\"))";
-            var cell6TVal = $"SUM({colName[6]}{8}:{colName[6]}{row - 1})/2"; ws.Cell(row, 6).FormulaA1 = $"IF(RIGHT(TEXT({cell6TVal},\"#,##0.0\"),1)=\"0\", TEXT({cell6TVal},\"#,##0\"), TEXT({cell6TVal},\"#,##0.0\"))";
-            var cell11TVal = $"SUM({colName[11]}{8}:{colName[11]}{row - 1})/2"; ws.Cell(row, 11).FormulaA1 = $"IF(RIGHT(TEXT({cell11TVal},\"#,##0.0\"),1)=\"0\", TEXT({cell11TVal},\"#,##0\"), TEXT({cell11TVal},\"#,##0.0\"))";
-            var cell15TVal = $"SUM({colName[15]}{8}:{colName[15]}{row - 1})/2"; ws.Cell(row, 15).FormulaA1 = $"IF(RIGHT(TEXT({cell15TVal},\"#,##0.0\"),1)=\"0\", TEXT({cell15TVal},\"#,##0\"), TEXT({cell15TVal},\"#,##0.0\"))";
+            var cell3TVal = $"SUM({colName[3]}{8}:{colName[3]}{row - 1})/2"; ws.Cell(row, 3).FormulaA1 = $"IF(RIGHT(TEXT({cell3TVal},\"###0.0\"),1)=\"0\", TEXT({cell3TVal},\"###0\"), TEXT({cell3TVal},\"###0.0\"))";
+            var cell4TVal = $"SUM({colName[4]}{8}:{colName[4]}{row - 1})/2"; ws.Cell(row, 4).FormulaA1 = $"IF(RIGHT(TEXT({cell4TVal},\"###0.0\"),1)=\"0\", TEXT({cell4TVal},\"###0\"), TEXT({cell4TVal},\"###0.0\"))";
+            var cell5TVal = $"SUM({colName[5]}{8}:{colName[5]}{row - 1})/2"; ws.Cell(row, 5).FormulaA1 = $"IF(RIGHT(TEXT({cell5TVal},\"###0.0\"),1)=\"0\", TEXT({cell5TVal},\"###0\"), TEXT({cell5TVal},\"###0.0\"))";
+            var cell6TVal = $"SUM({colName[6]}{8}:{colName[6]}{row - 1})/2"; ws.Cell(row, 6).FormulaA1 = $"IF(RIGHT(TEXT({cell6TVal},\"###0.0\"),1)=\"0\", TEXT({cell6TVal},\"###0\"), TEXT({cell6TVal},\"###0.0\"))";
+            var cell11TVal = $"SUM({colName[11]}{8}:{colName[11]}{row - 1})/2"; ws.Cell(row, 11).FormulaA1 = $"IF(RIGHT(TEXT({cell11TVal},\"###0.0\"),1)=\"0\", TEXT({cell11TVal},\"###0\"), TEXT({cell11TVal},\"###0.0\"))";
+            var cell15TVal = $"SUM({colName[15]}{8}:{colName[15]}{row - 1})/2"; ws.Cell(row, 15).FormulaA1 = $"IF(RIGHT(TEXT({cell15TVal},\"###0.0\"),1)=\"0\", TEXT({cell15TVal},\"###0\"), TEXT({cell15TVal},\"###0.0\"))";
 
             ws.Cell(row, 17).FormulaA1 = $"IF({colName[3]}{row} > 0 ,{colName[15]}{row}/{colName[3]}{row} ,0)";
             ws.Cell(row, 17).Style.NumberFormat.Format = "0.0%";
-            //ws.Range($"{colName[3]}{row}:{colName[15]}{row}").Style.NumberFormat.Format = "#,##0.##";
+            //ws.Range($"{colName[3]}{row}:{colName[15]}{row}").Style.NumberFormat.Format = "###0.##";
             row++;
 
             // ====== Style chung ======

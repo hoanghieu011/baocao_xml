@@ -124,3 +124,23 @@ table td {
   font-size: 14px!important;
   padding: 0!important;
 }
+
+table th:first-child, table td:first-child {
+  position: sticky;
+  left: 0;
+}
+
+table th:nth-child(2), table td:nth-child(2) {
+  position: sticky;
+  left: 80px;
+}
+
+table  th.first-row:first-child,table  th.first-row:nth-child(2) {
+  z-index: 55;
+}
+table  th.third-row:first-child,table  th.third-row:nth-child(2) {
+  z-index: 55;
+}
+table td:first-child, td:nth-child(2) {
+  z-index: 51;
+}

@@ -16,5 +16,7 @@ namespace API.DTO
         public string? tennhom { get; set; }
         public double? chiphi { get; set; }
         public double? heso { get; set; }
+        public double? heso_cls_cd { get; set; }
+        public double? heso_cls_th { get; set; }
     }
 }

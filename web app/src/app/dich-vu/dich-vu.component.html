@@ -40,11 +40,13 @@
     <table [cBorder]="1" borderColor="primary" bordered cTable >
     <!-- class="table table-hover table-striped table-fixed"> -->
       <colgroup>
-        <col style="width:80px" />
-        <col style="width:250px" />
-        <col style="width:380px" />
-        <col style="width:120px" />
+        <col style="width:50px" />
+        <col style="width:200px" />
+        <col style="width:300px" />
+        <col style="width:100px" />
         <col style="width:160px" />
+        <col style="width:140px" />
+        <col style="width:140px" />
         <col style="width:140px" />
         <col style="width:140px" />
         <col style="width:260px" />
@@ -60,6 +62,8 @@
           <th>Giá</th>
           <th>Chi phí</th>
           <th>Hệ số</th>
+          <th>Hệ số CLS CĐ</th>
+          <th>Hệ số CLS TH</th>
           <th>Loại dịch vụ</th>
           <th></th>
         </tr>
@@ -84,6 +88,8 @@
             </td>
 
             <td class="text-center">{{ dv.heso ?? '-' }}</td>
+            <td class="text-center">{{ dv.heso_cls_cd ?? '-' }}</td>
+            <td class="text-center">{{ dv.heso_cls ?? '-' }}</td>
 
             <td>{{ dv.tennhom || '-' }}</td>
 
@@ -235,6 +241,34 @@
                 [(ngModel)]="editHeSo"
                 name="editHeSo"
                 placeholder="Nhập hệ số"
+              />
+            </td>
+          </tr>
+          <tr>
+            <th class="w-40">Hệ số CLS CĐ</th>
+            <td class="w-60">
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                class="form-control form-control-sm text-end"
+                [(ngModel)]="editHeSoClsCd"
+                name="editHeSoClsCd"
+                placeholder="Nhập hệ số CLS Chỉ định"
+              />
+            </td>
+          </tr>
+          <tr>
+            <th class="w-40">Hệ số CLS TH</th>
+            <td class="w-60">
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                class="form-control form-control-sm text-end"
+                [(ngModel)]="editHeSoClsTh"
+                name="editHeSoClsTh"
+                placeholder="Nhập hệ số CLS Thực hiện"
               />
             </td>
           </tr>

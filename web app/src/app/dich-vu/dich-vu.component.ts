@@ -32,6 +32,8 @@ export class DichVuComponent {
   selectedDV: any | null = null;
   editChiPhi: number | null = null;
   editHeSo: number | null = null;
+  editHeSoClsCd: number | null = null;
+  editHeSoClsTh: number | null = null;
   saving = false;
   showModal = false;
 
@@ -130,6 +132,8 @@ export class DichVuComponent {
     this.selectedDV = dv;
     this.editChiPhi = dv.chiphi != null ? Number(dv.chiphi) : null;
     this.editHeSo = dv.heso != null ? Number(dv.heso) : null;
+    this.editHeSoClsCd = dv.heso_cls_cd != null ? Number(dv.heso_cls_cd) : null;
+    this.editHeSoClsTh = dv.heso_cls_th != null ? Number(dv.heso_cls_th) : null;
     this.showModal = true;
   }
 
@@ -139,6 +143,8 @@ export class DichVuComponent {
     this.selectedDV = null;
     this.editChiPhi = null;
     this.editHeSo = null;
+    this.editHeSoClsCd = null;
+    this.editHeSoClsTh = null;
   }
 
   // helper hiển thị ngày theo format dd/MM/yyyy
@@ -205,7 +211,9 @@ formatDate(value: any): string {
     this.dichVuService.updateDichVu(
       this.selectedDV.dichvuid,
       Number(this.editChiPhi),
-      Number(this.editHeSo)
+      Number(this.editHeSo),
+      Number(this.editHeSoClsCd),
+      Number(this.editHeSoClsTh)
     ).subscribe({
       next: () => {
         this.saving = false;
