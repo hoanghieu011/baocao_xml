@@ -40,7 +40,7 @@ namespace API.Controllers
                 var hasSearch = !string.IsNullOrWhiteSpace(term) && term != "All";
 
                 var sql = @"
-                    SELECT * 
+                    SELECT max(OFFICER_NAME) OFFICER_NAME, max(OFFICER_CODE) OFFICER_CODE, MA_BAC_SI
                     FROM org_officer 
                     WHERE CSYTID = @csytid
                     AND STATUS = 1 
@@ -57,8 +57,8 @@ namespace API.Controllers
                     sql += " AND (MA_BAC_SI LIKE @term OR OFFICER_NAME LIKE @term)";
                     parameters.Add(new MySqlConnector.MySqlParameter("@term", $"%{term}%"));
                 }
-
-                var ds_officer = await _context.org_officer
+                sql += " GROUP BY MA_BAC_SI";
+                var ds_officer = await _context.filter_officer
                     .FromSqlRaw(sql, parameters.ToArray())
                     .AsNoTracking()
                     .ToListAsync();

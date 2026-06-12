@@ -402,25 +402,24 @@ namespace API.Controllers
         private async Task<List<BcDoanhThuBscdDto>> GetDoanhThuBSCDFunc(DateTime tuNgay, DateTime denNgay, string? maBacSi, string dbName)
         {
             var sql = $@"
-                            SELECT NHOM_MABHYT_ID,MA_DICH_VU, TEN_DICH_VU, TENNHOM, TEN_BACSI, DON_GIA_BH, HESO, CHIPHI, SOLUONG , CHIPHI * SOLUONG AS CHIPHI_VATTU, DON_GIA_BH * SOLUONG AS THANH_TIEN, ((DON_GIA_BH - CHIPHI) * SOLUONG) AS SOTIEN_CONLAI, HESO * SOLUONG AS DIEM_THUCHIEN
+                            SELECT NHOM_MABHYT_ID,MA_DICH_VU, TEN_DICH_VU, TENNHOM, bs.OFFICER_NAME TEN_BACSI, DON_GIA_BH, HESO, CHIPHI, SOLUONG , CHIPHI * SOLUONG AS CHIPHI_VATTU, DON_GIA_BH * SOLUONG AS THANH_TIEN, ((DON_GIA_BH - CHIPHI) * SOLUONG) AS SOTIEN_CONLAI, HESO * SOLUONG AS DIEM_THUCHIEN
                             FROM (
-                                SELECT NHOM_MABHYT_ID,MA_DICH_VU, TEN_DICH_VU, TENNHOM, DON_GIA_BH, HESO, CHIPHI, TEN_BACSI, SUM(SO_LUONG) SOLUONG FROM (
+                                SELECT NHOM_MABHYT_ID,MA_DICH_VU, TEN_DICH_VU, TENNHOM, DON_GIA_BH, HESO, CHIPHI, SUM(SO_LUONG) SOLUONG FROM (
                                     SELECT 
-                                        nhom.NHOM_MABHYT_ID,IFNULL(b.MA_DICH_VU,b.MA_VAT_TU) MA_DICH_VU,IFNULL(b.TEN_DICH_VU,b.TEN_VAT_TU) TEN_DICH_VU,nhom.TENNHOM,IFNULL(b.SO_LUONG,0) SO_LUONG,IFNULL(b.DON_GIA_BH, 0) DON_GIA_BH ,IFNULL(dv.HESO,0) HESO, IFNULL(dv.CHIPHI,0) CHIPHI, org.OFFICER_NAME TEN_BACSI
+                                        nhom.NHOM_MABHYT_ID,IF(IFNULL(b.MA_DICH_VU,'') <> '', b.MA_DICH_VU, b.MA_VAT_TU) MA_DICH_VU,IF(IFNULL(b.TEN_DICH_VU,'') <> '',b.TEN_DICH_VU,b.TEN_VAT_TU) TEN_DICH_VU,nhom.TENNHOM,IFNULL(b.SO_LUONG,0) SO_LUONG,IFNULL(b.DON_GIA_BH, 0) DON_GIA_BH ,IFNULL(dv.HESO,0) HESO, IFNULL(dv.CHIPHI,0) CHIPHI
                                     FROM  
                                         `{dbName}`.xml1 a, 
-                                        `{dbName}`.xml3 b LEFT JOIN dmc_dichvu dv on IFNULL(b.MA_DICH_VU,b.MA_VAT_TU) = dv.MA_DICHVU AND IFNULL(b.TEN_DICH_VU,b.TEN_VAT_TU) = dv.TEN_DICHVU,
-                                        dmc_nhom_mabhyt nhom,
-                                        org_officer org
+                                        `{dbName}`.xml3 b LEFT JOIN dmc_dichvu dv on IF(IFNULL(b.MA_DICH_VU,'') <> '', b.MA_DICH_VU, b.MA_VAT_TU) = dv.MA_DICHVU AND IF(IFNULL(b.TEN_DICH_VU,'') <> '',b.TEN_DICH_VU,b.TEN_VAT_TU) = dv.TEN_DICHVU,
+                                        dmc_nhom_mabhyt nhom
                                     WHERE a.ma_lk = b.ma_lk
                                     AND b.ma_nhom = nhom.MANHOM_BHYT
-                                    AND b.MA_BAC_SI = org.MA_BAC_SI
                                     AND a.NGAY_RA >= @tungay 
                                     AND a.NGAY_RA <= @dengay 
                                     AND b.ma_bac_si = @maBacSi
                                 ) th
-                                group by NHOM_MABHYT_ID,MA_DICH_VU, TEN_DICH_VU, TENNHOM, DON_GIA_BH, HESO, CHIPHI, TEN_BACSI
-                            ) th2
+                                group by NHOM_MABHYT_ID,MA_DICH_VU, TEN_DICH_VU, TENNHOM, DON_GIA_BH, HESO, CHIPHI
+                            ) th2,
+                            (select * FROM org_officer where MA_BAC_SI = @maBacSi LIMIT 1) bs
                             ORDER BY NHOM_MABHYT_ID, MA_DICH_VU;";
 
             var conn = _context.Database.GetDbConnection();
@@ -755,40 +754,43 @@ namespace API.Controllers
         private async Task<List<BcDoanhThuBscdDto>> GetDoanhThuBsthFunc(DateTime tuNgay, DateTime denNgay, string? maBacSi, string dbName)
         {
             var sql = $@"
-                    SELECT NHOM_MABHYT_ID, MA_DICH_VU, TEN_DICH_VU, TENNHOM, DON_GIA_BH, HESO, CHIPHI, SOLUONG,
+                    SELECT NHOM_MABHYT_ID, MA_DICH_VU, TEN_DICH_VU, TENNHOM, DON_GIA_BH, CHIPHI, SOLUONG,
                         CHIPHI * SOLUONG AS CHIPHI_VATTU,
                         DON_GIA_BH * SOLUONG AS THANH_TIEN,
                         ((DON_GIA_BH - CHIPHI) * SOLUONG) AS SOTIEN_CONLAI,
-                        HESO * SOLUONG AS DIEM_THUCHIEN,
+                        IF(bs.officer_type = 4, IF(IFNULL(HESO_CLS_BS, 0) > 0,HESO_CLS_BS, HESO ) ,IF(IFNULL(HESO_CLS_DD, 0) > 0,HESO_CLS_DD, HESO )) HESO,
+                        IF(bs.officer_type = 4, IF(IFNULL(HESO_CLS_BS, 0) > 0,HESO_CLS_BS, HESO ) ,IF(IFNULL(HESO_CLS_DD, 0) > 0,HESO_CLS_DD, HESO )) * SOLUONG AS DIEM_THUCHIEN,
                         bs.TEN_BACSI
                     FROM (
-                        SELECT NHOM_MABHYT_ID, MA_DICH_VU, TEN_DICH_VU, TENNHOM, IFNULL(DON_GIA_BH,0) DON_GIA_BH, IFNULL(HESO,0) HESO, IFNULL(CHIPHI, 0) CHIPHI, IFNULL(SUM(SO_LUONG),0) SOLUONG
+                        SELECT NHOM_MABHYT_ID, MA_DICH_VU, TEN_DICH_VU, TENNHOM, IFNULL(DON_GIA_BH,0) DON_GIA_BH, IFNULL(HESO,0) HESO, IFNULL(HESO_CLS_BS,0) HESO_CLS_BS,IFNULL(HESO_CLS_DD,0) HESO_CLS_DD, IFNULL(CHIPHI, 0) CHIPHI, IFNULL(SUM(SO_LUONG),0) SOLUONG
                         FROM (
                             SELECT 
                                 nhom.NHOM_MABHYT_ID,
-                                IFNULL(b.MA_DICH_VU, b.MA_VAT_TU) MA_DICH_VU,
-                                IFNULL(b.TEN_DICH_VU, b.TEN_VAT_TU) TEN_DICH_VU,
+                                IF(IFNULL(b.MA_DICH_VU, '') <> '',b.MA_DICH_VU, b.MA_VAT_TU) MA_DICH_VU,
+                                IF(IFNULL(b.TEN_DICH_VU, '') <> '',b.TEN_DICH_VU, b.TEN_VAT_TU) TEN_DICH_VU,
                                 nhom.TENNHOM,
                                 b.SO_LUONG,
                                 b.DON_GIA_BH,
                                 dv.HESO,
+                                dv.HESO_CLS_BS,
+                                dv.HESO_CLS_DD,
                                 dv.CHIPHI
                             FROM  
                                 `{dbName}`.xml1 a, 
                                 `{dbName}`.xml3 b 
                                 LEFT JOIN dmc_dichvu dv 
-                                    ON IFNULL(b.MA_DICH_VU, b.MA_VAT_TU) = dv.MA_DICHVU 
-                                AND IFNULL(b.TEN_DICH_VU, b.TEN_VAT_TU) = dv.TEN_DICHVU,
+                                    ON IF(IFNULL(b.MA_DICH_VU, '') <> '',b.MA_DICH_VU, b.MA_VAT_TU) = dv.MA_DICHVU 
+                                AND IF(IFNULL(b.TEN_DICH_VU, '') <> '',b.TEN_DICH_VU, b.TEN_VAT_TU) = dv.TEN_DICHVU,
                                 dmc_nhom_mabhyt nhom
                             WHERE a.ma_lk = b.ma_lk
                             AND b.ma_nhom = nhom.MANHOM_BHYT
                             AND a.NGAY_RA >= @tungay 
                             AND a.NGAY_RA <= @dengay 
-                            AND b.nguoi_thuc_hien LIKE @nguoiThucHien
+                            AND b.nguoi_thuc_hien LIKE @nguoiThucHien AND b.MA_BAC_SI <> @nguoiThucHienCode
                         ) th
-                        GROUP BY NHOM_MABHYT_ID, MA_DICH_VU, TEN_DICH_VU, TENNHOM, DON_GIA_BH, HESO, CHIPHI
+                        GROUP BY NHOM_MABHYT_ID, MA_DICH_VU, TEN_DICH_VU, TENNHOM, DON_GIA_BH, HESO,HESO_CLS_BS, HESO_CLS_DD, CHIPHI
                     ) th2,
-                    (select OFFICER_NAME TEN_BACSI FROM org_officer where MA_BAC_SI=@nguoiThucHienCode) bs
+                    (select OFFICER_NAME TEN_BACSI, officer_type FROM org_officer where MA_BAC_SI=@nguoiThucHienCode LIMIT 1) bs
                     ORDER BY NHOM_MABHYT_ID, MA_DICH_VU;";
 
             var conn = _context.Database.GetDbConnection();
@@ -842,7 +844,7 @@ namespace API.Controllers
 			                    nhom.NHOM_MABHYT_ID,b.MA_KHOA,khoa.ORG_NAME KHOA,dv.MA_DICHVU MA_DICH_VU,dv.TEN_DICHVU TEN_DICH_VU,nhom.TENNHOM,IFNULL(b.SO_LUONG,0) SO_LUONG,IFNULL(b.DON_GIA_BH,0) DON_GIA_BH ,IFNULL(dv.HESO, 0) HESO, IFNULL(dv.CHIPHI,0) CHIPHI
 		                    FROM  
 			                    his_data_binhluc.xml1 a, 
-			                    his_data_binhluc.xml3 b LEFT JOIN his_common.dmc_dichvu dv on IFNULL(b.MA_DICH_VU,b.MA_VAT_TU) = dv.MA_DICHVU,
+			                    his_data_binhluc.xml3 b LEFT JOIN his_common.dmc_dichvu dv on IF(IFNULL(b.MA_DICH_VU,'') <> '', b.MA_DICH_VU, b.MA_VAT_TU) = dv.MA_DICHVU,
 			                    his_common.dmc_nhom_mabhyt nhom,
                                 his_common.org_organization khoa
 		                    WHERE a.ma_lk = b.ma_lk
@@ -937,7 +939,7 @@ namespace API.Controllers
 			                    nhom.NHOM_MABHYT_ID,b.MA_KHOA,khoa.ORG_NAME KHOA,dv.MA_DICHVU MA_DICH_VU,dv.TEN_DICHVU TEN_DICH_VU,nhom.TENNHOM,IFNULL(b.SO_LUONG,0) SO_LUONG,IFNULL(b.DON_GIA_BH,0) DON_GIA_BH ,IFNULL(dv.HESO, 0) HESO, IFNULL(dv.CHIPHI,0) CHIPHI
 		                    FROM  
 			                    his_data_binhluc.xml1 a, 
-			                    his_data_binhluc.xml3 b LEFT JOIN his_common.dmc_dichvu dv on IFNULL(b.MA_DICH_VU,b.MA_VAT_TU) = dv.MA_DICHVU,
+			                    his_data_binhluc.xml3 b LEFT JOIN his_common.dmc_dichvu dv on IF(IFNULL(b.MA_DICH_VU,'') <> '', b.MA_DICH_VU, b.MA_VAT_TU) = dv.MA_DICHVU,
 			                    his_common.dmc_nhom_mabhyt nhom,
                                 his_common.org_organization khoa
 		                    WHERE a.ma_lk = b.ma_lk
@@ -1311,7 +1313,7 @@ namespace API.Controllers
 							                            nhom.NHOM_MABHYT_ID,b.MA_KHOA,khoa.ORG_NAME KHOA,dv.MA_DICHVU MA_DICH_VU,dv.TEN_DICHVU TEN_DICH_VU,nhom.TENNHOM,IFNULL(b.SO_LUONG,0) SO_LUONG,IFNULL(b.DON_GIA_BH,0) DON_GIA_BH ,IFNULL(dv.HESO, 0) HESO, IFNULL(dv.CHIPHI,0) CHIPHI
 						                            FROM  
 							                            his_data_binhluc.xml1 a, 
-							                            his_data_binhluc.xml3 b LEFT JOIN his_common.dmc_dichvu dv on IFNULL(b.MA_DICH_VU,b.MA_VAT_TU) = dv.MA_DICHVU,
+							                            his_data_binhluc.xml3 b LEFT JOIN his_common.dmc_dichvu dv on IF(IFNULL(b.MA_DICH_VU,'') <> '', b.MA_DICH_VU, b.MA_VAT_TU) = dv.MA_DICHVU,
 							                            his_common.dmc_nhom_mabhyt nhom,
 							                            his_common.org_organization khoa
 						                            WHERE a.ma_lk = b.ma_lk
@@ -1408,7 +1410,7 @@ namespace API.Controllers
 							                    nhom.NHOM_MABHYT_ID,b.MA_KHOA,khoa.ORG_NAME KHOA,dv.MA_DICHVU MA_DICH_VU,dv.TEN_DICHVU TEN_DICH_VU,nhom.TENNHOM,IFNULL(b.SO_LUONG,0) SO_LUONG,IFNULL(b.DON_GIA_BH,0) DON_GIA_BH ,IFNULL(dv.HESO, 0) HESO, IFNULL(dv.CHIPHI,0) CHIPHI
 						                    FROM  
 							                    his_data_binhluc.xml1 a, 
-							                    his_data_binhluc.xml3 b LEFT JOIN his_common.dmc_dichvu dv on IFNULL(b.MA_DICH_VU,b.MA_VAT_TU) = dv.MA_DICHVU,
+							                    his_data_binhluc.xml3 b LEFT JOIN his_common.dmc_dichvu dv on IF(IFNULL(b.MA_DICH_VU,'') <> '', b.MA_DICH_VU, b.MA_VAT_TU) = dv.MA_DICHVU,
 							                    his_common.dmc_nhom_mabhyt nhom,
 							                    his_common.org_organization khoa
 						                    WHERE a.ma_lk = b.ma_lk
@@ -1667,39 +1669,35 @@ namespace API.Controllers
         private async Task<List<DiemCtkh>> GetBcDiemCtkhFunc(DateTime tuNgay, DateTime denNgay, List<int>? arrThangNam, string dbName)
         {
 
-            var sql = $"SELECT officer.OFFICER_NAME  ,officer.OFFICER_TYPE  ,officer.BACSIID  ,t1.DIEMTHUCHIEN  ,t2.KHOAID  ,t2.DIEM_KEHOACH  ,org.ORG_NAME KHOA  ,t2.DIEM_TRUC  ,(IFNULL(t2.DIEMTANGCUONG,0)+IFNULL(t1.DIEMDTCD,0))  DIEMTANGCUONG  ,t2.SONGAYTANGCUONG  ,t3.DIEMCDNHAPVIEN * 6.4 DIEMCDNHAPVIEN  ,t3.DIEMCDNHAPVIENBNND * 19.2 DIEMCDNHAPVIENBNND  ,t1.DIEMPTTCD * 0.2 DIEMPTTCHIDINH  ,t5.DIEMPTTTHUCHIEN * 0.8 DIEMPTTTHUCHIEN  ,t4.DIEMBANT  ,t6.DIEMBNNDCD  ,t7.DIEMBNNDTH " +
-                $"FROM (  " +
-                $"SELECT dkh.KHOAID   ,IFNULL(sum(dkh.DIEM_KEHOACH), 0) AS DIEM_KEHOACH   ,dkh.BACSIID   ,IFNULL(sum(dkh.DIEM_TRUC), 0) AS DIEM_TRUC   ,IFNULL(sum(tcSum.DIEMTANGCUONG), 0) AS DIEMTANGCUONG   ,IFNULL(sum(tcSum.SONGAYTANGCUONG), 0) AS SONGAYTANGCUONG  FROM {dbName}.bc_diemkehoach dkh  " +
-                $"LEFT JOIN (   SELECT DIEMKEHOACHID    ,IFNULL(SUM(tc.DIEM), 0) DIEMTANGCUONG    ,IFNULL(SUM(tc.SONGAY), 0) SONGAYTANGCUONG   FROM {dbName}.bc_tangcuong tc   GROUP BY DIEMKEHOACHID   ) tcSum ON tcSum.DIEMKEHOACHID = dkh.DIEMKEHOACHID  WHERE THANGNAM IN (    "+GenerateDynamicParamThangNam(arrThangNam)+"    )  GROUP BY KHOAID   ,BACSIID  ) t2 LEFT JOIN ( " +
-                $"SELECT t.DIEMTHUCHIEN, t.DIEMDTCD   ,activeUsers.BACSIID   ,t.DIEMPTTCD  FROM (   SELECT MA_BAC_SI    ,SUM(HESO) AS DIEMTHUCHIEN    ,SUM(CASE       WHEN NHOM_MABHYT_ID IN (        6        ,26        )       THEN HESO      ELSE 0      END) DIEMPTTCD, SUM(CASE WHEN MA_DICH_VU='21.0014.1778' THEN HESO  ELSE 0  END  ) DIEMDTCD   FROM ( " +
-                $"SELECT nhom.NHOM_MABHYT_ID     ,IFNULL(b.MA_DICH_VU, b.MA_VAT_TU) MA_DICH_VU     ,IFNULL(b.TEN_DICH_VU, b.TEN_VAT_TU) TEN_DICH_VU     ,nhom.TENNHOM     ,IFNULL(b.SO_LUONG, 0) SO_LUONG     ,IFNULL(b.DON_GIA_BH, 0) DON_GIA_BH     ,IFNULL(IF(IFNULL(dv.HESO_CLS_CD,0) > 0, dv.HESO_CLS_CD, IF(IFNULL(dv.HESO,0) >0, dv.HESO,0) ), 0) HESO     ,IFNULL(dv.CHIPHI, 0) CHIPHI     ,b.MA_BAC_SI    FROM {dbName}.xml1 a     ,{dbName}.xml3 b  " +
-                $"LEFT JOIN his_common.dmc_dichvu dv ON IFNULL(b.MA_DICH_VU, b.MA_VAT_TU) = dv.MA_DICHVU     AND IFNULL(b.TEN_DICH_VU, b.TEN_VAT_TU) = dv.TEN_DICHVU     ,his_common.dmc_nhom_mabhyt nhom    WHERE a.ma_lk = b.ma_lk     AND b.ma_nhom = nhom.MANHOM_BHYT     AND a.NGAY_RA >= @tuNgay     AND a.NGAY_RA <= @denNgay   ) x   GROUP BY MA_BAC_SI   ) t  LEFT JOIN (   SELECT *   FROM his_common.org_officer   WHERE STATUS = 1    AND MA_BAC_SI IS NOT NULL    AND MA_BAC_SI <> \"\"   ) activeUsers ON t.MA_BAC_SI = activeUsers.MA_BAC_SI  ) t1 ON t2.BACSIID = t1.BACSIID LEFT JOIN (   " +
-                $"SELECT BACSIID   ,SUM(CASE      WHEN BHYT = 1      THEN SOLUONG     ELSE 0     END) DIEMCDNHAPVIEN   ,SUM(CASE      WHEN BHYT = 2      THEN SOLUONG     ELSE 0     END) DIEMCDNHAPVIENBNND  FROM {dbName}.bc_benhnhan_nhapvien  WHERE THANGNAM IN (    "+GenerateDynamicParamThangNam(arrThangNam)+"    )  GROUP BY BACSIID  ) t3 ON t2.BACSIID = t3.BACSIID LEFT JOIN (   " +
-                $"SELECT BACSIID   ,SUM(SOLUONG) DIEMBANT  FROM {dbName}.bc_benhnhan_15t  WHERE THANGNAM IN (    " +GenerateDynamicParamThangNam(arrThangNam)+"   )   AND BHYT = 1  GROUP BY BACSIID  ) t4 ON t2.BACSIID = t4.BACSIID LEFT JOIN ( " +
-                $"SELECT pttTHSum.*   ,org.BACSIID   ,org.OFFICER_NAME  FROM (   SELECT NGUOI_THUC_HIEN    ,SUM(SO_LUONG * HESO) DIEMPTTTHUCHIEN   FROM (    SELECT tPtt.NHOM_MABHYT_ID     ,tPtt.SO_LUONG     ,tPtt.HESO     ,jt.NGUOI_THUC_HIEN    FROM (     SELECT nhom.NHOM_MABHYT_ID      ,IFNULL(b.SO_LUONG, 0) SO_LUONG      ,IFNULL(dv.HESO, 0) HESO      ,b.NGUOI_THUC_HIEN     FROM {dbName}.xml1 a      ,{dbName}.xml3 b     LEFT JOIN his_common.dmc_dichvu dv ON IFNULL(b.MA_DICH_VU, b.MA_VAT_TU) = dv.MA_DICHVU      AND IFNULL(b.TEN_DICH_VU, b.TEN_VAT_TU) = dv.TEN_DICHVU      ,his_common.dmc_nhom_mabhyt nhom     WHERE a.ma_lk = b.ma_lk      AND b.ma_nhom = nhom.MANHOM_BHYT      AND a.NGAY_RA >= @tuNgay      AND a.NGAY_RA <= @denNgay      AND nhom.NHOM_MABHYT_ID IN (       6       ,26       )     ) tPtt    JOIN JSON_TABLE(CONCAT (       '[\"'       ,REPLACE(tPtt.NGUOI_THUC_HIEN, ';', '\",\"')       ,'\"]'       ), '$[*]' COLUMNS(NGUOI_THUC_HIEN VARCHAR(255) PATH '$')) AS jt    ) tPttSplit   GROUP BY NGUOI_THUC_HIEN   ) pttTHSum  LEFT JOIN " +
-                $"his_common.org_officer org ON org.MA_BAC_SI = pttTHSum.NGUOI_THUC_HIEN ) t5 ON t5.BACSIID = t2.BACSIID " +
-                $"LEFT JOIN ( " +
-                $"SELECT BACSIID_CD ,SUM(DIEMBNNDCD) DIEMBNNDCD FROM ( " +
-                $"SELECT xml_bnnd.MADICHVU ,dv.DICHVUID ,xml_bnnd.TENDICHVU ,NGUOIDUNGID BACSIID_CD ,IF(IFNULL(HESO_CLS_CD,0) > 0, HESO_CLS_CD, IF(IFNULL(HESO,0) >0, HESO,0) ) HESO ,IFNULL(SOLUONG, 0) SOLUONG ,IFNULL(IF(IFNULL(HESO_CLS_CD,0) > 0, HESO_CLS_CD, IF(IFNULL(HESO,0) >0, HESO,0) ) * SOLUONG, 0) DIEMBNNDCD " +
-                $",LOAIPHIEUMAUBENHPHAM " +
-                $"FROM {dbName}.xml_bnnd " +
-                $"LEFT JOIN his_common.dmc_dichvu dv ON xml_bnnd.MADICHVU = dv.MA_DICHVU " +
-                $"AND xml_bnnd.TENDICHVU = dv.TEN_DICHVU " +
-                $"WHERE LOAIPHIEUMAUBENHPHAM <> 7 " +
-                $"AND LOAIPHIEUMAUBENHPHAM <> 8 " +
-                $"AND xml_bnnd.NGAY_RAVIEN >= @tuNgay AND xml_bnnd.NGAY_RAVIEN <= @denNgay GROUP BY MADICHVU ,DICHVUID ,TENDICHVU ,NGUOIDUNGID ,HESO ,SOLUONG ,LOAIPHIEUMAUBENHPHAM ) t " +
-                $"GROUP BY BACSIID_CD ) t6 ON t6.BACSIID_CD = t2.BACSIID " +
-                $"LEFT JOIN (  " +
-                $"SELECT BACSIID_TH ,SUM(DIEMBNNDTH) DIEMBNNDTH " +
-                $"FROM ( SELECT xml_bnnd.MADICHVU ,dv.DICHVUID ,xml_bnnd.TENDICHVU ,NGUOITRAKETQUA BACSIID_TH ,IF(IFNULL(HESO_CLS_TH,0) >0, HESO_CLS_TH, (IF(IFNULL(HESO_CLS_CD,0) > 0, HESO_CLS_CD, IF(IFNULL(HESO,0) >0, HESO,0)) )) HESO ,IFNULL(SOLUONG, 0) SOLUONG " +
-                $",IFNULL(IF(IFNULL(HESO_CLS_TH,0) >0, HESO_CLS_TH, (IF(IFNULL(HESO_CLS_CD,0) > 0, HESO_CLS_CD, IF(IFNULL(HESO,0) >0, HESO,0)) )) * SOLUONG, 0) DIEMBNNDTH ,LOAIPHIEUMAUBENHPHAM " +
-                $"FROM {dbName}.xml_bnnd " +
-                $"LEFT JOIN his_common.dmc_dichvu dv ON xml_bnnd.MADICHVU = dv.MA_DICHVU AND xml_bnnd.TENDICHVU = dv.TEN_DICHVU WHERE LOAIPHIEUMAUBENHPHAM <> 7 AND LOAIPHIEUMAUBENHPHAM <> 8 AND NGUOITRAKETQUA IS NOT NULL AND xml_bnnd.NGAY_RAVIEN >=  @tuNgay AND xml_bnnd.NGAY_RAVIEN <=  @denNgay GROUP BY MADICHVU ,DICHVUID ,TENDICHVU ,NGUOITRAKETQUA ,HESO ,SOLUONG ,LOAIPHIEUMAUBENHPHAM ) t " +
-                $"GROUP BY BACSIID_TH " +
-                $") t7 ON t7.BACSIID_TH = t2.BACSIID " +
+            var sql = $"SELECT officer.OFFICER_NAME ,officer.OFFICER_TYPE ,officer.BACSIID ,IFNULL(t1.DIEMTHUCHIEN,0) DIEMTHUCHIEN     ,IFNULL(t5.DIEMDT,0) DIEMDT ,t2.KHOAID ,t2.DIEM_KEHOACH ,org.ORG_NAME KHOA ,t2.DIEM_TRUC     ,t2.DIEMTANGCUONG DIEMTC ,(IFNULL(t2.DIEMTANGCUONG,0)+IFNULL(t5.DIEMDT,0))  DIEMTANGCUONG ,t2.SONGAYTANGCUONG ,t3.DIEMCDNHAPVIEN * 6.4 DIEMCDNHAPVIEN ,t3.DIEMCDNHAPVIENBNND * 19.2 DIEMCDNHAPVIENBNND ,t1.DIEMPTTCD * 0.2 DIEMPTTCHIDINH ,t5.DIEMPTTTHUCHIEN * 0.8 DIEMPTTTHUCHIEN ,t4.DIEMBANT ,t6.DIEMBNNDCD ,t7.DIEMBNNDTH " +
+                $"FROM (  SELECT dkh.KHOAID ,IFNULL(sum(dkh.DIEM_KEHOACH), 0) AS DIEM_KEHOACH ,dkh.BACSIID ,IFNULL(sum(dkh.DIEM_TRUC), 0) AS DIEM_TRUC ,IFNULL(sum(tcSum.DIEMTANGCUONG), 0) AS DIEMTANGCUONG ,IFNULL(sum(tcSum.SONGAYTANGCUONG), 0) AS SONGAYTANGCUONG FROM `{dbName}`.bc_diemkehoach dkh " +
+                $"LEFT JOIN ( SELECT DIEMKEHOACHID ,IFNULL(SUM(tc.DIEM), 0) DIEMTANGCUONG ,IFNULL(SUM(tc.SONGAY), 0) SONGAYTANGCUONG FROM `{dbName}`.bc_tangcuong tc GROUP BY DIEMKEHOACHID ) tcSum ON tcSum.DIEMKEHOACHID = dkh.DIEMKEHOACHID WHERE THANGNAM IN (" +GenerateDynamicParamThangNam(arrThangNam)+") " +
+                $"GROUP BY KHOAID ,BACSIID ) t2 " +
+                $"LEFT JOIN (  SELECT t.DIEMTHUCHIEN ,activeUsers.BACSIID ,t.DIEMPTTCD FROM ( SELECT MA_BAC_SI ,SUM(HESO) AS DIEMTHUCHIEN ,SUM(CASE  WHEN NHOM_MABHYT_ID IN ( 6 ,26 ) THEN HESO ELSE 0 END) DIEMPTTCD " +
+                $"FROM ( SELECT nhom.NHOM_MABHYT_ID ,IF(IFNULL(b.MA_DICH_VU, '') <> '',b.MA_DICH_VU, b.MA_VAT_TU) MA_DICH_VU ,IF(IFNULL(b.TEN_DICH_VU, '') <> '',b.TEN_DICH_VU, b.TEN_VAT_TU) TEN_DICH_VU ,nhom.TENNHOM ,IFNULL(b.SO_LUONG, 0) SO_LUONG ,IFNULL(b.DON_GIA_BH, 0) DON_GIA_BH ,IFNULL(HESO,0) HESO ,IFNULL(dv.CHIPHI, 0) CHIPHI ,b.MA_BAC_SI FROM `{dbName}`.xml1 a ,`{dbName}`.xml3 b " +
+                $"LEFT JOIN his_common.dmc_dichvu dv ON IF(IFNULL(b.MA_DICH_VU, '') <> '',b.MA_DICH_VU, b.MA_VAT_TU) = dv.MA_DICHVU AND IFNULL(b.TEN_DICH_VU, b.TEN_VAT_TU) = dv.TEN_DICHVU ,his_common.dmc_nhom_mabhyt nhom WHERE a.ma_lk = b.ma_lk AND b.ma_nhom = nhom.MANHOM_BHYT AND a.NGAY_RA >= @tuNgay AND a.NGAY_RA <= @denNgay) x " +
+                $"GROUP BY MA_BAC_SI) t " +
+                $"LEFT JOIN ( SELECT * FROM his_common.org_officer WHERE STATUS = 1 AND MA_BAC_SI IS NOT NULL AND MA_BAC_SI <> \"\" ) activeUsers ON t.MA_BAC_SI = activeUsers.MA_BAC_SI) t1 ON t2.BACSIID = t1.BACSIID " +
+                $"LEFT JOIN ( SELECT BACSIID ,SUM(CASE  WHEN BHYT = 1 THEN SOLUONG ELSE 0 END) DIEMCDNHAPVIEN ,SUM(CASE  WHEN BHYT = 2 THEN SOLUONG ELSE 0 END) DIEMCDNHAPVIENBNND FROM `{dbName}`.bc_benhnhan_nhapvien WHERE THANGNAM IN ( " +GenerateDynamicParamThangNam(arrThangNam)+") GROUP BY BACSIID ) t3 ON t2.BACSIID = t3.BACSIID " +
+                $"LEFT JOIN ( SELECT BACSIID ,SUM(SOLUONG) DIEMBANT FROM `{dbName}`.bc_benhnhan_15t WHERE THANGNAM IN ( " +GenerateDynamicParamThangNam(arrThangNam)+") AND BHYT = 1 GROUP BY BACSIID ) t4 ON t2.BACSIID = t4.BACSIID " +
+                $"LEFT JOIN ( SELECT pttTHSum.* ,org.BACSIID ,org.OFFICER_NAME FROM ( SELECT NGUOI_THUC_HIEN ,SUM(CASE WHEN NHOM_MABHYT_ID IN (6,26) THEN SO_LUONG * HESO ELSE 0 END) DIEMPTTTHUCHIEN             ,SUM(CASE WHEN MA_DICH_VU = '21.0014.1778' THEN SO_LUONG * HESO_CLS_BS ELSE 0 END) DIEMDT " +
+                $"FROM ( SELECT tPtt.NHOM_MABHYT_ID ,tPtt.SO_LUONG ,tPtt.HESO ,tPtt.HESO_CLS_BS ,tPtt.HESO_CLS_DD ,tPtt.MA_BAC_SI ,tPtt.MA_DICH_VU ,jt.NGUOI_THUC_HIEN FROM ( SELECT nhom.NHOM_MABHYT_ID ,IFNULL(b.SO_LUONG, 0) SO_LUONG ,IFNULL(dv.HESO, 0) HESO ,IFNULL(dv.HESO_CLS_BS, 0) HESO_CLS_BS  ,IFNULL(dv.HESO_CLS_DD, 0) HESO_CLS_DD ,b.NGUOI_THUC_HIEN ,b.MA_BAC_SI, b.MA_DICH_VU " +
+                $"FROM `{dbName}`.xml1 a ,`{dbName}`.xml3 b " +
+                $"LEFT JOIN his_common.dmc_dichvu dv ON IF(IFNULL(b.MA_DICH_VU, '') <> '',b.MA_DICH_VU, b.MA_VAT_TU) = dv.MA_DICHVU " +
+                $"AND IFNULL(b.TEN_DICH_VU, b.TEN_VAT_TU) = dv.TEN_DICHVU ,his_common.dmc_nhom_mabhyt nhom " +
+                $"WHERE a.ma_lk = b.ma_lk AND b.ma_nhom = nhom.MANHOM_BHYT " +
+                $"AND a.NGAY_RA >= @tuNgay AND a.NGAY_RA <= @denNgay AND ( nhom.NHOM_MABHYT_ID IN (6,26) OR b.MA_DICH_VU='21.0014.1778'  )) tPtt " +
+                $"JOIN JSON_TABLE(CONCAT ('[\"',REPLACE(tPtt.NGUOI_THUC_HIEN, ';', '\",\"'),'\"]'), '$[*]' COLUMNS(NGUOI_THUC_HIEN VARCHAR(255) PATH '$')) AS jt ) tPttSplit " +
+                $"WHERE tPttSplit.NGUOI_THUC_HIEN <> tPttSplit.MA_BAC_SI GROUP BY NGUOI_THUC_HIEN ) pttTHSum " +
+                $"LEFT JOIN his_common.org_officer org ON org.MA_BAC_SI = pttTHSum.NGUOI_THUC_HIEN ) t5 ON t5.BACSIID = t2.BACSIID " +
+                $"LEFT JOIN ( SELECT BACSIID_CD ,SUM(DIEMBNNDCD) DIEMBNNDCD FROM ( SELECT xml_bnnd.MADICHVU ,dv.DICHVUID ,xml_bnnd.TENDICHVU ,NGUOIDUNGID BACSIID_CD ,IF(IFNULL(HESO_CLS_BS,0) > 0, HESO_CLS_BS, IF(IFNULL(HESO,0) >0, HESO,0) ) HESO ,IFNULL(SOLUONG, 0) SOLUONG ,IFNULL(IF(IFNULL(HESO_CLS_BS,0) > 0, HESO_CLS_BS, IF(IFNULL(HESO,0) >0, HESO,0) ) * SOLUONG, 0) DIEMBNNDCD ,LOAIPHIEUMAUBENHPHAM " +
+                $"FROM `{dbName}`.xml_bnnd " +
+                $"LEFT JOIN his_common.dmc_dichvu dv ON xml_bnnd.MADICHVU = dv.MA_DICHVU AND xml_bnnd.TENDICHVU = dv.TEN_DICHVU WHERE LOAIPHIEUMAUBENHPHAM <> 7 AND LOAIPHIEUMAUBENHPHAM <> 8 AND xml_bnnd.NGAY_RAVIEN >= @tuNgay AND xml_bnnd.NGAY_RAVIEN <= @denNgay GROUP BY MADICHVU ,DICHVUID ,TENDICHVU ,NGUOIDUNGID ,HESO ,SOLUONG ,LOAIPHIEUMAUBENHPHAM ) t GROUP BY BACSIID_CD ) t6 ON t6.BACSIID_CD = t2.BACSIID " +
+                $"LEFT JOIN ( SELECT BACSIID_TH ,SUM(DIEMBNNDTH) DIEMBNNDTH FROM ( SELECT xml_bnnd.MADICHVU ,dv.DICHVUID ,xml_bnnd.TENDICHVU ,NGUOITRAKETQUA BACSIID_TH ,IF(IFNULL(HESO_CLS_DD,0) >0, HESO_CLS_DD, (IF(IFNULL(HESO_CLS_BS,0) > 0, HESO_CLS_BS, IF(IFNULL(HESO,0) >0, HESO,0)) )) HESO ,IFNULL(SOLUONG, 0) SOLUONG ,IFNULL(IF(IFNULL(HESO_CLS_DD,0) >0, HESO_CLS_DD, (IF(IFNULL(HESO_CLS_BS,0) > 0, HESO_CLS_BS, IF(IFNULL(HESO,0) >0, HESO,0)) )) * SOLUONG, 0) DIEMBNNDTH ,LOAIPHIEUMAUBENHPHAM FROM `{dbName}`.xml_bnnd " +
+                $"LEFT JOIN his_common.dmc_dichvu dv ON xml_bnnd.MADICHVU = dv.MA_DICHVU AND xml_bnnd.TENDICHVU = dv.TEN_DICHVU WHERE LOAIPHIEUMAUBENHPHAM <> 7 AND LOAIPHIEUMAUBENHPHAM <> 8 AND NGUOITRAKETQUA IS NOT NULL AND xml_bnnd.NGAY_RAVIEN >= @tuNgay AND xml_bnnd.NGAY_RAVIEN <= @denNgay GROUP BY MADICHVU ,DICHVUID ,TENDICHVU ,NGUOITRAKETQUA,HESO ,SOLUONG ,LOAIPHIEUMAUBENHPHAM ) t GROUP BY BACSIID_TH ) t7 ON t7.BACSIID_TH = t2.BACSIID " +
                 $"LEFT JOIN his_common.org_organization org ON org.ORG_ID = t2.KHOAID " +
                 $"LEFT JOIN his_common.org_officer officer ON officer.BACSIID = t2.BACSIID " +
-                $"ORDER BY t2.KHOAID;";
+                $"ORDER BY t2.KHOAID; ";
             var conn = _context.Database.GetDbConnection();
             using var cmd = conn.CreateCommand();
             var paramList = new List<DbParameter>();
@@ -3228,10 +3226,10 @@ namespace API.Controllers
                     $"FROM (SELECT * from his_common.org_officer WHERE STATUS = 1 AND MA_BAC_SI IS NOT NULL AND MA_BAC_SI <> '' ) activeUsers " +
                     $"LEFT JOIN (SELECT  MA_BAC_SI, SUM(HESO) as DIEMTHUCHIEN " +
                     $"FROM (SELECT " +
-                    $"nhom.NHOM_MABHYT_ID,IFNULL(b.MA_DICH_VU,b.MA_VAT_TU) MA_DICH_VU,IFNULL(b.TEN_DICH_VU,b.TEN_VAT_TU) TEN_DICH_VU,nhom.TENNHOM,IFNULL(b.SO_LUONG,0) SO_LUONG,IFNULL(b.DON_GIA_BH, 0) DON_GIA_BH ,IFNULL(dv.HESO,0) HESO, IFNULL(dv.CHIPHI,0) CHIPHI, b.MA_BAC_SI" +
+                    $"nhom.NHOM_MABHYT_ID,IF(IFNULL(b.MA_DICH_VU,'') <> '', b.MA_DICH_VU, b.MA_VAT_TU) MA_DICH_VU,IF(IFNULL(b.TEN_DICH_VU,'') <> '',b.TEN_DICH_VU,b.TEN_VAT_TU) TEN_DICH_VU,nhom.TENNHOM,IFNULL(b.SO_LUONG,0) SO_LUONG,IFNULL(b.DON_GIA_BH, 0) DON_GIA_BH ,IFNULL(dv.HESO,0) HESO, IFNULL(dv.CHIPHI,0) CHIPHI, b.MA_BAC_SI" +
                     $" FROM " +
                     $"`{dbData}`.xml1 a, " +
-                    $"`{dbData}`.xml3 b LEFT JOIN his_common.dmc_dichvu dv on IFNULL(b.MA_DICH_VU,b.MA_VAT_TU) = dv.MA_DICHVU AND IFNULL(b.TEN_DICH_VU,b.TEN_VAT_TU) = dv.TEN_DICHVU, " +
+                    $"`{dbData}`.xml3 b LEFT JOIN his_common.dmc_dichvu dv on IF(IFNULL(b.MA_DICH_VU,'') <> '', b.MA_DICH_VU, b.MA_VAT_TU) = dv.MA_DICHVU AND IF(IFNULL(b.TEN_DICH_VU,'') <> '',b.TEN_DICH_VU,b.TEN_VAT_TU) = dv.TEN_DICHVU, " +
                     $"his_common.dmc_nhom_mabhyt nhom " +
                     $"WHERE a.ma_lk = b.ma_lk " +
                     $"AND b.ma_nhom = nhom.MANHOM_BHYT " +

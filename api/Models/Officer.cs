@@ -30,4 +30,11 @@ namespace API.Models
         public string? ma_bac_si { get; set; }
         public int? khoaid { get; set; }
     }
+
+    public class FilterOfficer
+    {
+        public string? ma_bac_si { get; set; }
+        public string officer_code { get; set; }
+        public string officer_name { get; set; }
+    }
 }

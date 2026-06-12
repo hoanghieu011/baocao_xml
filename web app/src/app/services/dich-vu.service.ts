@@ -43,16 +43,16 @@ export class DichVuService {
     dichVuId: number,
     chiPhi: number,
     heSo: number,
-    heso_cls_cd: number,
-    heso_cls_th: number
+    heso_cls_bs: number,
+    heso_cls_dd: number
   ): Observable<any> {
 
     const body: any = {
       dichVuId,
       chiPhi,
       heSo,
-      heso_cls_cd,
-      heso_cls_th
+      heso_cls_bs,
+      heso_cls_dd
     };
 
     return this.http.put<any>(

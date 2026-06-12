@@ -21,6 +21,7 @@ namespace API.Data
         public DbSet<BcDoanhThuKhoaDto> dto_bc_doanhthu_khoa { get; set; }
         public DbSet<BcDoanhThuToanVienDto> dto_bc_doanhthu_toanvien { get; set; }
         public DbSet<Officer> org_officer { get; set; }
+        public DbSet<FilterOfficer> filter_officer { get; set; }
         public DbSet<Organization> org_organization { get; set; }
         public DbSet<BenhVien> dmc_benhvien { get; set; }
         public DbSet<DiemKeHoach> diemkehoach { get; set; }
@@ -35,6 +36,7 @@ namespace API.Data
             modelBuilder.Entity<BcDoanhThuKhoaDto>().HasNoKey();
             modelBuilder.Entity<BcDoanhThuToanVienDto>().HasNoKey();
             modelBuilder.Entity<DiemCtkh>().HasNoKey();
+            modelBuilder.Entity<FilterOfficer>().HasNoKey();
         }
     }
 

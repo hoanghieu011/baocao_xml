@@ -74,7 +74,7 @@ namespace API.Controllers
 
                 var sql = @"SELECT 
                                 a.MA_DICHVU,
-                                a.DICHVUID, a.TEN_DICHVU, b.TENNHOM, a.DONVI, a.CSYTID, a.GIA_BHYT, a.CHIPHI, a.HESO, a.nhom_mabhyt_id, a.HESO_CLS_CD, a.HESO_CLS_TH
+                                a.DICHVUID, a.TEN_DICHVU, b.TENNHOM, a.DONVI, a.CSYTID, a.GIA_BHYT, a.CHIPHI, a.HESO, a.nhom_mabhyt_id, a.HESO_CLS_BS, a.HESO_CLS_DD
                                 FROM dmc_dichvu a, dmc_nhom_mabhyt b"
                             + whereBuilder.ToString() + $" ORDER BY a.LOAIID, a.nhom_mabhyt_id LIMIT {pageSize} OFFSET {offset}" ;
 
@@ -157,8 +157,8 @@ namespace API.Controllers
                     UPDATE dmc_dichvu
                     SET CHIPHI = @chiphi,
                         HESO = @heso,
-                        HESO_CLS_CD = @heso_cls_cd,
-                        HESO_CLS_TH = @heso_cls_th
+                        HESO_CLS_BS = @heso_cls_bs,
+                        HESO_CLS_DD = @heso_cls_dd
                     WHERE DICHVUID = @dichvuid
                         AND CSYTID = @csytid";
 
@@ -183,13 +183,13 @@ namespace API.Controllers
                 cmd.Parameters.Add(p4);
 
                 var p5 = cmd.CreateParameter();
-                p5.ParameterName = "@heso_cls_cd";
-                p5.Value = req.HeSo_Cls_cd;
+                p5.ParameterName = "@heso_cls_bs";
+                p5.Value = req.HeSo_Cls_bs;
                 cmd.Parameters.Add(p5);
 
                 var p6 = cmd.CreateParameter();
-                p6.ParameterName = "@heso_cls_th";
-                p6.Value = req.HeSo_Cls_th;
+                p6.ParameterName = "@heso_cls_dd";
+                p6.Value = req.HeSo_Cls_dd;
                 cmd.Parameters.Add(p6);
 
                 var affectedRows = await cmd.ExecuteNonQueryAsync();
@@ -222,7 +222,7 @@ namespace API.Controllers
         public int DichVuId { get; set; }
         public decimal? ChiPhi { get; set; }
         public decimal? HeSo { get; set; }
-        public decimal? HeSo_Cls_cd { get; set; }
-        public decimal? HeSo_Cls_th { get; set; }
+        public decimal? HeSo_Cls_bs { get; set; }
+        public decimal? HeSo_Cls_dd{ get; set; }
     }
 }
