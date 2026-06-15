@@ -787,7 +787,7 @@ namespace API.Controllers
                             AND a.NGAY_RA >= @tungay 
                             AND a.NGAY_RA <= @dengay 
                             AND b.nguoi_thuc_hien LIKE @nguoiThucHien
-                            AND nhom.NHOM_MABYHT_ID IN (3,4,5,6,26)
+                            AND nhom.NHOM_MABHYT_ID IN (3,4,5,6,26)
                         ) th
                         GROUP BY NHOM_MABHYT_ID, MA_DICH_VU, TEN_DICH_VU, TENNHOM, DON_GIA_BH, HESO,HESO_CLS_BS, HESO_CLS_DD, CHIPHI
                     ) th2,
