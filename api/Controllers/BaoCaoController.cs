@@ -786,7 +786,8 @@ namespace API.Controllers
                             AND b.ma_nhom = nhom.MANHOM_BHYT
                             AND a.NGAY_RA >= @tungay 
                             AND a.NGAY_RA <= @dengay 
-                            AND b.nguoi_thuc_hien LIKE @nguoiThucHien AND b.MA_BAC_SI <> @nguoiThucHienCode
+                            AND b.nguoi_thuc_hien LIKE @nguoiThucHien
+                            AND nhom.NHOM_MABYHT_ID IN (3,4,5,6,26)
                         ) th
                         GROUP BY NHOM_MABHYT_ID, MA_DICH_VU, TEN_DICH_VU, TENNHOM, DON_GIA_BH, HESO,HESO_CLS_BS, HESO_CLS_DD, CHIPHI
                     ) th2,
@@ -1688,7 +1689,7 @@ namespace API.Controllers
                 $"WHERE a.ma_lk = b.ma_lk AND b.ma_nhom = nhom.MANHOM_BHYT " +
                 $"AND a.NGAY_RA >= @tuNgay AND a.NGAY_RA <= @denNgay AND ( nhom.NHOM_MABHYT_ID IN (6,26) OR b.MA_DICH_VU='21.0014.1778'  )) tPtt " +
                 $"JOIN JSON_TABLE(CONCAT ('[\"',REPLACE(tPtt.NGUOI_THUC_HIEN, ';', '\",\"'),'\"]'), '$[*]' COLUMNS(NGUOI_THUC_HIEN VARCHAR(255) PATH '$')) AS jt ) tPttSplit " +
-                $"WHERE tPttSplit.NGUOI_THUC_HIEN <> tPttSplit.MA_BAC_SI GROUP BY NGUOI_THUC_HIEN ) pttTHSum " +
+                $" GROUP BY NGUOI_THUC_HIEN ) pttTHSum " +
                 $"LEFT JOIN his_common.org_officer org ON org.MA_BAC_SI = pttTHSum.NGUOI_THUC_HIEN ) t5 ON t5.BACSIID = t2.BACSIID " +
                 $"LEFT JOIN ( SELECT BACSIID_CD ,SUM(DIEMBNNDCD) DIEMBNNDCD FROM ( SELECT xml_bnnd.MADICHVU ,dv.DICHVUID ,xml_bnnd.TENDICHVU ,NGUOIDUNGID BACSIID_CD ,IF(IFNULL(HESO_CLS_BS,0) > 0, HESO_CLS_BS, IF(IFNULL(HESO,0) >0, HESO,0) ) HESO ,IFNULL(SOLUONG, 0) SOLUONG ,IFNULL(IF(IFNULL(HESO_CLS_BS,0) > 0, HESO_CLS_BS, IF(IFNULL(HESO,0) >0, HESO,0) ) * SOLUONG, 0) DIEMBNNDCD ,LOAIPHIEUMAUBENHPHAM " +
                 $"FROM `{dbName}`.xml_bnnd " +
@@ -2431,7 +2432,7 @@ namespace API.Controllers
             }
             // ====== Style chung ======
             ws.SheetView.FreezeRows(6);
-
+            ws.SheetView.FreezeColumns(2);
             ws.Column(1).Width = 8;
             ws.Column(2).Width = 40;
             ws.Column(3).Width = 10;
@@ -2612,7 +2613,7 @@ namespace API.Controllers
 
             // ====== Style chung ======
             ws.SheetView.FreezeRows(6);
-
+            ws.SheetView.FreezeColumns(2);
             ws.Column(1).Width = 8;
             ws.Column(2).Width = 40;
             ws.Column(3).Width = 10;
