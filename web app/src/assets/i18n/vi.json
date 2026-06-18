@@ -244,6 +244,7 @@
   },
   "BC_DIEM_CTKH": {
     "KHOA_BAC_SY": "Khoa, bác sỹ",
+    "DIEM_TH_CLS":"Điểm thực hiện CLS",
     "DIEU_DUONG": "Điều dưỡng",
     "DIEM_KE_HOACH": "Điểm kế hoạch",
     "DIEM_TH_THEO_BS": "Điểm T.H tại khoa theo Bs, Dược (phát thuốc)",

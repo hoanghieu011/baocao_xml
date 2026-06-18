@@ -37,6 +37,11 @@ namespace API.Models
         [Column("DIEMPTTTHUCHIEN")]
         public decimal? DiemPTTTH { get; set; } = 0;
         /// <summary>
+        /// Điểm thực hiện cls
+        /// </summary>
+        [Column("DIEMTHCLS")]
+        public decimal? DiemTHCLS { get; set; } = 0;
+        /// <summary>
         ///  Điểm BH/ĐT Tcường
         /// </summary>
         [Column("DIEMTANGCUONG")]

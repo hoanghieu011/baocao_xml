@@ -1670,7 +1670,7 @@ namespace API.Controllers
         private async Task<List<DiemCtkh>> GetBcDiemCtkhFunc(DateTime tuNgay, DateTime denNgay, List<int>? arrThangNam, string dbName)
         {
 
-            var sql = $"SELECT officer.OFFICER_NAME ,officer.OFFICER_TYPE ,officer.BACSIID ,IFNULL(t1.DIEMTHUCHIEN,0) DIEMTHUCHIEN     ,IFNULL(t5.DIEMDT,0) DIEMDT ,t2.KHOAID ,t2.DIEM_KEHOACH ,org.ORG_NAME KHOA ,t2.DIEM_TRUC     ,t2.DIEMTANGCUONG DIEMTC ,(IFNULL(t2.DIEMTANGCUONG,0)+IFNULL(t5.DIEMDT,0))  DIEMTANGCUONG ,t2.SONGAYTANGCUONG ,t3.DIEMCDNHAPVIEN * 6.4 DIEMCDNHAPVIEN ,t3.DIEMCDNHAPVIENBNND * 19.2 DIEMCDNHAPVIENBNND ,t1.DIEMPTTCD * 0.2 DIEMPTTCHIDINH ,t5.DIEMPTTTHUCHIEN * 0.8 DIEMPTTTHUCHIEN ,t4.DIEMBANT ,t6.DIEMBNNDCD ,t7.DIEMBNNDTH " +
+            var sql = $"SELECT officer.OFFICER_NAME ,officer.OFFICER_TYPE ,officer.BACSIID ,IFNULL(t1.DIEMTHUCHIEN,0) DIEMTHUCHIEN     ,IFNULL(t5.DIEMDT,0) DIEMDT ,t2.KHOAID ,t2.DIEM_KEHOACH ,org.ORG_NAME KHOA ,t2.DIEM_TRUC     ,t2.DIEMTANGCUONG DIEMTC ,(IFNULL(t2.DIEMTANGCUONG,0)+IFNULL(t5.DIEMDT,0))  DIEMTANGCUONG ,t2.SONGAYTANGCUONG ,t3.DIEMCDNHAPVIEN * 6.4 DIEMCDNHAPVIEN ,t3.DIEMCDNHAPVIENBNND * 19.2 DIEMCDNHAPVIENBNND ,t1.DIEMPTTCD * 0.2 DIEMPTTCHIDINH ,t5.DIEMPTTTHUCHIEN * 0.8 DIEMPTTTHUCHIEN, t5.DIEMTHCLS ,t4.DIEMBANT ,t6.DIEMBNNDCD ,t7.DIEMBNNDTH " +
                 $"FROM (  SELECT dkh.KHOAID ,IFNULL(sum(dkh.DIEM_KEHOACH), 0) AS DIEM_KEHOACH ,dkh.BACSIID ,IFNULL(sum(dkh.DIEM_TRUC), 0) AS DIEM_TRUC ,IFNULL(sum(tcSum.DIEMTANGCUONG), 0) AS DIEMTANGCUONG ,IFNULL(sum(tcSum.SONGAYTANGCUONG), 0) AS SONGAYTANGCUONG FROM `{dbName}`.bc_diemkehoach dkh " +
                 $"LEFT JOIN ( SELECT DIEMKEHOACHID ,IFNULL(SUM(tc.DIEM), 0) DIEMTANGCUONG ,IFNULL(SUM(tc.SONGAY), 0) SONGAYTANGCUONG FROM `{dbName}`.bc_tangcuong tc GROUP BY DIEMKEHOACHID ) tcSum ON tcSum.DIEMKEHOACHID = dkh.DIEMKEHOACHID WHERE THANGNAM IN (" +GenerateDynamicParamThangNam(arrThangNam)+") " +
                 $"GROUP BY KHOAID ,BACSIID ) t2 " +
@@ -1681,13 +1681,13 @@ namespace API.Controllers
                 $"LEFT JOIN ( SELECT * FROM his_common.org_officer WHERE STATUS = 1 AND MA_BAC_SI IS NOT NULL AND MA_BAC_SI <> \"\" ) activeUsers ON t.MA_BAC_SI = activeUsers.MA_BAC_SI) t1 ON t2.BACSIID = t1.BACSIID " +
                 $"LEFT JOIN ( SELECT BACSIID ,SUM(CASE  WHEN BHYT = 1 THEN SOLUONG ELSE 0 END) DIEMCDNHAPVIEN ,SUM(CASE  WHEN BHYT = 2 THEN SOLUONG ELSE 0 END) DIEMCDNHAPVIENBNND FROM `{dbName}`.bc_benhnhan_nhapvien WHERE THANGNAM IN ( " +GenerateDynamicParamThangNam(arrThangNam)+") GROUP BY BACSIID ) t3 ON t2.BACSIID = t3.BACSIID " +
                 $"LEFT JOIN ( SELECT BACSIID ,SUM(SOLUONG) DIEMBANT FROM `{dbName}`.bc_benhnhan_15t WHERE THANGNAM IN ( " +GenerateDynamicParamThangNam(arrThangNam)+") AND BHYT = 1 GROUP BY BACSIID ) t4 ON t2.BACSIID = t4.BACSIID " +
-                $"LEFT JOIN ( SELECT pttTHSum.* ,org.BACSIID ,org.OFFICER_NAME FROM ( SELECT NGUOI_THUC_HIEN ,SUM(CASE WHEN NHOM_MABHYT_ID IN (6,26) THEN SO_LUONG * HESO ELSE 0 END) DIEMPTTTHUCHIEN             ,SUM(CASE WHEN MA_DICH_VU = '21.0014.1778' THEN SO_LUONG * HESO_CLS_BS ELSE 0 END) DIEMDT " +
+                $"LEFT JOIN ( SELECT pttTHSum.* ,org.BACSIID ,org.OFFICER_NAME FROM ( SELECT NGUOI_THUC_HIEN ,SUM(CASE WHEN NHOM_MABHYT_ID IN (6,26) THEN SO_LUONG * HESO ELSE 0 END) DIEMPTTTHUCHIEN             ,SUM(CASE WHEN MA_DICH_VU = '21.0014.1778' THEN SO_LUONG * HESO_CLS_BS ELSE 0 END) DIEMDT, SUM(SO_LUONG * HESO) DIEMTHCLS " +
                 $"FROM ( SELECT tPtt.NHOM_MABHYT_ID ,tPtt.SO_LUONG ,tPtt.HESO ,tPtt.HESO_CLS_BS ,tPtt.HESO_CLS_DD ,tPtt.MA_BAC_SI ,tPtt.MA_DICH_VU ,jt.NGUOI_THUC_HIEN FROM ( SELECT nhom.NHOM_MABHYT_ID ,IFNULL(b.SO_LUONG, 0) SO_LUONG ,IFNULL(dv.HESO, 0) HESO ,IFNULL(dv.HESO_CLS_BS, 0) HESO_CLS_BS  ,IFNULL(dv.HESO_CLS_DD, 0) HESO_CLS_DD ,b.NGUOI_THUC_HIEN ,b.MA_BAC_SI, b.MA_DICH_VU " +
                 $"FROM `{dbName}`.xml1 a ,`{dbName}`.xml3 b " +
                 $"LEFT JOIN his_common.dmc_dichvu dv ON IF(IFNULL(b.MA_DICH_VU, '') <> '',b.MA_DICH_VU, b.MA_VAT_TU) = dv.MA_DICHVU " +
                 $"AND IFNULL(b.TEN_DICH_VU, b.TEN_VAT_TU) = dv.TEN_DICHVU ,his_common.dmc_nhom_mabhyt nhom " +
                 $"WHERE a.ma_lk = b.ma_lk AND b.ma_nhom = nhom.MANHOM_BHYT " +
-                $"AND a.NGAY_RA >= @tuNgay AND a.NGAY_RA <= @denNgay AND ( nhom.NHOM_MABHYT_ID IN (6,26) OR b.MA_DICH_VU='21.0014.1778'  )) tPtt " +
+                $"AND a.NGAY_RA >= @tuNgay AND a.NGAY_RA <= @denNgay AND  nhom.NHOM_MABHYT_ID IN (3,4,5,6,26)) tPtt " +
                 $"JOIN JSON_TABLE(CONCAT ('[\"',REPLACE(tPtt.NGUOI_THUC_HIEN, ';', '\",\"'),'\"]'), '$[*]' COLUMNS(NGUOI_THUC_HIEN VARCHAR(255) PATH '$')) AS jt ) tPttSplit " +
                 $" GROUP BY NGUOI_THUC_HIEN ) pttTHSum " +
                 $"LEFT JOIN his_common.org_officer org ON org.MA_BAC_SI = pttTHSum.NGUOI_THUC_HIEN ) t5 ON t5.BACSIID = t2.BACSIID " +
@@ -1698,7 +1698,7 @@ namespace API.Controllers
                 $"LEFT JOIN his_common.dmc_dichvu dv ON xml_bnnd.MADICHVU = dv.MA_DICHVU AND xml_bnnd.TENDICHVU = dv.TEN_DICHVU WHERE LOAIPHIEUMAUBENHPHAM <> 7 AND LOAIPHIEUMAUBENHPHAM <> 8 AND NGUOITRAKETQUA IS NOT NULL AND xml_bnnd.NGAY_RAVIEN >= @tuNgay AND xml_bnnd.NGAY_RAVIEN <= @denNgay GROUP BY MADICHVU ,DICHVUID ,TENDICHVU ,NGUOITRAKETQUA,HESO ,SOLUONG ,LOAIPHIEUMAUBENHPHAM ) t GROUP BY BACSIID_TH ) t7 ON t7.BACSIID_TH = t2.BACSIID " +
                 $"LEFT JOIN his_common.org_organization org ON org.ORG_ID = t2.KHOAID " +
                 $"LEFT JOIN his_common.org_officer officer ON officer.BACSIID = t2.BACSIID " +
-                $"ORDER BY t2.KHOAID; ";
+                $" WHERE t2.KHOAID <> 43581 ORDER BY t2.KHOAID; ";
             var conn = _context.Database.GetDbConnection();
             using var cmd = conn.CreateCommand();
             var paramList = new List<DbParameter>();
@@ -1876,8 +1876,8 @@ namespace API.Controllers
                     if(ddItem!= null)
                     {
                         
-                        bsItem.tongDiemKH = bsItem.tongDiemKH +( ddItem.DiemCtkh.DiemKeHoach?? 0m);
-                        bsItem.tongDiemTH = bsItem.tongDiemTH + ddItem.tongCong;
+                        bsItem.tongDiemKH = (bsItem.DiemCtkh.DiemKeHoach ?? 0m) + ( ddItem.DiemCtkh.DiemKeHoach?? 0m);
+                        bsItem.tongDiemTH = bsItem.tongCong + ddItem.tongCong;
                         bsItem.datCtkhTong = bsItem.tongDiemKH!=0 ? bsItem.tongDiemTH/ bsItem.tongDiemKH : 0;
                         tongTH += (bsItem.tongDiemTH);
                         tongKH += (bsItem.tongDiemKH);
@@ -1899,11 +1899,11 @@ namespace API.Controllers
             string curKhoa = "";
 
             // corresponds to total accumulators
-            decimal tongDiemKeHoach = 0, tongDiemCdKham = 0, tongDiemCdDieuTri = 0, tongDiemPTTCD = 0, tongDiemPTTTH = 0;
+            decimal tongDiemKeHoach = 0, tongDiemCdKham = 0, tongDiemCdDieuTri = 0, tongDiemPTTCD = 0, tongDiemPTTTH = 0, tongDiemTHCLS = 0;
             decimal tongDiemTangCuong = 0, tongSoNgayTangCuong = 0, tongDiemTruc = 0, tongDiemCongBANT = 0;
             decimal tongDiemBNNDCD = 0, tongDiemBNNDTH = 0, tongDiemBNNDCDNhapVien = 0;
 
-            decimal diemKeHoachKhoa = 0, diemCdKhamKhoa = 0, diemCdDieuTriKhoa = 0, diemPTTCDKhoa = 0, diemPTTTHKhoa = 0;
+            decimal diemKeHoachKhoa = 0, diemCdKhamKhoa = 0, diemCdDieuTriKhoa = 0, diemPTTCDKhoa = 0, diemPTTTHKhoa = 0, diemTHCLSKhoa = 0;
             decimal diemTangCuongKhoa = 0, soNgayTangCuongKhoa = 0, diemTrucKhoa = 0, diemCongBANTKhoa = 0;
             decimal diemBNNDCDKhoa = 0, diemBNNDTHKhoa = 0, diemBNNDCDNhapVienKhoa = 0;
 
@@ -1927,15 +1927,15 @@ namespace API.Controllers
                         // tổng điểm TH của từng khoa sẽ bao gồm điểm TH của bác sĩ / điều dưỡng trong khoa đó + điểm PTTTHTheoDD (nếu là bác sĩ) hoặc điểm TH (nếu là điều dưỡng) + điểm BNNDTheoBS (nếu là điều dưỡng)
                         decimal tongDiemTHKhoa =
                             LoaiBaoCao == LoaiBaoCaoCtkh.BAC_SI
-                                ? (diemCdKhamKhoa + diemCdDieuTriKhoa + diemPTTCDKhoa + diemPTTTHKhoa + diemTangCuongKhoa
+                                ? (diemCdKhamKhoa + diemCdDieuTriKhoa + diemPTTCDKhoa + diemPTTTHKhoa + diemTHCLSKhoa + diemTangCuongKhoa
                                    + diemTrucKhoa + diemCongBANTKhoa + diemBNNDCDKhoa + diemBNNDTHKhoa + diemBNNDCDNhapVienKhoa)
-                                : diemTrucKhoa + diemTangCuongKhoa + tongDiemPTTTHTheoDDKhoa;
-
+                                : diemTrucKhoa + diemTangCuongKhoa + tongDiemPTTTHTheoDDKhoa + diemTHCLSKhoa;
                         dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemKeHoach = diemKeHoachKhoa;
                         dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemCdKham = diemCdKhamKhoa;
                         dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemCDDieuTri = diemCdDieuTriKhoa;
                         dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemPTTCD = diemPTTCDKhoa;
                         dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemPTTTH = diemPTTTHKhoa;
+                        dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemTHCLS = diemTHCLSKhoa;
                         dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemTangCuong = diemTangCuongKhoa;
                         dsDiemCtkh[currentGroupIndex].DiemCtkh.SoNgayTangCuong = soNgayTangCuongKhoa;
                         dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemTruc = diemTrucKhoa;
@@ -1997,6 +1997,7 @@ namespace API.Controllers
                     diemCdDieuTriKhoa = 0;
                     diemPTTCDKhoa = 0; // BS
                     diemPTTTHKhoa = 0; // BS => DD  =BS/0.8 (vì SQL * 0.8)
+                    diemTHCLSKhoa = 0;
                     diemTangCuongKhoa = 0;
                     soNgayTangCuongKhoa = 0;
                     diemTrucKhoa = 0;
@@ -2025,6 +2026,7 @@ namespace API.Controllers
                             DiemCDDieuTri = 0,
                             DiemPTTCD = 0,
                             DiemPTTTH = 0,
+                            DiemTHCLS = 0,
                             DiemTangCuong = 0,
                             SoNgayTangCuong = 0,
                             DiemTruc = 0,
@@ -2045,7 +2047,7 @@ namespace API.Controllers
                 if (item.OfficerType == 4) // bác sĩ
                 {
                     tongDiemTHBS +=
-                        (item.DiemCdKham ?? 0m) + (item.DiemCDDieuTri ?? 0m) +( item.DiemPTTCD ?? 0m) + (item.DiemPTTTH ?? 0m) + (item.DiemTangCuong ?? 0m)
+                        (item.DiemCdKham ?? 0m) + (item.DiemCDDieuTri ?? 0m) +( item.DiemPTTCD ?? 0m) + (item.DiemPTTTH ?? 0m) + (item.DiemTHCLS ?? 0m) + (item.DiemTangCuong ?? 0m)
                          + (item.DiemTruc ?? 0m) + (item.DiemCongBANT ?? 0m) + (item.DiemBNNDCDNhapVien ?? 0m)
                          + (item.DiemBNNDCD??0m )+ (item.DiemBNNDTH ?? 0m)
                          ;
@@ -2053,7 +2055,7 @@ namespace API.Controllers
                     tongDiemNhapVienBS += (item.DiemCDDieuTri ?? 0m);
 
                     tongDiemTHBSTheoKhoa +=
-                        (item.DiemCdKham ?? 0m) + (item.DiemCDDieuTri ?? 0m) + (item.DiemPTTCD ?? 0m) + (item.DiemPTTTH ?? 0m) + (item.DiemTangCuong ?? 0m)
+                        (item.DiemCdKham ?? 0m) + (item.DiemCDDieuTri ?? 0m) + (item.DiemPTTCD ?? 0m) + (item.DiemPTTTH ?? 0m) + (item.DiemTHCLS ?? 0m) + (item.DiemTangCuong ?? 0m)
                          +( item.DiemTruc ?? 0m) +( item.DiemCongBANT ?? 0m) + (item.DiemBNNDCDNhapVien ?? 0m)
                          +(item.DiemBNNDCD ?? 0m) + (item.DiemBNNDTH ?? 0m);
 
@@ -2081,6 +2083,7 @@ namespace API.Controllers
                 diemCdDieuTriKhoa += pushedItem != null ? pushedItem.DiemCDDieuTri ?? 0m : 0;
                 diemPTTCDKhoa += pushedItem != null ? pushedItem.DiemPTTCD ?? 0m : 0;
                 diemPTTTHKhoa += pushedItem != null ? pushedItem.DiemPTTTH ?? 0m : 0;
+                diemTHCLSKhoa += pushedItem != null ? pushedItem.DiemTHCLS ?? 0m : 0;
                 diemTangCuongKhoa += pushedItem != null ? pushedItem.DiemTangCuong ?? 0m : 0;
                 diemTrucKhoa += pushedItem != null ? pushedItem.DiemTruc ?? 0m : 0;
                 diemCongBANTKhoa += pushedItem != null ? pushedItem.DiemCongBANT ?? 0m : 0;
@@ -2094,6 +2097,7 @@ namespace API.Controllers
                 tongDiemCdDieuTri += pushedItem != null ? pushedItem.DiemCDDieuTri ?? 0m : 0;
                 tongDiemPTTCD += pushedItem != null ? pushedItem.DiemPTTCD ?? 0m : 0;
                 tongDiemPTTTH += pushedItem != null ? pushedItem.DiemPTTTH ?? 0m : 0;
+                tongDiemTHCLS += pushedItem != null ? pushedItem.DiemTHCLS ?? 0m : 0;
                 tongDiemTangCuong += pushedItem != null ? pushedItem.DiemTangCuong ?? 0m : 0;
                 tongSoNgayTangCuong += pushedItem != null ? pushedItem.SoNgayTangCuong ?? 0m : 0;
                 tongDiemTruc += pushedItem != null ? pushedItem.DiemTruc ?? 0m : 0;
@@ -2106,11 +2110,11 @@ namespace API.Controllers
                 {
                     decimal tongDiemTHItem =
                         LoaiBaoCao == LoaiBaoCaoCtkh.BAC_SI
-                            ? (pushedItem.DiemCdKham ?? 0m) + (pushedItem.DiemCDDieuTri ?? 0m) + (pushedItem.DiemPTTCD ?? 0m) + (pushedItem.DiemPTTTH ?? 0m) + (pushedItem.DiemTangCuong ?? 0m)
+                            ? (pushedItem.DiemCdKham ?? 0m) + (pushedItem.DiemCDDieuTri ?? 0m) + (pushedItem.DiemPTTCD ?? 0m) + (pushedItem.DiemPTTTH ?? 0m) + (pushedItem.DiemTHCLS ?? 0m) + (pushedItem.DiemTangCuong ?? 0m)
                                + (pushedItem.DiemTruc ?? 0m) +( pushedItem.DiemCongBANT ?? 0m) + (pushedItem.DiemBNNDCDNhapVien ?? 0m)
                                + (pushedItem.DiemBNNDCD ?? 0m) + (pushedItem.DiemBNNDTH ?? 0m)
                                
-                            : (pushedItem.DiemTruc ?? 0m) + (pushedItem.DiemTangCuong?? 0m) +( pushedItem.DiemPTTTH??0m) /0.8m;
+                            : (pushedItem.DiemTruc ?? 0m) + (pushedItem.DiemTangCuong?? 0m) +( pushedItem.DiemPTTTH??0m) /0.8m + (pushedItem.DiemTHCLS ?? 0m);
 
                     var tempItem = new ReportCtkhRow
                     {
@@ -2120,12 +2124,13 @@ namespace API.Controllers
                         {
                             OfficerName = pushedItem.OfficerName,
                             OfficerType = pushedItem.OfficerType,
-
+                            KhoaId = pushedItem.KhoaId,
                             DiemKeHoach = pushedItem.DiemKeHoach,
                             DiemCdKham = pushedItem.DiemCdKham,
                             DiemCDDieuTri = pushedItem.DiemCDDieuTri,
                             DiemPTTCD = pushedItem.DiemPTTCD,
                             DiemPTTTH = pushedItem.DiemPTTTH,
+                            DiemTHCLS= pushedItem.DiemTHCLS,
                             DiemTangCuong = pushedItem.DiemTangCuong,
                             SoNgayTangCuong = pushedItem.SoNgayTangCuong,
                             DiemTruc = pushedItem.DiemTruc,
@@ -2154,15 +2159,16 @@ namespace API.Controllers
             {
                 decimal tongDiemTHKhoa =
                     LoaiBaoCao == LoaiBaoCaoCtkh.BAC_SI
-                        ? (diemCdKhamKhoa + diemCdDieuTriKhoa + diemPTTCDKhoa + diemPTTTHKhoa + diemTangCuongKhoa
+                        ? (diemCdKhamKhoa + diemCdDieuTriKhoa + diemPTTCDKhoa + diemPTTTHKhoa + diemTHCLSKhoa + diemTangCuongKhoa
                            + diemTrucKhoa + diemCongBANTKhoa + diemBNNDCDKhoa + diemBNNDTHKhoa + diemBNNDCDNhapVienKhoa)
-                        : diemTrucKhoa + diemTangCuongKhoa + tongDiemPTTTHTheoDDKhoa;
+                        : diemTrucKhoa + diemTangCuongKhoa + tongDiemPTTTHTheoDDKhoa + diemTHCLSKhoa;
 
                 dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemKeHoach = diemKeHoachKhoa;
                 dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemCdKham = diemCdKhamKhoa;
                 dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemCDDieuTri = diemCdDieuTriKhoa;
                 dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemPTTCD = diemPTTCDKhoa;
                 dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemPTTTH = diemPTTTHKhoa;
+                dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemTHCLS= diemTHCLSKhoa;
                 dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemTangCuong = diemTangCuongKhoa;
                 dsDiemCtkh[currentGroupIndex].DiemCtkh.SoNgayTangCuong = soNgayTangCuongKhoa;
                 dsDiemCtkh[currentGroupIndex].DiemCtkh.DiemTruc = diemTrucKhoa;
@@ -2213,9 +2219,9 @@ namespace API.Controllers
             // grand total
             decimal tongDiemTH =
                 LoaiBaoCao == LoaiBaoCaoCtkh.BAC_SI
-                    ? (tongDiemCdKham + tongDiemCdDieuTri + tongDiemPTTCD + tongDiemPTTTH + tongDiemTangCuong + tongDiemTruc + tongDiemCongBANT
+                    ? (tongDiemCdKham + tongDiemCdDieuTri + tongDiemPTTCD + tongDiemPTTTH + tongDiemTHCLS + tongDiemTangCuong + tongDiemTruc + tongDiemCongBANT
                        + tongDiemPTTTHTheoDD + tongDiemBNNDCD + tongDiemBNNDTH + tongDiemBNNDCDNhapVien)
-                    : tongDiemTruc + tongDiemTHBS + tongDiemTangCuong + tongDiemPTTTHTheoDD + tongDiemBNNDTheoBS;
+                    : tongDiemTruc + tongDiemTHBS + tongDiemTangCuong + tongDiemPTTTHTheoDD + tongDiemBNNDTheoBS + tongDiemTHCLS;
 
             dsDiemCtkh.Add(new ReportCtkhRow
             {
@@ -2225,11 +2231,13 @@ namespace API.Controllers
                 {
                     Khoa = "Tổng cộng",
                     OfficerType = 0,
+                    KhoaId = 999,
                     DiemKeHoach = tongDiemKeHoach,
                     DiemCdKham = tongDiemCdKham,
                     DiemCDDieuTri = tongDiemCdDieuTri,
                     DiemPTTCD = tongDiemPTTCD,
                     DiemPTTTH = tongDiemPTTTH,
+                    DiemTHCLS = tongDiemTHCLS,
                     DiemTangCuong = tongDiemTangCuong,
                     SoNgayTangCuong = tongSoNgayTangCuong,
                     DiemTruc = tongDiemTruc,
@@ -2257,7 +2265,7 @@ namespace API.Controllers
         {
             var ws = wb.Worksheets.Add("BAC_SI");
             string[] colName = new string[30];
-            int colCount = 20;
+            int colCount = 21;
             int idx = 1;
             colName[0] = "";
             for (char c = 'A'; c < 'Z'; c++)
@@ -2298,18 +2306,19 @@ namespace API.Controllers
                     new CtkhHeaderCell{row1="STT", row2 = [], row3 = ["A"]},
                     new CtkhHeaderCell{row1="Khoa, bác sỹ",row2 = [], row3 = ["B"]} ,
                     new CtkhHeaderCell{row1="Điểm kế hoạch", row2=[], row3=["1"]} ,
-                    new CtkhHeaderCell{row1="Điểm CĐ Khám, điều trị, phát thuốc (Dược)",row2 = [], row3 = ["2"]} ,
-                    new CtkhHeaderCell{row1="Điểm CĐ nhập viện, Dược(hc)",row2 = [], row3 = ["3"]} ,
-                    new CtkhHeaderCell{row1="Phẫu, thủ thuật",row2 = ["Chỉ địnhx0.2", "Thực hiệnx0.8"], row3 = ["4","5"]} ,
-                    new CtkhHeaderCell{row1="Điểm BH/ĐT; Tăng cường",row2=[], row3=["6"]},
-                    new CtkhHeaderCell{row1="Trực",row2=[], row3=["7"]},
-                    new CtkhHeaderCell{row1="Điểm cộng BA ngoại trú; TH siêu âm, Dược",row2=[], row3=["8"]},
-                    new CtkhHeaderCell{row1="Điểm TH PTT theo Điều dưỡng",row2=[], row3=["9"]},
-                    new CtkhHeaderCell{row1="Điểm BNND",row2=["Chỉ định","Thực hiện","Điểm CĐ nhập viện, Dược(hc)"], row3=["10","11","12"]},
-                    new CtkhHeaderCell{row1="Tổng điểm",row2=[],row3=["13 = 2+...+12"]},
-                    new CtkhHeaderCell{row1="Khoa chia lại điểm",row2=[],row3=["14"]},
-                    new CtkhHeaderCell{row1="Đạt CTKH Bác sỹ",row2=[], row3=["15=13/1"]},
-                    new CtkhHeaderCell{row1="Tổng cộng chung cả khoa",row2 = ["Điểm K.H", "Tổng điểm T.H", "Đạt CTKH"],row3=["31=1+16", "32=13+28", "33=32/31"]}
+                    new CtkhHeaderCell{row1="Điểm thực hiện CLS", row2=[], row3=["2"]} ,
+                    new CtkhHeaderCell{row1="Điểm CĐ Khám, điều trị, phát thuốc (Dược)",row2 = [], row3 = ["3"]} ,
+                    new CtkhHeaderCell{row1="Điểm CĐ nhập viện, Dược(hc)",row2 = [], row3 = ["4"]} ,
+                    new CtkhHeaderCell{row1="Phẫu, thủ thuật",row2 = ["Chỉ địnhx0.2", "Thực hiệnx0.8"], row3 = ["5","6"]} ,
+                    new CtkhHeaderCell{row1="Điểm BH/ĐT; Tăng cường",row2=[], row3=["7"]},
+                    new CtkhHeaderCell{row1="Trực",row2=[], row3=["8"]},
+                    new CtkhHeaderCell{row1="Điểm cộng BA ngoại trú; TH siêu âm, Dược",row2=[], row3=["9"]},
+                    new CtkhHeaderCell{row1="Điểm TH PTT theo Điều dưỡng",row2=[], row3=["10"]},
+                    new CtkhHeaderCell{row1="Điểm BNND",row2=["Chỉ định","Thực hiện","Điểm CĐ nhập viện, Dược(hc)"], row3=["11","12","13"]},
+                    new CtkhHeaderCell{row1="Tổng điểm",row2=[],row3=["14 = 2+...+13"]},
+                    new CtkhHeaderCell{row1="Khoa chia lại điểm",row2=[],row3=["15"]},
+                    new CtkhHeaderCell{row1="Đạt CTKH Bác sỹ",row2=[], row3=["16=14/1"]},
+                    new CtkhHeaderCell{row1="Tổng cộng chung cả khoa",row2 = ["Điểm K.H", "Tổng điểm T.H", "Đạt CTKH"],row3=["32=1+17", "33=14+29", "34=33/32"]}
             ];
             int hCol = 1;
             for (int i = 0; i < headers.Length; i++)
@@ -2390,39 +2399,40 @@ namespace API.Controllers
                 if(dataRow.type == ReportRowType.ITEM) ws.Cell(row, 2).Value = dataRow.DiemCtkh.OfficerName;
                 if(dataRow.type == ReportRowType.GRAND_TOTAL) ws.Cell(row, 2).Value = "Tổng cộng";
                 var cellRow3Val = dataRow.DiemCtkh.DiemKeHoach; ws.Cell(row, 3).FormulaA1 = $"IF(RIGHT(TEXT({cellRow3Val},\"###0.0\"),1)=\"0\", TEXT({cellRow3Val},\"###0\"), TEXT({cellRow3Val},\"###0.0\"))"; // format tùy theo giá trị integer hay decimal
-                var cellRow4Val = dataRow.DiemCtkh.DiemCdKham; ws.Cell(row, 4).FormulaA1 = $"IF(RIGHT(TEXT({cellRow4Val},\"###0.0\"),1)=\"0\", TEXT({cellRow4Val},\"###0\"), TEXT({cellRow4Val},\"###0.0\"))";
-                var cellRow5Val = dataRow.DiemCtkh.DiemCDDieuTri; ws.Cell(row, 5).FormulaA1 = $"IF(RIGHT(TEXT({cellRow5Val},\"###0.0\"),1)=\"0\", TEXT({cellRow5Val},\"###0\"), TEXT({cellRow5Val},\"###0.0\"))";
-                var cellRow6Val = dataRow.DiemCtkh.DiemPTTCD; ws.Cell(row, 6).FormulaA1 = $"IF(RIGHT(TEXT({cellRow6Val},\"###0.0\"),1)=\"0\", TEXT({cellRow6Val},\"###0\"), TEXT({cellRow6Val},\"###0.0\"))";
-                var cellRow7Val = dataRow.DiemCtkh.DiemPTTTH; ws.Cell(row, 7).FormulaA1 = $"IF(RIGHT(TEXT({cellRow7Val},\"###0.0\"),1)=\"0\", TEXT({cellRow7Val},\"###0\"), TEXT({cellRow7Val},\"###0.0\"))";
-                var cellRow8Val = dataRow.DiemCtkh.DiemTangCuong; ws.Cell(row, 8).FormulaA1 = $"IF(RIGHT(TEXT({cellRow8Val},\"###0.0\"),1)=\"0\", TEXT({cellRow8Val},\"###0\"), TEXT({cellRow8Val},\"###0.0\"))";
-                var cellRow9Val = dataRow.DiemCtkh.DiemTruc; ws.Cell(row, 9).FormulaA1 = $"IF(RIGHT(TEXT({cellRow9Val},\"###0.0\"),1)=\"0\", TEXT({cellRow9Val},\"###0\"), TEXT({cellRow9Val},\"###0.0\"))";
-                var cellRow10Val = dataRow.DiemCtkh.DiemCongBANT; ws.Cell(row, 10).FormulaA1 = $"IF(RIGHT(TEXT({cellRow10Val},\"###0.0\"),1)=\"0\", TEXT({cellRow10Val},\"###0\"), TEXT({cellRow10Val},\"###0.0\"))";
-                var cellRow11Val = dataRow.diemPTTTHTheoDD; ws.Cell(row, 11).FormulaA1 = $"IF(RIGHT(TEXT({cellRow11Val},\"###0.0\"),1)=\"0\", TEXT({cellRow11Val},\"###0\"), TEXT({cellRow11Val},\"###0.0\"))";
-                var cellRow12Val = dataRow.DiemCtkh.DiemBNNDCD; ws.Cell(row, 12).FormulaA1 = $"IF(RIGHT(TEXT({cellRow12Val},\"###0.0\"),1)=\"0\", TEXT({cellRow12Val},\"###0\"), TEXT({cellRow12Val},\"###0.0\"))";
-                var cellRow13Val = dataRow.DiemCtkh.DiemBNNDTH; ws.Cell(row, 13).FormulaA1 = $"IF(RIGHT(TEXT({cellRow13Val},\"###0.0\"),1)=\"0\", TEXT({cellRow13Val},\"###0\"), TEXT({cellRow13Val},\"###0.0\"))";
-                var cellRow14Val = dataRow.DiemCtkh.DiemBNNDCDNhapVien; ws.Cell(row, 14).FormulaA1 = $"IF(RIGHT(TEXT({cellRow14Val},\"###0.0\"),1)=\"0\", TEXT({cellRow14Val},\"###0\"), TEXT({cellRow14Val},\"###0.0\"))";
-                var cellRow15Val = dataRow.tongCong; ws.Cell(row, 15).FormulaA1 = $"IF(RIGHT(TEXT({cellRow15Val},\"###0.0\"),1)=\"0\", TEXT({cellRow15Val},\"###0\"), TEXT({cellRow15Val},\"###0.0\"))";
-                var cellRow17Val = dataRow.datCtkh; ws.Cell(row, 17).FormulaA1 = $"CONCAT(IF(RIGHT(TEXT({cellRow17Val},\"###0.0\"),1)=\"0\", TEXT({cellRow17Val},\"###0\"), TEXT({cellRow17Val},\"###0.0\")),\"%\")";
+                var cellRow4Val = dataRow.DiemCtkh.DiemTHCLS; ws.Cell(row, 4).FormulaA1 = $"IF(RIGHT(TEXT({cellRow4Val},\"###0.0\"),1)=\"0\", TEXT({cellRow4Val},\"###0\"), TEXT({cellRow4Val},\"###0.0\"))";
+                var cellRow5Val = dataRow.DiemCtkh.DiemCdKham; ws.Cell(row, 5).FormulaA1 = $"IF(RIGHT(TEXT({cellRow5Val},\"###0.0\"),1)=\"0\", TEXT({cellRow5Val},\"###0\"), TEXT({cellRow5Val},\"###0.0\"))";
+                var cellRow6Val = dataRow.DiemCtkh.DiemCDDieuTri; ws.Cell(row, 6).FormulaA1 = $"IF(RIGHT(TEXT({cellRow6Val},\"###0.0\"),1)=\"0\", TEXT({cellRow6Val},\"###0\"), TEXT({cellRow6Val},\"###0.0\"))";
+                var cellRow7Val = dataRow.DiemCtkh.DiemPTTCD; ws.Cell(row, 7).FormulaA1 = $"IF(RIGHT(TEXT({cellRow7Val},\"###0.0\"),1)=\"0\", TEXT({cellRow7Val},\"###0\"), TEXT({cellRow7Val},\"###0.0\"))";
+                var cellRow8Val = dataRow.DiemCtkh.DiemPTTTH; ws.Cell(row, 8).FormulaA1 = $"IF(RIGHT(TEXT({cellRow8Val},\"###0.0\"),1)=\"0\", TEXT({cellRow8Val},\"###0\"), TEXT({cellRow8Val},\"###0.0\"))";
+                var cellRow9Val = dataRow.DiemCtkh.DiemTangCuong; ws.Cell(row, 9).FormulaA1 = $"IF(RIGHT(TEXT({cellRow9Val},\"###0.0\"),1)=\"0\", TEXT({cellRow9Val},\"###0\"), TEXT({cellRow9Val},\"###0.0\"))";
+                var cellRow10Val = dataRow.DiemCtkh.DiemTruc; ws.Cell(row, 10).FormulaA1 = $"IF(RIGHT(TEXT({cellRow10Val},\"###0.0\"),1)=\"0\", TEXT({cellRow10Val},\"###0\"), TEXT({cellRow10Val},\"###0.0\"))";
+                var cellRow11Val = dataRow.DiemCtkh.DiemCongBANT; ws.Cell(row, 11).FormulaA1 = $"IF(RIGHT(TEXT({cellRow11Val},\"###0.0\"),1)=\"0\", TEXT({cellRow11Val},\"###0\"), TEXT({cellRow11Val},\"###0.0\"))";
+                var cellRow12Val = dataRow.diemPTTTHTheoDD; ws.Cell(row, 12).FormulaA1 = $"IF(RIGHT(TEXT({cellRow12Val},\"###0.0\"),1)=\"0\", TEXT({cellRow12Val},\"###0\"), TEXT({cellRow12Val},\"###0.0\"))";
+                var cellRow13Val = dataRow.DiemCtkh.DiemBNNDCD; ws.Cell(row, 13).FormulaA1 = $"IF(RIGHT(TEXT({cellRow13Val},\"###0.0\"),1)=\"0\", TEXT({cellRow13Val},\"###0\"), TEXT({cellRow13Val},\"###0.0\"))";
+                var cellRow14Val = dataRow.DiemCtkh.DiemBNNDTH; ws.Cell(row, 14).FormulaA1 = $"IF(RIGHT(TEXT({cellRow14Val},\"###0.0\"),1)=\"0\", TEXT({cellRow14Val},\"###0\"), TEXT({cellRow14Val},\"###0.0\"))";
+                var cellRow15Val = dataRow.DiemCtkh.DiemBNNDCDNhapVien; ws.Cell(row, 15).FormulaA1 = $"IF(RIGHT(TEXT({cellRow15Val},\"###0.0\"),1)=\"0\", TEXT({cellRow15Val},\"###0\"), TEXT({cellRow15Val},\"###0.0\"))";
+                var cellRow16Val = dataRow.tongCong; ws.Cell(row, 16).FormulaA1 = $"IF(RIGHT(TEXT({cellRow16Val},\"###0.0\"),1)=\"0\", TEXT({cellRow16Val},\"###0\"), TEXT({cellRow16Val},\"###0.0\"))";
+                var cellRow18Val = dataRow.datCtkh; ws.Cell(row, 18).FormulaA1 = $"CONCAT(IF(RIGHT(TEXT({cellRow18Val},\"###0.0\"),1)=\"0\", TEXT({cellRow18Val},\"###0\"), TEXT({cellRow18Val},\"###0.0\")),\"%\")";
                 if (dataRow.type == ReportRowType.GRAND_TOTAL)
                 {
-                    var cellRow18Val = dataRow.tongDiemKH; ws.Cell(row, 18).FormulaA1 = $"IF(RIGHT(TEXT({cellRow18Val},\"###0.0\"),1)=\"0\", TEXT({cellRow18Val},\"###0\"), TEXT({cellRow18Val},\"###0.0\"))";
-                    var cellRow19Val = dataRow.tongDiemTH; ws.Cell(row, 19).FormulaA1 = $"IF(RIGHT(TEXT({cellRow19Val},\"###0.0\"),1)=\"0\", TEXT({cellRow19Val},\"###0\"), TEXT({cellRow19Val},\"###0.0\"))";
-                    var cellRow20Val = dataRow.datCtkhTong*100; ws.Cell(row, 20).FormulaA1 = $"CONCAT(IF(RIGHT(TEXT({cellRow20Val},\"###0.0\"),1)=\"0\", TEXT({cellRow20Val},\"###0\"), TEXT({cellRow20Val},\"###0.0\")),\"%\")";
+                    var cellRow19Val = dataRow.tongDiemKH; ws.Cell(row, 19).FormulaA1 = $"IF(RIGHT(TEXT({cellRow19Val},\"###0.0\"),1)=\"0\", TEXT({cellRow19Val},\"###0\"), TEXT({cellRow19Val},\"###0.0\"))";
+                    var cellRow20Val = dataRow.tongDiemTH; ws.Cell(row, 20).FormulaA1 = $"IF(RIGHT(TEXT({cellRow20Val},\"###0.0\"),1)=\"0\", TEXT({cellRow20Val},\"###0\"), TEXT({cellRow20Val},\"###0.0\"))";
+                    var cellRow21Val = dataRow.datCtkhTong*100; ws.Cell(row, 21).FormulaA1 = $"CONCAT(IF(RIGHT(TEXT({cellRow21Val},\"###0.0\"),1)=\"0\", TEXT({cellRow21Val},\"###0\"), TEXT({cellRow21Val},\"###0.0\")),\"%\")";
                 }
                 else if(dataRow.type == ReportRowType.GROUP)
                 {
-                    ws.Cell(row, 18).Value = "";
                     ws.Cell(row, 19).Value = "";
                     ws.Cell(row, 20).Value = "";
+                    ws.Cell(row, 21).Value = "";
                 }
                 else if (dataRow.type == ReportRowType.ITEM && r >= 1 && data[r - 1].type == ReportRowType.GROUP)
                 {
-                    var cellRow18Val = data[r - 1].tongDiemKH; ws.Cell(row, 18).FormulaA1 = $"IF(RIGHT(TEXT({cellRow18Val},\"###0.0\"),1)=\"0\", TEXT({cellRow18Val},\"###0\"), TEXT({cellRow18Val},\"###0.0\"))";
-                    ws.Range(row, 18, row + data[r - 1].tongBS-1, 18).Merge();
-                    var cellRow19Val = data[r - 1].tongDiemTH; ws.Cell(row, 19).FormulaA1 = $"IF(RIGHT(TEXT({cellRow19Val},\"###0.0\"),1)=\"0\", TEXT({cellRow19Val},\"###0\"), TEXT({cellRow19Val},\"###0.0\"))";
+                    var cellRow19Val = data[r - 1].tongDiemKH; ws.Cell(row, 19).FormulaA1 = $"IF(RIGHT(TEXT({cellRow19Val},\"###0.0\"),1)=\"0\", TEXT({cellRow19Val},\"###0\"), TEXT({cellRow19Val},\"###0.0\"))";
                     ws.Range(row, 19, row + data[r - 1].tongBS-1, 19).Merge();
-                    var cellRow20Val = data[r - 1].datCtkhTong * 100; ws.Cell(row, 20).FormulaA1 = $"CONCAT(IF(RIGHT(TEXT({cellRow20Val},\"###0.0\"),1)=\"0\", TEXT({cellRow20Val},\"###0\"), TEXT({cellRow20Val},\"###0.0\")),\"%\")";
+                    var cellRow20Val = data[r - 1].tongDiemTH; ws.Cell(row, 20).FormulaA1 = $"IF(RIGHT(TEXT({cellRow20Val},\"###0.0\"),1)=\"0\", TEXT({cellRow20Val},\"###0\"), TEXT({cellRow20Val},\"###0.0\"))";
                     ws.Range(row, 20, row + data[r - 1].tongBS-1, 20).Merge();
+                    var cellRow21Val = data[r - 1].datCtkhTong * 100; ws.Cell(row, 21).FormulaA1 = $"CONCAT(IF(RIGHT(TEXT({cellRow21Val},\"###0.0\"),1)=\"0\", TEXT({cellRow21Val},\"###0\"), TEXT({cellRow21Val},\"###0.0\")),\"%\")";
+                    ws.Range(row, 21, row + data[r - 1].tongBS-1, 21).Merge();
                 }
 
 
@@ -2436,23 +2446,24 @@ namespace API.Controllers
             ws.Column(1).Width = 8;
             ws.Column(2).Width = 40;
             ws.Column(3).Width = 10;
-            ws.Column(4).Width = 16;
+            ws.Column(4).Width = 10;
             ws.Column(5).Width = 16;
-            ws.Column(6).Width = 12;
+            ws.Column(6).Width = 16;
             ws.Column(7).Width = 12;
             ws.Column(8).Width = 12;
             ws.Column(9).Width = 12;
-            ws.Column(10).Width = 14;
+            ws.Column(10).Width = 12;
             ws.Column(11).Width = 14;
-            ws.Column(12).Width = 10;
+            ws.Column(12).Width = 14;
             ws.Column(13).Width = 10;
             ws.Column(14).Width = 10;
-            ws.Column(15).Width = 20;
-            ws.Column(16).Width = 16;
+            ws.Column(15).Width = 10;
+            ws.Column(16).Width = 20;
             ws.Column(17).Width = 16;
             ws.Column(18).Width = 16;
             ws.Column(19).Width = 16;
             ws.Column(20).Width = 16;
+            ws.Column(21).Width = 16;
 
 
             ws.Row(1).Height = 22;
@@ -2509,18 +2520,18 @@ namespace API.Controllers
             CtkhHeaderCell[] headers = [
                 new CtkhHeaderCell{row1="STT", row2 = [], row3 = ["C"]},
                     new CtkhHeaderCell{row1="Điều dưỡng",row2 = [], row3 = ["D"]} ,
-                    new CtkhHeaderCell{row1="Điểm kế hoạch", row2=[], row3=["16"]} ,
-                    new CtkhHeaderCell{row1="Điểm T.H tại khoa theo Bs, Dược (phát thuốc)",row2 = [], row3 = ["17=2+...+6\r\n=2+...+5(TN)"]} ,
-                    new CtkhHeaderCell{row1="Đi tăng cường",row2 = ["Số ngày","Tổng điểm"], row3 = ["18","19"]} ,
-                    new CtkhHeaderCell{row1="Khoa được tăng cường",row2 = ["Số ngày được tc", "Điểm trừ"], row3 = ["20","21"]} ,
-                    new CtkhHeaderCell{row1="Điểm lấy mẫu máu, nước tiểu, Dược (hc)",row2=[], row3=["22"]},
-                    new CtkhHeaderCell{row1="Điểm cộng theo Bs; Đ.tim (CLS); Dược",row2=[], row3=["23"]},
-                    new CtkhHeaderCell{row1="Trực",row2=[], row3=["24"]},
-                    new CtkhHeaderCell{row1="Điểm TH thủ thuật 1 Điều dưỡng",row2=[], row3=["25"]},
-                    new CtkhHeaderCell{row1="Điểm BNND",row2=["Theo Bs", "BN nhập viện"], row3=["26","27"]},
-                    new CtkhHeaderCell{row1="Tổng điểm",row2=[],row3=["28=17+...+27"]},
-                    new CtkhHeaderCell{row1="Khoa chia lại điểm",row2=[],row3=["29"]},
-                    new CtkhHeaderCell{row1="Đạt CTKH Điều dưỡng",row2=[], row3=["30=28/16"]},
+                    new CtkhHeaderCell{row1="Điểm kế hoạch", row2=[], row3=["17"]} ,
+                    new CtkhHeaderCell{row1="Điểm T.H tại khoa theo Bs, Dược (phát thuốc)",row2 = [], row3 = ["18=2+...+6\r\n=2+...+5(TN)"]} ,
+                    new CtkhHeaderCell{row1="Đi tăng cường",row2 = ["Số ngày","Tổng điểm"], row3 = ["19","20"]} ,
+                    new CtkhHeaderCell{row1="Khoa được tăng cường",row2 = ["Số ngày được tc", "Điểm trừ"], row3 = ["21","22"]} ,
+                    new CtkhHeaderCell{row1="Điểm lấy mẫu máu, nước tiểu, Dược (hc)",row2=[], row3=["23"]},
+                    new CtkhHeaderCell{row1="Điểm cộng theo Bs; Đ.tim (CLS); Dược",row2=[], row3=["24"]},
+                    new CtkhHeaderCell{row1="Trực",row2=[], row3=["25"]},
+                    new CtkhHeaderCell{row1="Điểm TH thủ thuật 1 Điều dưỡng",row2=[], row3=["26"]},
+                    new CtkhHeaderCell{row1="Điểm BNND",row2=["Theo Bs", "BN nhập viện"], row3=["27","28"]},
+                    new CtkhHeaderCell{row1="Tổng điểm",row2=[],row3=["29=18+...+28"]},
+                    new CtkhHeaderCell{row1="Khoa chia lại điểm",row2=[],row3=["30"]},
+                    new CtkhHeaderCell{row1="Đạt CTKH Điều dưỡng",row2=[], row3=["31=29/17"]},
             ];
             int hCol = 1;
             for (int i = 0; i < headers.Length; i++)
@@ -2603,6 +2614,7 @@ namespace API.Controllers
                 var cellRow4Val = dataRow.diemTHTheoBS; ws.Cell(row, 4).FormulaA1 = $"IF(RIGHT(TEXT({cellRow4Val},\"###0.0\"),1)=\"0\", TEXT({cellRow4Val},\"###0\"), TEXT({cellRow4Val},\"###0.0\"))";
                 var cellRow5Val = dataRow.DiemCtkh.SoNgayTangCuong; ws.Cell(row, 5).FormulaA1 = $"IF(RIGHT(TEXT({cellRow5Val},\"###0.0\"),1)=\"0\", TEXT({cellRow5Val},\"###0\"), TEXT({cellRow5Val},\"###0.0\"))";
                 var cellRow6Val = dataRow.DiemCtkh.DiemTangCuong; ws.Cell(row, 6).FormulaA1 = $"IF(RIGHT(TEXT({cellRow6Val},\"###0.0\"),1)=\"0\", TEXT({cellRow6Val},\"###0\"), TEXT({cellRow6Val},\"###0.0\"))";
+                var cellRow10Val = dataRow.DiemCtkh.DiemTHCLS; ws.Cell(row, 10).FormulaA1 = $"IF(RIGHT(TEXT({cellRow10Val},\"###0.0\"),1)=\"0\", TEXT({cellRow10Val},\"###0\"), TEXT({cellRow10Val},\"###0.0\"))";
                 var cellRow11Val = dataRow.DiemCtkh.DiemTruc; ws.Cell(row, 11).FormulaA1 = $"IF(RIGHT(TEXT({cellRow11Val},\"###0.0\"),1)=\"0\", TEXT({cellRow11Val},\"###0\"), TEXT({cellRow11Val},\"###0.0\"))";
                 var cellRow12Val = dataRow.type == ReportRowType.ITEM ? dataRow.DiemCtkh.DiemPTTTH??0m/0.8m : dataRow.diemPTTTHTheoDD; ws.Cell(row, 12).FormulaA1 = $"IF(RIGHT(TEXT({cellRow12Val},\"###0.0\"),1)=\"0\", TEXT({cellRow12Val},\"###0\"), TEXT({cellRow12Val},\"###0.0\"))";
                 var cellRow13Val = dataRow.diemBNNDTheoBs; ws.Cell(row, 13).FormulaA1 = $"IF(RIGHT(TEXT({cellRow13Val},\"###0.0\"),1)=\"0\", TEXT({cellRow13Val},\"###0\"), TEXT({cellRow13Val},\"###0.0\"))";

@@ -141,6 +141,9 @@ table  th.first-row:first-child,table  th.first-row:nth-child(2) {
 table  th.third-row:first-child,table  th.third-row:nth-child(2) {
   z-index: 55;
 }
+table  th.third-row-dd:first-child,table  th.third-row-dd:nth-child(2) {
+  z-index: 55;
+}
 table td:first-child, td:nth-child(2) {
   z-index: 51;
 }
