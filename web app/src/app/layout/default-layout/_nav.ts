@@ -21,13 +21,13 @@ export const navItems: INavDataExtended[] = [
         iconComponent: { name: 'cil-people' }
       },
       {
-        name: 'Báo cáo doanh thu theo bác sĩ chỉ định',
+        name: 'Bảng chi tiết bác sĩ chỉ định',
         roles: ['ADMIN','BC_BSCD'],
         url: '/baocao-tracuu/doanhthu_bscd',
         iconComponent: { name: 'cil-chart' }
       },
       {
-        name: 'Báo cáo doanh thu theo bác sĩ thực hiện',
+        name: 'Bảng chi tiết bác sĩ thực hiện',
         roles: ['ADMIN','BC_BSTH'],
         url: '/baocao-tracuu/doanhthu_bsth',
         iconComponent: { name: 'cil-chart' }

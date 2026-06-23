@@ -162,7 +162,7 @@ export const routes: Routes = [
             canActivate: [AuthGuard],
             loadChildren: () => import('../app/bc-doanhthu-bscd/bc-doanhthu-bscd.routes').then(m => m.DOANHTHU_BSCD),
             data: {
-              title: 'Báo cáo doanh thu theo bác sĩ chỉ định',
+              title: 'Bảng chi tiết bác sĩ chỉ định',
               roles: ['BC_BSCD', 'ADMIN']
             }
           }, 
@@ -171,7 +171,7 @@ export const routes: Routes = [
             canActivate: [AuthGuard],
             loadChildren: () => import('../app/bc-doanhthu-bsth/bc-doanhthu-bsth.routes').then(m => m.DOANHTHU_BSTH),
             data: {
-              title: 'Báo cáo doanh thu theo bác sĩ thực hiện',
+              title: 'Bảng chi tiết bác sĩ thực hiện',
               roles: ['BC_BSTH', 'ADMIN']
             }
           }, 
