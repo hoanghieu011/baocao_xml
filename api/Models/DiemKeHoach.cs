@@ -34,4 +34,28 @@ namespace API.Models
         //[Column("NGAYTAO")]
         //public DateTime? ngayTao { get; set; }
     }
+
+    public class DiemKeHoachTemp
+    {
+        [Column("KHOAID")]
+        public int? khoaid { get; set; }
+        [Column("BACSI")]
+        public string officerName { get; set; }
+        [Column("BACSIID")]
+        public int? bacSiId { get; set; }
+        [Column("DIEM_KEHOACH")]
+        public decimal? diemKeHoach { get; set; }
+        [Column("SO_BUOITRUC")]
+        public decimal? soBuoiTruc { get; set; }
+        [Column("SO_BENHNHAN")]
+        public int? soBenhNhan { get; set; }
+        [Column("DIEM_TRUC")]
+        public decimal? diemTruc { get; set; }
+        [Column("DIEM_TRUC_CC")]
+        public decimal? diemTrucCC { get; set; }
+        [Column("DIEM_LAYMAU")]
+        public decimal? diemLayMau { get; set; }
+        [Column("THANGNAM")]
+        public int? thangNam { get; set; }
+    }
 }

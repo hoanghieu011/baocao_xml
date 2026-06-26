@@ -36,5 +36,7 @@ namespace API.Models
         public string? ma_bac_si { get; set; }
         public string officer_code { get; set; }
         public string officer_name { get; set; }
+        public int? bacsiid { get; set; }
+        public int? officer_type { get; set; }
     }
 }

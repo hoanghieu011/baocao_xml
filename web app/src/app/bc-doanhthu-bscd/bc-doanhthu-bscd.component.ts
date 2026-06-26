@@ -143,8 +143,8 @@ export class BcDoanhthuBscdComponent implements OnInit {
         this.buildDisplayRows();
         this.loading = false;
       },
-      error: () => {
-        this.addToast('Có lỗi xảy ra, vui lòng thử lại sau!');
+      error: (err) => {
+        this.addToast(err?.error?.detail || 'Có lỗi xảy ra, vui lòng thử lại sau!');
         this.loading = false;
       }
     });

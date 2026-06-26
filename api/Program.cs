@@ -52,7 +52,34 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ClockSkew = TimeSpan.Zero
         };
     });
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("ThemMoiDkh", policy =>
+        policy.RequireAssertion(ctx =>
+        {
+            var hasAdmin = ctx.User.IsInRole("ADMIN");
 
+            var hasAdd = ctx.User.IsInRole("ADD_DIEMKEHOACH");
+            var hasEdit = ctx.User.IsInRole("EDIT_TANGCUONG");
+
+            return hasAdmin || (hasAdd && hasEdit);
+        })
+    );
+});
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("CapnhatDkh", policy =>
+        policy.RequireAssertion(ctx =>
+        {
+            var hasAdmin = ctx.User.IsInRole("ADMIN");
+
+            var hasEditDkh = ctx.User.IsInRole("EDIT_DIEMKEHOACH");
+            var hasEditTc = ctx.User.IsInRole("EDIT_TANGCUONG");
+
+            return hasAdmin || (hasEditDkh && hasEditTc);
+        })
+    );
+});
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {

@@ -36,11 +36,11 @@ namespace API.Controllers
                 var csytid = User.FindFirst("CSYTID")?.Value;
                 if (string.IsNullOrEmpty(csytid))
                     return Unauthorized();
-
+                
                 var hasSearch = !string.IsNullOrWhiteSpace(term) && term != "All";
 
                 var sql = @"
-                    SELECT max(OFFICER_NAME) OFFICER_NAME, max(OFFICER_CODE) OFFICER_CODE, MA_BAC_SI
+                    SELECT max(OFFICER_NAME) OFFICER_NAME, max(OFFICER_CODE) OFFICER_CODE, max(BACSIID) BACSIID, OFFICER_TYPE ,MA_BAC_SI
                     FROM org_officer 
                     WHERE CSYTID = @csytid
                     AND STATUS = 1 
@@ -57,7 +57,7 @@ namespace API.Controllers
                     sql += " AND (MA_BAC_SI LIKE @term OR OFFICER_NAME LIKE @term)";
                     parameters.Add(new MySqlConnector.MySqlParameter("@term", $"%{term}%"));
                 }
-                sql += " GROUP BY MA_BAC_SI";
+                sql += " GROUP BY MA_BAC_SI, OFFICER_TYPE";
                 var ds_officer = await _context.filter_officer
                     .FromSqlRaw(sql, parameters.ToArray())
                     .AsNoTracking()

@@ -146,7 +146,7 @@ export class BcDoanhthuBsthComponent implements OnInit {
       },
       error: (e) => {
         console.error(e);
-        this.addToast('Có lỗi xảy ra, vui lòng thử lại sau!');
+        this.addToast(e?.error?.detail || 'Có lỗi xảy ra, vui lòng thử lại sau!');
         this.loading = false;
       }
     });

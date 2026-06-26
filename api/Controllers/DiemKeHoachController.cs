@@ -199,8 +199,7 @@ namespace API.Controllers
         /// Cập nhật điểm kế hoạch.
         /// </summary>
         /// <returns>Trả về kq cập nhật.</returns>
-        [Authorize(Roles = "EDIT_DIEMKEHOACH,EDIT_TANGCUONG, ADMIN")]
-        [Authorize(Roles = "EDIT_TANGCUONG")]
+        [Authorize(Policy = "CapnhatDkh")]
         [HttpPut("cap-nhat-diemkehoach")]
         public async Task<ActionResult<object>> CapNhatDiemKeHoach([FromBody] CapNhatDiemKeHoachRequest req)
         {
@@ -293,8 +292,7 @@ namespace API.Controllers
             }
         }
 
-        [Authorize(Roles = "ADD_DIEMKEHOACH, ADMIN")]
-        [Authorize(Roles = "EDIT_TANGCUONG")]
+        [Authorize(Policy = "ThemMoiDkh")]
         [HttpPost("them-moi-diemkehoach")]
         public async Task<ActionResult<object>> ThemDiemKeHoach([FromBody] ThemDiemKeHoachRequest req)
         {

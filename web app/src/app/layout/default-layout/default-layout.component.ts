@@ -17,12 +17,10 @@ import {
 
 import { DefaultFooterComponent, DefaultHeaderComponent } from './';
 import { navItems, navItems1, INavDataExtended } from './_nav';
-import { AuthService } from 'src/app/services/auth.service';
-import { NghiPhepSearchDto, NghiPhepService } from 'src/app/services/nghi-phep.service';
 import { HttpErrorResponse } from '@angular/common/http';
 
 import { TranslateService } from '@ngx-translate/core';
-import { ItemsList } from '@ng-select/ng-select/lib/items-list';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -54,8 +52,7 @@ export class DefaultLayoutComponent implements OnInit {
   public navItems1 = navItems1;
   private notificationCount: number = 0;
 
-  constructor(private router: Router, private authService: AuthService,
-    private nghiPhepService: NghiPhepService, private translate: TranslateService) {
+  constructor(private router: Router, private authService: AuthService, private translate: TranslateService) {
     this.navItems_g = this.filterNavItemsByRole();
     this.translate.setDefaultLang('vi');
     const savedLang = localStorage.getItem('language') || 'vi';

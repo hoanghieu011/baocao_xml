@@ -25,6 +25,7 @@ namespace API.Data
         public DbSet<Organization> org_organization { get; set; }
         public DbSet<BenhVien> dmc_benhvien { get; set; }
         public DbSet<DiemKeHoach> diemkehoach { get; set; }
+        public DbSet<DiemKeHoachTemp> diemkehoachTemp { get; set; }
         public DbSet<TangCuong> tangcuong { get; set; }
         public DbSet<DiemCtkh> diemCtkhs { get; set; }
 
@@ -37,6 +38,7 @@ namespace API.Data
             modelBuilder.Entity<BcDoanhThuToanVienDto>().HasNoKey();
             modelBuilder.Entity<DiemCtkh>().HasNoKey();
             modelBuilder.Entity<FilterOfficer>().HasNoKey();
+            modelBuilder.Entity<DiemKeHoachTemp>().HasNoKey();
         }
     }
 
