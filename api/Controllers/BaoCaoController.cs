@@ -20,6 +20,7 @@ using System.Data.Common;
 using System.Diagnostics.Metrics;
 using System.Security.Claims;
 using System.Text.RegularExpressions;
+using System.Xml.Linq;
 using static Humanizer.In;
 
 namespace API.Controllers
@@ -60,8 +61,72 @@ namespace API.Controllers
                 var dbData = await _dbResolver.GetDatabaseByUserAsync(userName);
                 if (string.IsNullOrEmpty(dbData))
                     return BadRequest("Không xác định được database dữ liệu cho user.");
+                // check quyền của tài khoản hiện tại và setup các trường thông tin được lấy tương ứng
+                var fieldsToGet = "NHOM_MABHYT_ID,MA_DICH_VU, TEN_DICH_VU, TENNHOM, bs.OFFICER_NAME TEN_BACSI, DON_GIA_BH, HESO, CHIPHI, SOLUONG , CHIPHI * SOLUONG AS CHIPHI_VATTU, DON_GIA_BH * SOLUONG AS THANH_TIEN, ((DON_GIA_BH - CHIPHI) * SOLUONG) AS SOTIEN_CONLAI, HESO * SOLUONG AS DIEM_THUCHIEN ";
+                var isAdmin = User.IsInRole("ADMIN");
+                var isKhoa = false;
+                if (!isAdmin)
+                {
+                    // nếu k phải admin thì kiểm tra:
+                    // 1. Nếu là tk của khoa thì kiểm tra mã bác sĩ được chọn có nằm ở khoa hiện tại trong thời gian đang chọn không. Vì mỗi tháng các bác sĩ có thể chuyển sang khoa khác
+                    // 2. Nếu k phải tk khoa ( mà là tk nhập liệu,...) thì lấy dữ liệu tất cả các khoa
+                    var sqlOfficer = $"SELECT a.* FROM org_officer a LEFT JOIN adm_user b ON a.OFFICER_ID = b.OFFICER_ID WHERE b.USER_NAME ='{userName}'";
+                    var officer = await _context.org_officer
+                        .FromSqlRaw(sqlOfficer)
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync();
+                    var currentUserkhoaId = officer.khoaid;
+                    if (officer.officer_name.ToLower().StartsWith("khoa"))
+                    {
+                        isKhoa = true;
+                        var tuThang = req.TuNgay.Month;
+                        var tuNam = req.TuNgay.Year;
 
-                var doanhthu_bscd = await GetDoanhThuBSCDFunc(req.TuNgay, req.DenNgay, req.MaBacSy, dbData);
+                        var denThang = req.DenNgay.Month;
+                        var denNam = req.DenNgay.Year;
+
+                        var endPointMonth = Math.Max((denNam - tuNam) * 12, denThang);
+                        var arrThangNam = new List<int>();
+                        for (var year = tuNam; year <= denNam; year++)
+                        {
+                            for (var month = tuThang; month <= endPointMonth; month++)
+                            {
+                                var tempM = month % 12 == 0 ? 12 : month % 12;
+                                arrThangNam.Add(Convert.ToInt32($"{tempM}{year}"));
+                            }
+                        }
+
+                        var sqlT = $@"SELECT dkh.* FROM `{dbData}`.bc_diemkehoach dkh LEFT JOIN his_common.org_officer o ON o.BACSIID = dkh.BACSIID " + $"WHERE dkh.THANGNAM IN (" + GenerateDynamicParamThangNam(arrThangNam) + $") AND o.MA_BAC_SI =@maBacSiT AND dkh.KHOAID = {currentUserkhoaId};";
+                        var connT = _context.Database.GetDbConnection();
+                        using var tempCmdT = connT.CreateCommand();
+
+                        var paramListT = new List<DbParameter>();
+
+                        for (var i = 0; i < arrThangNam.Count; i++)
+                        {
+                            var p = tempCmdT.CreateParameter();
+                            p.ParameterName = $"pThangNam{i}";
+                            p.Value = arrThangNam[i];
+                            paramListT.Add(p);
+                        }
+
+                        var p1T = tempCmdT.CreateParameter();
+                        p1T.ParameterName = "@maBacSiT";
+                        p1T.Value = string.IsNullOrWhiteSpace(req.MaBacSy)
+                            ? DBNull.Value
+                            : req.MaBacSy.Trim();
+                        paramListT.Add(p1T);
+
+                        var dkhBS = await _context.diemkehoachTemp
+                                .FromSqlRaw(sqlT, paramListT.ToArray())
+                                .AsNoTracking()
+                                .ToListAsync();
+                        if (dkhBS.Count == 0) throw new Exception("Không có dữ liệu bác sĩ tại Khoa trong khoảng thời gian đã chọn");
+                        fieldsToGet = "NHOM_MABHYT_ID,MA_DICH_VU, TEN_DICH_VU, TENNHOM, bs.OFFICER_NAME TEN_BACSI,0 AS DON_GIA_BH, HESO,0.0 AS CHIPHI, SOLUONG , 0.0 AS CHIPHI_VATTU, 0.0 AS THANH_TIEN, 0.0 AS SOTIEN_CONLAI, HESO * SOLUONG AS DIEM_THUCHIEN ";
+
+                    }
+                }
+                    var doanhthu_bscd = await GetDoanhThuBSCDFunc(req.TuNgay, req.DenNgay, req.MaBacSy, dbData, fieldsToGet);
                 return Ok(new
                 {
                     data = doanhthu_bscd,
@@ -107,8 +172,73 @@ namespace API.Controllers
                     .FromSqlRaw("SELECT * FROM dmc_benhvien WHERE CSYTID = @csytid", pCsyTid.ToArray())
                     .AsNoTracking()
                     .FirstOrDefaultAsync();
+                // check quyền của tài khoản hiện tại và setup các trường thông tin được lấy tương ứng
+                var fieldsToGet = "NHOM_MABHYT_ID,MA_DICH_VU, TEN_DICH_VU, TENNHOM, bs.OFFICER_NAME TEN_BACSI, DON_GIA_BH, HESO, CHIPHI, SOLUONG , CHIPHI * SOLUONG AS CHIPHI_VATTU, DON_GIA_BH * SOLUONG AS THANH_TIEN, ((DON_GIA_BH - CHIPHI) * SOLUONG) AS SOTIEN_CONLAI, HESO * SOLUONG AS DIEM_THUCHIEN ";
+                var isAdmin = User.IsInRole("ADMIN");
+                var isKhoa = false;
+                if (!isAdmin)
+                {
+                    // nếu k phải admin thì kiểm tra:
+                    // 1. Nếu là tk của khoa thì kiểm tra mã bác sĩ được chọn có nằm ở khoa hiện tại trong thời gian đang chọn không. Vì mỗi tháng các bác sĩ có thể chuyển sang khoa khác
+                    // 2. Nếu k phải tk khoa ( mà là tk nhập liệu,...) thì lấy dữ liệu tất cả các khoa
+                    var sqlOfficer = $"SELECT a.* FROM org_officer a LEFT JOIN adm_user b ON a.OFFICER_ID = b.OFFICER_ID WHERE b.USER_NAME ='{userName}'";
+                    var officer = await _context.org_officer
+                        .FromSqlRaw(sqlOfficer)
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync();
+                    var currentUserkhoaId = officer.khoaid;
+                    if (officer.officer_name.ToLower().StartsWith("khoa"))
+                    {
+                        isKhoa = true;
+                        var tuThang = req.TuNgay.Month;
+                        var tuNam = req.TuNgay.Year;
 
-                var data = await GetDoanhThuBSCDFunc(req.TuNgay, req.DenNgay, req.MaBacSy, dbData);
+                        var denThang = req.DenNgay.Month;
+                        var denNam = req.DenNgay.Year;
+
+                        var endPointMonth = Math.Max((denNam - tuNam) * 12, denThang);
+                        var arrThangNam = new List<int>();
+                        for (var year = tuNam; year <= denNam; year++)
+                        {
+                            for (var month = tuThang; month <= endPointMonth; month++)
+                            {
+                                var tempM = month % 12 == 0 ? 12 : month % 12;
+                                arrThangNam.Add(Convert.ToInt32($"{tempM}{year}"));
+                            }
+                        }
+
+                        var sqlT = $@"SELECT dkh.* FROM `{dbData}`.bc_diemkehoach dkh LEFT JOIN his_common.org_officer o ON o.BACSIID = dkh.BACSIID " + $"WHERE dkh.THANGNAM IN (" + GenerateDynamicParamThangNam(arrThangNam) + $") AND o.MA_BAC_SI =@maBacSiT AND dkh.KHOAID = {currentUserkhoaId};";
+                        var connT = _context.Database.GetDbConnection();
+                        using var tempCmdT = connT.CreateCommand();
+
+                        var paramListT = new List<DbParameter>();
+
+                        for (var i = 0; i < arrThangNam.Count; i++)
+                        {
+                            var p = tempCmdT.CreateParameter();
+                            p.ParameterName = $"pThangNam{i}";
+                            p.Value = arrThangNam[i];
+                            paramListT.Add(p);
+                        }
+
+                        var p1T = tempCmdT.CreateParameter();
+                        p1T.ParameterName = "@maBacSiT";
+                        p1T.Value = string.IsNullOrWhiteSpace(req.MaBacSy)
+                            ? DBNull.Value
+                            : req.MaBacSy.Trim();
+                        paramListT.Add(p1T);
+
+                        var dkhBS = await _context.diemkehoachTemp
+                                .FromSqlRaw(sqlT, paramListT.ToArray())
+                                .AsNoTracking()
+                                .ToListAsync();
+                        if (dkhBS.Count == 0) throw new Exception("Không có dữ liệu bác sĩ tại Khoa trong khoảng thời gian đã chọn");
+                        fieldsToGet = "NHOM_MABHYT_ID,MA_DICH_VU, TEN_DICH_VU, TENNHOM, bs.OFFICER_NAME TEN_BACSI,0 AS DON_GIA_BH, HESO,0.0 AS CHIPHI, SOLUONG , 0.0 AS CHIPHI_VATTU, 0.0 AS THANH_TIEN, 0.0 AS SOTIEN_CONLAI, HESO * SOLUONG AS DIEM_THUCHIEN ";
+
+                    }
+                }
+
+                var data = await GetDoanhThuBSCDFunc(req.TuNgay, req.DenNgay, req.MaBacSy, dbData, fieldsToGet);
 
                 using var wb = new XLWorkbook();
 
@@ -138,7 +268,8 @@ namespace API.Controllers
                         doctorGroup.ToList(),
                         benhVien?.tenbenhvien ?? "",
                         req.TuNgay,
-                        req.DenNgay
+                        req.DenNgay,
+                        isKhoa
                     );
                 }
 
@@ -164,36 +295,38 @@ namespace API.Controllers
             List<API.DTO.BcDoanhThuBscdDto> data,
             string tenBenhVien,
             DateTime tuNgay,
-            DateTime denNgay)
+            DateTime denNgay,
+            Boolean isKhoa
+            )
         {
             var ws = wb.Worksheets.Add(sheetName);
-
-            ws.Range("A1:J1").Merge();
+            var endCol = isKhoa ? "F" : "J";
+            var colCount = isKhoa ? 6 : 10;
+            ws.Range($"A1:{endCol}1").Merge();
             ws.Cell("A1").Value = tenBenhVien;
             ws.Cell("A1").Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
             ws.Cell("A1").Style.Font.Bold = true;
 
-            ws.Range("A2:J2").Merge();
+            ws.Range($"A2:{endCol}2").Merge();
             ws.Cell("A2").Value = "Phòng Tài chính - Kế toán";
             ws.Cell("A2").Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
             ws.Cell("A2").Style.Font.Bold = true;
 
-            ws.Range("A3:J3").Merge();
+            ws.Range($"A3:{endCol}3").Merge();
             ws.Cell("A3").Value = BuildTitle(tuNgay, denNgay);
             ws.Cell("A3").Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
             ws.Cell("A3").Style.Font.Bold = true;
             ws.Cell("A3").Style.Font.FontSize = 14;
             ws.Cell("A3").Style.Font.FontColor = XLColor.Blue;
 
-            ws.Range("A4:J4").Merge();
+            ws.Range($"A4:{endCol}4").Merge();
             ws.Cell("A4").Value = $"Bác sỹ: {(data.FirstOrDefault()?.ten_bacsi ?? "")}";
             ws.Cell("A4").Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
             ws.Cell("A4").Style.Font.Bold = true;
 
             int row = 6;
 
-            string[] headers =
-            {
+            string[] headers = [
                 "STT",
                 "Nội dung",
                 "Số lượt",
@@ -204,14 +337,25 @@ namespace API.Controllers
                 "Hệ số",
                 "Điểm thực hiện",
                 "Ghi chú"
-            };
+            ];
+            if(isKhoa)
+            {
+                headers = [
+                    "STT",
+                    "Nội dung",
+                    "Số lượt",
+                    "Hệ số",
+                    "Điểm thực hiện",
+                    "Ghi chú"
+                ];
+            }
 
             for (int i = 0; i < headers.Length; i++)
             {
                 ws.Cell(row, i + 1).Value = headers[i];
             }
 
-            var headerRange = ws.Range(row, 1, row, 10);
+            var headerRange = ws.Range(row, 1, row, colCount);
             headerRange.Style.Font.Bold = true;
             headerRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
             headerRange.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
@@ -241,19 +385,19 @@ namespace API.Controllers
                 groupIndex++;
 
                 ws.Cell(row, 1).Value = groupIndex;
-                ws.Range(row, 2, row, 10).Merge();
+                ws.Range(row, 2, row, colCount).Merge();
                 ws.Cell(row, 2).Value = group.Key ?? "";
-                ws.Range(row, 1, row, 10).Style.Font.Bold = true;
-                ws.Range(row, 1, row, 10).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
-                ws.Range(row, 1, row, 10).Style.Alignment.WrapText = true;
+                ws.Range(row, 1, row, colCount).Style.Font.Bold = true;
+                ws.Range(row, 1, row, colCount).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+                ws.Range(row, 1, row, colCount).Style.Alignment.WrapText = true;
                 ws.Cell(row, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
                 ws.Cell(row, 2).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
 
-                ws.Range(row, 1, row, 10).Style.Fill.BackgroundColor = XLColor.FromArgb(242, 242, 242);
-                ws.Range(row, 1, row, 10).Style.Border.TopBorder = XLBorderStyleValues.Thin;
-                ws.Range(row, 1, row, 10).Style.Border.BottomBorder = XLBorderStyleValues.Thin;
-                ws.Range(row, 1, row, 10).Style.Border.LeftBorder = XLBorderStyleValues.Thin;
-                ws.Range(row, 1, row, 10).Style.Border.RightBorder = XLBorderStyleValues.Thin;
+                ws.Range(row, 1, row, colCount).Style.Fill.BackgroundColor = XLColor.FromArgb(242, 242, 242);
+                ws.Range(row, 1, row, colCount).Style.Border.TopBorder = XLBorderStyleValues.Thin;
+                ws.Range(row, 1, row, colCount).Style.Border.BottomBorder = XLBorderStyleValues.Thin;
+                ws.Range(row, 1, row, colCount).Style.Border.LeftBorder = XLBorderStyleValues.Thin;
+                ws.Range(row, 1, row, colCount).Style.Border.RightBorder = XLBorderStyleValues.Thin;
 
                 row++;
 
@@ -270,37 +414,57 @@ namespace API.Controllers
                     ws.Cell(row, 1).Value = $"{groupIndex}.{itemIndex}";
                     ws.Cell(row, 2).Value = item.ten_dich_vu ?? "";
                     ws.Cell(row, 3).Value = item.soluong ?? 0;
-                    ws.Cell(row, 4).Value = item.don_gia_bh ?? 0;
-                    ws.Cell(row, 5).Value = item.thanh_tien ?? 0;
-                    ws.Cell(row, 6).Value = item.chiphi_vattu ?? 0;
-                    ws.Cell(row, 7).Value = item.sotien_conlai ?? 0;
-                    ws.Cell(row, 8).Value = item.heso ?? 0;
-                    ws.Cell(row, 9).Value = item.diem_thuchien ?? 0;
-                    ws.Cell(row, 10).Value = "";
+                    if(isKhoa)
+                    {
+                        ws.Cell(row, 4).Value = item.heso ?? 0;
+                        ws.Cell(row, 5).Value = item.diem_thuchien ?? 0;
+                        ws.Cell(row, 6).Value = "";
 
-                    ws.Cell(row, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-                    ws.Cell(row, 2).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
-                    ws.Cell(row, 3).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
-                    ws.Cell(row, 4).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
-                    ws.Cell(row, 5).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
-                    ws.Cell(row, 6).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
-                    ws.Cell(row, 7).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
-                    ws.Cell(row, 8).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
-                    ws.Cell(row, 9).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                        ws.Cell(row, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                        ws.Cell(row, 2).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+                        ws.Cell(row, 3).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                        ws.Cell(row, 4).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                        ws.Cell(row, 5).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
 
-                    ws.Cell(row, 3).Style.NumberFormat.Format = "###0.##";
-                    ws.Cell(row, 4).Style.NumberFormat.Format = "###0.##";
-                    ws.Cell(row, 5).Style.NumberFormat.Format = "###0.##";
-                    ws.Cell(row, 6).Style.NumberFormat.Format = "###0.##";
-                    ws.Cell(row, 7).Style.NumberFormat.Format = "###0.##";
-                    ws.Cell(row, 8).Style.NumberFormat.Format = "###0.##";
-                    ws.Cell(row, 9).Style.NumberFormat.Format = "###0.##";
+                        ws.Cell(row, 3).Style.NumberFormat.Format = "###0.##";
+                        ws.Cell(row, 4).Style.NumberFormat.Format = "###0.##";
+                        ws.Cell(row, 5).Style.NumberFormat.Format = "###0.##";
+ 
+                    }
+                    else
+                    {
+                        ws.Cell(row, 4).Value = item.don_gia_bh ?? 0;
+                        ws.Cell(row, 5).Value = item.thanh_tien ?? 0;
+                        ws.Cell(row, 6).Value = item.chiphi_vattu ?? 0;
+                        ws.Cell(row, 7).Value = item.sotien_conlai ?? 0;
+                        ws.Cell(row, 8).Value = item.heso ?? 0;
+                        ws.Cell(row, 9).Value = item.diem_thuchien ?? 0;
+                        ws.Cell(row, 10).Value = "";
 
-                    ws.Range(row, 1, row, 10).Style.Border.TopBorder = XLBorderStyleValues.Thin;
-                    ws.Range(row, 1, row, 10).Style.Border.BottomBorder = XLBorderStyleValues.Thin;
-                    ws.Range(row, 1, row, 10).Style.Border.LeftBorder = XLBorderStyleValues.Thin;
-                    ws.Range(row, 1, row, 10).Style.Border.RightBorder = XLBorderStyleValues.Thin;
-                    ws.Range(row, 1, row, 10).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+                        ws.Cell(row, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                        ws.Cell(row, 2).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+                        ws.Cell(row, 3).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                        ws.Cell(row, 4).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                        ws.Cell(row, 5).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                        ws.Cell(row, 6).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                        ws.Cell(row, 7).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                        ws.Cell(row, 8).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                        ws.Cell(row, 9).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+
+                        ws.Cell(row, 3).Style.NumberFormat.Format = "###0.##";
+                        ws.Cell(row, 4).Style.NumberFormat.Format = "###0.##";
+                        ws.Cell(row, 5).Style.NumberFormat.Format = "###0.##";
+                        ws.Cell(row, 6).Style.NumberFormat.Format = "###0.##";
+                        ws.Cell(row, 7).Style.NumberFormat.Format = "###0.##";
+                        ws.Cell(row, 8).Style.NumberFormat.Format = "###0.##";
+                        ws.Cell(row, 9).Style.NumberFormat.Format = "###0.##";
+                    }
+
+                        ws.Range(row, 1, row, colCount).Style.Border.TopBorder = XLBorderStyleValues.Thin;
+                    ws.Range(row, 1, row, colCount).Style.Border.BottomBorder = XLBorderStyleValues.Thin;
+                    ws.Range(row, 1, row, colCount).Style.Border.LeftBorder = XLBorderStyleValues.Thin;
+                    ws.Range(row, 1, row, colCount).Style.Border.RightBorder = XLBorderStyleValues.Thin;
+                    ws.Range(row, 1, row, colCount).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
 
                     tongThanhTien += item.thanh_tien ?? 0;
                     tongChiPhiVattu += item.chiphi_vattu ?? 0;
@@ -315,51 +479,82 @@ namespace API.Controllers
                     row++;
                 }
 
-                ws.Cell(row, 2).Value = "Tổng";
-                ws.Cell(row, 5).Value = tongThanhTien;
-                ws.Cell(row, 6).Value = tongChiPhiVattu;
-                ws.Cell(row, 7).Value = tongConLai;
-                ws.Cell(row, 9).Value = tongDiem;
+                if(isKhoa)
+                {
+                    ws.Cell(row, 2).Value = "Tổng";
+                    ws.Cell(row, 5).Value = tongDiem;
+
+                    ws.Cell(row, 5).Style.NumberFormat.Format = "###0.##";
+                }
+                else
+                {
+                    ws.Cell(row, 2).Value = "Tổng";
+                    ws.Cell(row, 5).Value = tongThanhTien;
+                    ws.Cell(row, 6).Value = tongChiPhiVattu;
+                    ws.Cell(row, 7).Value = tongConLai;
+                    ws.Cell(row, 9).Value = tongDiem;
+
+                    ws.Cell(row, 5).Style.NumberFormat.Format = "###0.##";
+                    ws.Cell(row, 6).Style.NumberFormat.Format = "###0.##";
+                    ws.Cell(row, 7).Style.NumberFormat.Format = "###0.##";
+                    ws.Cell(row, 9).Style.NumberFormat.Format = "###0.##";
+                }
+
+                    ws.Range(row, 1, row, colCount).Style.Font.Bold = true;
+                ws.Range(row, 1, row, colCount).Style.Fill.BackgroundColor = XLColor.FromArgb(230, 230, 230);
+                ws.Range(row, 1, row, colCount).Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+
+                row++;
+            }
+
+            if(isKhoa)
+            {
+                ws.Cell(row, 2).Value = "Tổng cộng";
+                ws.Cell(row, 5).Value = tongAllDiem;
+
+                ws.Cell(row, 9).Style.NumberFormat.Format = "###0.##";
+            }else
+            {
+                ws.Cell(row, 2).Value = "Tổng cộng";
+                ws.Cell(row, 5).Value = tongAllThanhTien;
+                ws.Cell(row, 6).Value = tongAllChiPhiVattu;
+                ws.Cell(row, 7).Value = tongAllConLai;
+                ws.Cell(row, 9).Value = tongAllDiem;
 
                 ws.Cell(row, 5).Style.NumberFormat.Format = "###0.##";
                 ws.Cell(row, 6).Style.NumberFormat.Format = "###0.##";
                 ws.Cell(row, 7).Style.NumberFormat.Format = "###0.##";
                 ws.Cell(row, 9).Style.NumberFormat.Format = "###0.##";
-
-                ws.Range(row, 1, row, 10).Style.Font.Bold = true;
-                ws.Range(row, 1, row, 10).Style.Fill.BackgroundColor = XLColor.FromArgb(230, 230, 230);
-                ws.Range(row, 1, row, 10).Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
-
-                row++;
             }
 
-            ws.Cell(row, 2).Value = "Tổng cộng";
-            ws.Cell(row, 5).Value = tongAllThanhTien;
-            ws.Cell(row, 6).Value = tongAllChiPhiVattu;
-            ws.Cell(row, 7).Value = tongAllConLai;
-            ws.Cell(row, 9).Value = tongAllDiem;
-
-            ws.Cell(row, 5).Style.NumberFormat.Format = "###0.##";
-            ws.Cell(row, 6).Style.NumberFormat.Format = "###0.##";
-            ws.Cell(row, 7).Style.NumberFormat.Format = "###0.##";
-            ws.Cell(row, 9).Style.NumberFormat.Format = "###0.##";
-
-            ws.Range(row, 1, row, 10).Style.Font.Bold = true;
-            ws.Range(row, 1, row, 10).Style.Fill.BackgroundColor = XLColor.FromArgb(200, 200, 200);
-            ws.Range(row, 1, row, 10).Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+                ws.Range(row, 1, row, colCount).Style.Font.Bold = true;
+            ws.Range(row, 1, row, colCount).Style.Fill.BackgroundColor = XLColor.FromArgb(200, 200, 200);
+            ws.Range(row, 1, row, colCount).Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
 
             ws.SheetView.FreezeRows(6);
 
-            ws.Column(1).Width = 8;
-            ws.Column(2).Width = 55;
-            ws.Column(3).Width = 10;
-            ws.Column(4).Width = 16;
-            ws.Column(5).Width = 16;
-            ws.Column(6).Width = 18;
-            ws.Column(7).Width = 16;
-            ws.Column(8).Width = 10;
-            ws.Column(9).Width = 14;
-            ws.Column(10).Width = 12;
+            if(isKhoa)
+            {
+                ws.Column(1).Width = 8;
+                ws.Column(2).Width = 55;
+                ws.Column(3).Width = 10;
+                
+                ws.Column(4).Width = 10;
+                ws.Column(5).Width = 14;
+                ws.Column(6).Width = 12;
+            }else
+            {
+                ws.Column(1).Width = 8;
+                ws.Column(2).Width = 55;
+                ws.Column(3).Width = 10;
+                ws.Column(4).Width = 16;
+                ws.Column(5).Width = 16;
+                ws.Column(6).Width = 18;
+                ws.Column(7).Width = 16;
+                ws.Column(8).Width = 10;
+                ws.Column(9).Width = 14;
+                ws.Column(10).Width = 12;
+            }
 
             ws.Row(1).Height = 22;
             ws.Row(2).Height = 22;
@@ -367,7 +562,7 @@ namespace API.Controllers
             ws.Row(4).Height = 22;
             ws.Row(6).Height = 34;
 
-            var usedRange = ws.Range(1, 1, Math.Max(row - 1, 6), 10);
+            var usedRange = ws.Range(1, 1, Math.Max(row - 1, 6), colCount);
             usedRange.Style.Font.FontName = "Times New Roman";
             usedRange.Style.Font.FontSize = 11;
             usedRange.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
@@ -399,77 +594,14 @@ namespace API.Controllers
             return name;
         }
 
-        private async Task<List<BcDoanhThuBscdDto>> GetDoanhThuBSCDFunc(DateTime tuNgay, DateTime denNgay, string? maBacSi, string dbName)
+        private async Task<List<BcDoanhThuBscdDto>> GetDoanhThuBSCDFunc(DateTime tuNgay, DateTime denNgay, string? maBacSi, string dbName, string fieldsToGet)
         {
-            var isAdmin = User.IsInRole("ADMIN");
-            if (!isAdmin) 
-            {
-                // nếu k phải admin thì kiểm tra:
-                // 1. Nếu là tk của khoa thì kiểm tra mã bác sĩ được chọn có nằm ở khoa hiện tại trong thời gian đang chọn không. Vì mỗi tháng các bác sĩ có thể chuyển sang khoa khác
-                // 2. Nếu k phải tk khoa ( mà là tk nhập liệu,...) thì lấy dữ liệu tất cả các khoa
-                var userName = User.FindFirst(ClaimTypes.Name)?.Value
-                    ?? User.FindFirst("USER_NAME")?.Value;
-                var sqlOfficer = $"SELECT a.* FROM org_officer a LEFT JOIN adm_user b ON a.OFFICER_ID = b.OFFICER_ID WHERE b.USER_NAME ='{userName}'";
-                var officer = await _context.org_officer
-                    .FromSqlRaw(sqlOfficer)
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync();
-                var currentUserkhoaId = officer.khoaid;
-                if(officer.officer_name.ToLower().StartsWith("khoa"))
-                {
-                    var tuThang = tuNgay.Month;
-                    var tuNam = tuNgay.Year;
-
-                    var denThang = denNgay.Month;
-                    var denNam = denNgay.Year;
-
-                    var endPointMonth = Math.Max((denNam - tuNam) * 12, denThang);
-                    var arrThangNam = new List<int>();
-                    for (var year = tuNam; year <= denNam; year++)
-                    {
-                        for (var month = tuThang; month <= endPointMonth; month++)
-                        {
-                            var tempM = month % 12 == 0 ? 12 : month % 12;
-                            arrThangNam.Add(Convert.ToInt32($"{tempM}{year}"));
-                        }
-                    }
-
-                    var sqlT = $@"SELECT dkh.* FROM `{dbName}`.bc_diemkehoach dkh LEFT JOIN his_common.org_officer o ON o.BACSIID = dkh.BACSIID " + $"WHERE dkh.THANGNAM IN (" + GenerateDynamicParamThangNam(arrThangNam)+ $") AND o.MA_BAC_SI =@maBacSiT AND dkh.KHOAID = {currentUserkhoaId};";
-                    var connT = _context.Database.GetDbConnection();
-                    using var tempCmdT = connT.CreateCommand();
-
-                    var paramListT = new List<DbParameter>();
-
-                    for (var i = 0; i < arrThangNam.Count; i++)
-                    {
-                        var p = tempCmdT.CreateParameter();
-                        p.ParameterName = $"pThangNam{i}";
-                        p.Value = arrThangNam[i];
-                        paramListT.Add(p);
-                    }
-
-                    var p1T = tempCmdT.CreateParameter();
-                    p1T.ParameterName = "@maBacSiT";
-                    p1T.Value = string.IsNullOrWhiteSpace(maBacSi)
-                        ? DBNull.Value
-                        : maBacSi.Trim();
-                    paramListT.Add(p1T);
-
-                    var dkhBS = await _context.diemkehoachTemp
-                            .FromSqlRaw(sqlT, paramListT.ToArray())
-                            .AsNoTracking()
-                            .ToListAsync();
-                    if (dkhBS.Count == 0) throw new Exception("Không có dữ liệu bác sĩ tại Khoa trong khoảng thời gian đã chọn");
-
-                }
-            }
-
             var sql = $@"
-                            SELECT NHOM_MABHYT_ID,MA_DICH_VU, TEN_DICH_VU, TENNHOM, bs.OFFICER_NAME TEN_BACSI, DON_GIA_BH, HESO, CHIPHI, SOLUONG , CHIPHI * SOLUONG AS CHIPHI_VATTU, DON_GIA_BH * SOLUONG AS THANH_TIEN, ((DON_GIA_BH - CHIPHI) * SOLUONG) AS SOTIEN_CONLAI, HESO * SOLUONG AS DIEM_THUCHIEN
+                            SELECT " + fieldsToGet + $@" 
                             FROM (
-                                SELECT NHOM_MABHYT_ID,MA_DICH_VU, TEN_DICH_VU, TENNHOM, DON_GIA_BH, HESO, CHIPHI, SUM(SO_LUONG) SOLUONG FROM (
+                                SELECT NHOM_MABHYT_ID,MA_DICH_VU, TEN_DICH_VU, TENNHOM, DON_GIA_BH, IF(MA_DICH_VU='02.0495.0196',HESO_DNT,HESO) HESO, CHIPHI, SUM(SO_LUONG) SOLUONG FROM (
                                     SELECT 
-                                        nhom.NHOM_MABHYT_ID,IF(IFNULL(b.MA_DICH_VU,'') <> '', b.MA_DICH_VU, b.MA_VAT_TU) MA_DICH_VU,IF(IFNULL(b.TEN_DICH_VU,'') <> '',b.TEN_DICH_VU,b.TEN_VAT_TU) TEN_DICH_VU,nhom.TENNHOM,IFNULL(b.SO_LUONG,0) SO_LUONG,IFNULL(b.DON_GIA_BH, 0) DON_GIA_BH ,IFNULL(dv.HESO,0) HESO, IFNULL(dv.CHIPHI,0) CHIPHI
+                                        nhom.NHOM_MABHYT_ID,IF(IFNULL(b.MA_DICH_VU,'') <> '', b.MA_DICH_VU, b.MA_VAT_TU) MA_DICH_VU,IF(IFNULL(b.TEN_DICH_VU,'') <> '',b.TEN_DICH_VU,b.TEN_VAT_TU) TEN_DICH_VU,nhom.TENNHOM,IFNULL(b.SO_LUONG,0) SO_LUONG,IFNULL(b.DON_GIA_BH, 0) DON_GIA_BH ,IFNULL(dv.HESO,0) HESO, (dv.GIA_BHYT - 280000)/60000 HESO_DNT, IFNULL(dv.CHIPHI,0) CHIPHI
                                     FROM  
                                         `{dbName}`.xml1 a, 
                                         `{dbName}`.xml3 b LEFT JOIN dmc_dichvu dv on IF(IFNULL(b.MA_DICH_VU,'') <> '', b.MA_DICH_VU, b.MA_VAT_TU) = dv.MA_DICHVU AND IF(IFNULL(b.TEN_DICH_VU,'') <> '',b.TEN_DICH_VU,b.TEN_VAT_TU) = dv.TEN_DICHVU,
@@ -480,7 +612,7 @@ namespace API.Controllers
                                     AND a.NGAY_RA <= @dengay 
                                     AND b.ma_bac_si = @maBacSi
                                 ) th
-                                group by NHOM_MABHYT_ID,MA_DICH_VU, TEN_DICH_VU, TENNHOM, DON_GIA_BH, HESO, CHIPHI
+                                group by NHOM_MABHYT_ID,MA_DICH_VU, TEN_DICH_VU, TENNHOM, DON_GIA_BH, HESO, HESO_DNT, CHIPHI
                             ) th2,
                             (select * FROM org_officer where MA_BAC_SI = @maBacSi LIMIT 1) bs
                             ORDER BY NHOM_MABHYT_ID, MA_DICH_VU;";
@@ -535,8 +667,82 @@ namespace API.Controllers
                 var dbData = await _dbResolver.GetDatabaseByUserAsync(userName);
                 if (string.IsNullOrEmpty(dbData))
                     return BadRequest("Không xác định được database dữ liệu cho user.");
+                var bonusFields = $@" DON_GIA_BH, CHIPHI,
+                        CHIPHI * SOLUONG AS CHIPHI_VATTU,
+                        DON_GIA_BH * SOLUONG AS THANH_TIEN,
+                        ((DON_GIA_BH - CHIPHI) * SOLUONG) AS SOTIEN_CONLAI, ";
+                var isAdmin = User.IsInRole("ADMIN");
+                var isKhoa = false;
+                if (!isAdmin)
+                {
+                    // nếu k phải admin thì kiểm tra:
+                    // 1. Nếu là tk của khoa thì kiểm tra mã bác sĩ được chọn có nằm ở khoa hiện tại trong thời gian đang chọn không. Vì mỗi tháng các bác sĩ có thể chuyển sang khoa khác
+                    // 2. Nếu k phải tk khoa ( mà là tk nhập liệu,...) thì lấy dữ liệu tất cả các khoa
 
-                var doanhthu_bscd = await GetDoanhThuBsthFunc(req.TuNgay, req.DenNgay, req.MaBacSy, dbData);
+                    var sqlOfficer = $"SELECT a.* FROM org_officer a LEFT JOIN adm_user b ON a.OFFICER_ID = b.OFFICER_ID WHERE b.USER_NAME ='{userName}'";
+                    var officer = await _context.org_officer
+                        .FromSqlRaw(sqlOfficer)
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync();
+                    var currentUserkhoaId = officer.khoaid;
+                    if (officer.officer_name.ToLower().StartsWith("khoa"))
+                    {
+                        var tuThang = req.TuNgay.Month;
+                        var tuNam = req.TuNgay.Year;
+
+                        var denThang = req.DenNgay.Month;
+                        var denNam = req.DenNgay.Year;
+
+                        var endPointMonth = Math.Max((denNam - tuNam) * 12, denThang);
+                        var arrThangNam = new List<int>();
+                        for (var year = tuNam; year <= denNam; year++)
+                        {
+                            for (var month = tuThang; month <= endPointMonth; month++)
+                            {
+                                var tempM = month % 12 == 0 ? 12 : month % 12;
+                                arrThangNam.Add(Convert.ToInt32($"{tempM}{year}"));
+                            }
+                        }
+
+                        var sqlT = $@"SELECT dkh.* FROM `{dbData}`.bc_diemkehoach dkh LEFT JOIN his_common.org_officer o ON o.BACSIID = dkh.BACSIID " + $"WHERE dkh.THANGNAM IN (" + GenerateDynamicParamThangNam(arrThangNam) + ") AND o.MA_BAC_SI =@maBacSiT AND dkh.KHOAID = @khoaIdT;";
+                        var connT = _context.Database.GetDbConnection();
+                        using var tempCmdT = connT.CreateCommand();
+
+                        var paramListT = new List<DbParameter>();
+
+                        for (var i = 0; i < arrThangNam.Count; i++)
+                        {
+                            var p = tempCmdT.CreateParameter();
+                            p.ParameterName = $"pThangNam{i}";
+                            p.Value = arrThangNam[i];
+                            paramListT.Add(p);
+                        }
+
+                        var p1T = tempCmdT.CreateParameter();
+                        p1T.ParameterName = "@maBacSiT";
+                        p1T.Value = string.IsNullOrWhiteSpace(req.MaBacSy)
+                            ? DBNull.Value
+                            : req.MaBacSy.Trim();
+                        paramListT.Add(p1T);
+
+                        var p2T = tempCmdT.CreateParameter();
+                        p2T.ParameterName = "@khoaIdT";
+                        p2T.Value = currentUserkhoaId;
+                        paramListT.Add(p2T);
+
+                        var dkhBS = await _context.diemkehoachTemp
+                                .FromSqlRaw(sqlT, paramListT.ToArray())
+                                .AsNoTracking()
+                                .ToListAsync();
+                        if (dkhBS.Count == 0) throw new Exception("Không có dữ liệu bác sĩ tại Khoa trong khoảng thời gian đã chọn");
+                        bonusFields = $@"0 AS DON_GIA_BH,0.0 AS CHIPHI,
+                        0.0 AS CHIPHI_VATTU,
+                        0.0 AS THANH_TIEN,
+                        0.0 AS SOTIEN_CONLAI, ";
+                        isKhoa = true;
+                    }
+                }
+                var doanhthu_bscd = await GetDoanhThuBsthFunc(req.TuNgay, req.DenNgay, req.MaBacSy, dbData, bonusFields);
 
                 return Ok(new
                 {
@@ -572,30 +778,108 @@ namespace API.Controllers
                     .AsNoTracking()
                     .FirstOrDefaultAsync();
 
-                var data = await GetDoanhThuBsthFunc(req.TuNgay, req.DenNgay, req.MaBacSy, dbData);
+                var bonusFields = $@" DON_GIA_BH, CHIPHI,
+                        CHIPHI * SOLUONG AS CHIPHI_VATTU,
+                        DON_GIA_BH * SOLUONG AS THANH_TIEN,
+                        ((DON_GIA_BH - CHIPHI) * SOLUONG) AS SOTIEN_CONLAI, ";
+                var isAdmin = User.IsInRole("ADMIN");
+                var isKhoa = false;
+                if (!isAdmin)
+                {
+                    // nếu k phải admin thì kiểm tra:
+                    // 1. Nếu là tk của khoa thì kiểm tra mã bác sĩ được chọn có nằm ở khoa hiện tại trong thời gian đang chọn không. Vì mỗi tháng các bác sĩ có thể chuyển sang khoa khác
+                    // 2. Nếu k phải tk khoa ( mà là tk nhập liệu,...) thì lấy dữ liệu tất cả các khoa
+                    
+                    var sqlOfficer = $"SELECT a.* FROM org_officer a LEFT JOIN adm_user b ON a.OFFICER_ID = b.OFFICER_ID WHERE b.USER_NAME ='{userName}'";
+                    var officer = await _context.org_officer
+                        .FromSqlRaw(sqlOfficer)
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync();
+                    var currentUserkhoaId = officer.khoaid;
+                    if (officer.officer_name.ToLower().StartsWith("khoa"))
+                    {
+                        var tuThang = req.TuNgay.Month;
+                        var tuNam = req.TuNgay.Year;
+
+                        var denThang = req.DenNgay.Month;
+                        var denNam = req.DenNgay.Year;
+
+                        var endPointMonth = Math.Max((denNam - tuNam) * 12, denThang);
+                        var arrThangNam = new List<int>();
+                        for (var year = tuNam; year <= denNam; year++)
+                        {
+                            for (var month = tuThang; month <= endPointMonth; month++)
+                            {
+                                var tempM = month % 12 == 0 ? 12 : month % 12;
+                                arrThangNam.Add(Convert.ToInt32($"{tempM}{year}"));
+                            }
+                        }
+
+                        var sqlT = $@"SELECT dkh.* FROM `{dbData}`.bc_diemkehoach dkh LEFT JOIN his_common.org_officer o ON o.BACSIID = dkh.BACSIID " + $"WHERE dkh.THANGNAM IN (" + GenerateDynamicParamThangNam(arrThangNam) + ") AND o.MA_BAC_SI =@maBacSiT AND dkh.KHOAID = @khoaIdT;";
+                        var connT = _context.Database.GetDbConnection();
+                        using var tempCmdT = connT.CreateCommand();
+
+                        var paramListT = new List<DbParameter>();
+
+                        for (var i = 0; i < arrThangNam.Count; i++)
+                        {
+                            var p = tempCmdT.CreateParameter();
+                            p.ParameterName = $"pThangNam{i}";
+                            p.Value = arrThangNam[i];
+                            paramListT.Add(p);
+                        }
+
+                        var p1T = tempCmdT.CreateParameter();
+                        p1T.ParameterName = "@maBacSiT";
+                        p1T.Value = string.IsNullOrWhiteSpace(req.MaBacSy)
+                            ? DBNull.Value
+                            : req.MaBacSy.Trim();
+                        paramListT.Add(p1T);
+
+                        var p2T = tempCmdT.CreateParameter();
+                        p2T.ParameterName = "@khoaIdT";
+                        p2T.Value = currentUserkhoaId;
+                        paramListT.Add(p2T);
+
+                        var dkhBS = await _context.diemkehoachTemp
+                                .FromSqlRaw(sqlT, paramListT.ToArray())
+                                .AsNoTracking()
+                                .ToListAsync();
+                        if (dkhBS.Count == 0) throw new Exception("Không có dữ liệu bác sĩ tại Khoa trong khoảng thời gian đã chọn");
+                        bonusFields = $@"0 AS DON_GIA_BH,0.0 AS CHIPHI,
+                        0.0 AS CHIPHI_VATTU,
+                        0.0 AS THANH_TIEN,
+                        0.0 AS SOTIEN_CONLAI, ";
+                        isKhoa = true;
+                    }
+                }
+
+                var data = await GetDoanhThuBsthFunc(req.TuNgay, req.DenNgay, req.MaBacSy, dbData , bonusFields);
 
                 using var wb = new XLWorkbook();
                 var ws = wb.Worksheets.Add("BSTH");
 
+                var endCol = isKhoa ? "F" : "J";
+                var colCount = isKhoa ? 6 : 10;
                 // ====== 4 dòng đầu ======
-                ws.Range("A1:J1").Merge();
+                ws.Range($"A1:{endCol}1").Merge();
                 ws.Cell("A1").Value = benhVien?.tenbenhvien;
                 ws.Cell("A1").Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
                 ws.Cell("A1").Style.Font.Bold = true;
 
-                ws.Range("A2:J2").Merge();
+                ws.Range($"A2:{endCol}2").Merge();
                 ws.Cell("A2").Value = "Phòng Tài chính - Kế toán";
                 ws.Cell("A2").Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
                 ws.Cell("A2").Style.Font.Bold = true;
 
-                ws.Range("A3:J3").Merge();
+                ws.Range($"A3:{endCol}3").Merge();
                 ws.Cell("A3").Value = BuildTitle(req.TuNgay, req.DenNgay);
                 ws.Cell("A3").Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
                 ws.Cell("A3").Style.Font.Bold = true;
                 ws.Cell("A3").Style.Font.FontSize = 14;
                 ws.Cell("A3").Style.Font.FontColor = XLColor.Blue;
 
-                ws.Range("A4:J4").Merge();
+                ws.Range($"A4:{endCol}4").Merge();
                 ws.Cell("A4").Value = $"Bác sỹ: {(data.FirstOrDefault()?.ten_bacsi ?? "")}";
                 ws.Cell("A4").Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
                 ws.Cell("A4").Style.Font.Bold = true;
@@ -605,7 +889,7 @@ namespace API.Controllers
 
                 // ====== Header ======
                 string[] headers =
-                {
+                [
                     "STT",
                     "Nội dung",
                     "Số lượt",
@@ -616,14 +900,25 @@ namespace API.Controllers
                     "Hệ số",
                     "Điểm thực hiện",
                     "Ghi chú"
-                };
+                ];
+                if(isKhoa)
+                {
+                    headers = [
+                        "STT",
+                        "Nội dung",
+                        "Số lượt",
+                        "Hệ số",
+                        "Điểm thực hiện",
+                        "Ghi chú"
+                    ];
+                }
 
                 for (int i = 0; i < headers.Length; i++)
                 {
                     ws.Cell(row, i + 1).Value = headers[i];
                 }
 
-                var headerRange = ws.Range(row, 1, row, 10);
+                var headerRange = ws.Range(row, 1, row, colCount);
                 headerRange.Style.Font.Bold = true;
                 headerRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
                 headerRange.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
@@ -655,20 +950,20 @@ namespace API.Controllers
 
                     // Dòng tên nhóm: cột STT + merge 9 cột còn lại
                     ws.Cell(row, 1).Value = groupIndex;
-                    ws.Range(row, 2, row, 10).Merge();
+                    ws.Range(row, 2, row, colCount).Merge();
                     ws.Cell(row, 2).Value = group.Key ?? "";
-                    ws.Range(row, 1, row, 10).Style.Font.Bold = true;
-                    ws.Range(row, 1, row, 10).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
-                    ws.Range(row, 1, row, 10).Style.Alignment.WrapText = true;
+                    ws.Range(row, 1, row, colCount).Style.Font.Bold = true;
+                    ws.Range(row, 1, row, colCount).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+                    ws.Range(row, 1, row, colCount).Style.Alignment.WrapText = true;
 
                     ws.Cell(row, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
                     ws.Cell(row, 2).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
 
-                    ws.Range(row, 1, row, 10).Style.Fill.BackgroundColor = XLColor.FromArgb(242, 242, 242);
-                    ws.Range(row, 1, row, 10).Style.Border.TopBorder = XLBorderStyleValues.Thin;
-                    ws.Range(row, 1, row, 10).Style.Border.BottomBorder = XLBorderStyleValues.Thin;
-                    ws.Range(row, 1, row, 10).Style.Border.LeftBorder = XLBorderStyleValues.Thin;
-                    ws.Range(row, 1, row, 10).Style.Border.RightBorder = XLBorderStyleValues.Thin;
+                    ws.Range(row, 1, row, colCount).Style.Fill.BackgroundColor = XLColor.FromArgb(242, 242, 242);
+                    ws.Range(row, 1, row, colCount).Style.Border.TopBorder = XLBorderStyleValues.Thin;
+                    ws.Range(row, 1, row, colCount).Style.Border.BottomBorder = XLBorderStyleValues.Thin;
+                    ws.Range(row, 1, row, colCount).Style.Border.LeftBorder = XLBorderStyleValues.Thin;
+                    ws.Range(row, 1, row, colCount).Style.Border.RightBorder = XLBorderStyleValues.Thin;
 
                     row++;
 
@@ -686,39 +981,64 @@ namespace API.Controllers
                         ws.Cell(row, 1).Value = $"{groupIndex}.{itemIndex}";
                         ws.Cell(row, 2).Value = item.ten_dich_vu ?? "";
                         ws.Cell(row, 3).Value = item.soluong ?? 0;
-                        ws.Cell(row, 4).Value = item.don_gia_bh ?? 0;
-                        ws.Cell(row, 5).Value = item.thanh_tien ?? 0;
-                        ws.Cell(row, 6).Value = item.chiphi_vattu ?? 0;
-                        ws.Cell(row, 7).Value = item.sotien_conlai ?? 0;
-                        ws.Cell(row, 8).Value = item.heso ?? 0;
-                        ws.Cell(row, 9).Value = item.diem_thuchien ?? 0;
-                        ws.Cell(row, 10).Value = "";
+                       if(isKhoa)
+                        {
+                            ws.Cell(row, 4).Value = item.heso ?? 0;
+                            ws.Cell(row, 5).Value = item.diem_thuchien ?? 0;
+                            ws.Cell(row, 6).Value = "";
+                        }
+                        else
+                        {
+                            ws.Cell(row, 4).Value = item.don_gia_bh ?? 0;
+                            ws.Cell(row, 5).Value = item.thanh_tien ?? 0;
+                            ws.Cell(row, 6).Value = item.chiphi_vattu ?? 0;
+                            ws.Cell(row, 7).Value = item.sotien_conlai ?? 0;
+                            ws.Cell(row, 8).Value = item.heso ?? 0;
+                            ws.Cell(row, 9).Value = item.diem_thuchien ?? 0;
+                            ws.Cell(row, 10).Value = "";
+                        }
 
-                        // Căn lề
-                        ws.Cell(row, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                            // Căn lề
+                            ws.Cell(row, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
                         ws.Cell(row, 2).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
                         ws.Cell(row, 3).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
-                        ws.Cell(row, 4).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
-                        ws.Cell(row, 5).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
-                        ws.Cell(row, 6).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
-                        ws.Cell(row, 7).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
-                        ws.Cell(row, 8).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
-                        ws.Cell(row, 9).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                        if(isKhoa)
+                        {
+                            ws.Cell(row, 4).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                            ws.Cell(row, 5).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                        }
+                        else
+                        {
+                            ws.Cell(row, 4).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                            ws.Cell(row, 5).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                            ws.Cell(row, 6).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                            ws.Cell(row, 7).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                            ws.Cell(row, 8).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                            ws.Cell(row, 9).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                        }
 
-                        // Định dạng số
-                        ws.Cell(row, 3).Style.NumberFormat.Format = "###0.##";
-                        ws.Cell(row, 4).Style.NumberFormat.Format = "###0.##";
-                        ws.Cell(row, 5).Style.NumberFormat.Format = "###0.##";
-                        ws.Cell(row, 6).Style.NumberFormat.Format = "###0.##";
-                        ws.Cell(row, 7).Style.NumberFormat.Format = "###0.##";
-                        ws.Cell(row, 8).Style.NumberFormat.Format = "###0.##";
-                        ws.Cell(row, 9).Style.NumberFormat.Format = "###0.##";
+                            // Định dạng số
+                            ws.Cell(row, 3).Style.NumberFormat.Format = "###0.##";
+                        if(isKhoa)
+                        {
+                            ws.Cell(row, 4).Style.NumberFormat.Format = "###0.##";
+                            ws.Cell(row, 5).Style.NumberFormat.Format = "###0.##";
+                        }
+                        else
+                        {
+                            ws.Cell(row, 4).Style.NumberFormat.Format = "###0.##";
+                            ws.Cell(row, 5).Style.NumberFormat.Format = "###0.##";
+                            ws.Cell(row, 6).Style.NumberFormat.Format = "###0.##";
+                            ws.Cell(row, 7).Style.NumberFormat.Format = "###0.##";
+                            ws.Cell(row, 8).Style.NumberFormat.Format = "###0.##";
+                            ws.Cell(row, 9).Style.NumberFormat.Format = "###0.##";
+                        }
 
-                        ws.Range(row, 1, row, 10).Style.Border.TopBorder = XLBorderStyleValues.Thin;
-                        ws.Range(row, 1, row, 10).Style.Border.BottomBorder = XLBorderStyleValues.Thin;
-                        ws.Range(row, 1, row, 10).Style.Border.LeftBorder = XLBorderStyleValues.Thin;
-                        ws.Range(row, 1, row, 10).Style.Border.RightBorder = XLBorderStyleValues.Thin;
-                        ws.Range(row, 1, row, 10).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+                            ws.Range(row, 1, row, colCount).Style.Border.TopBorder = XLBorderStyleValues.Thin;
+                        ws.Range(row, 1, row, colCount).Style.Border.BottomBorder = XLBorderStyleValues.Thin;
+                        ws.Range(row, 1, row, colCount).Style.Border.LeftBorder = XLBorderStyleValues.Thin;
+                        ws.Range(row, 1, row, colCount).Style.Border.RightBorder = XLBorderStyleValues.Thin;
+                        ws.Range(row, 1, row, colCount).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
 
                         tongThanhTien += item.thanh_tien ?? 0;
                         tongChiPhiVattu += item.chiphi_vattu ?? 0;
@@ -737,20 +1057,33 @@ namespace API.Controllers
                     // ===== Dòng tổng =====
                     ws.Cell(row, 2).Value = "Tổng";
 
-                    ws.Cell(row, 5).Value = tongThanhTien;
-                    ws.Cell(row, 6).Value = tongChiPhiVattu;
-                    ws.Cell(row, 7).Value = tongConLai;
-                    ws.Cell(row, 9).Value = tongDiem;
+                   if(isKhoa)
+                    {
+                        ws.Cell(row, 5).Value = tongDiem;
+                    }else
+                    {
+                        ws.Cell(row, 5).Value = tongThanhTien;
+                        ws.Cell(row, 6).Value = tongChiPhiVattu;
+                        ws.Cell(row, 7).Value = tongConLai;
+                        ws.Cell(row, 9).Value = tongDiem;
+                    }
 
-                    // format
-                    ws.Cell(row, 5).Style.NumberFormat.Format = "###0.##";
-                    ws.Cell(row, 6).Style.NumberFormat.Format = "###0.##";
-                    ws.Cell(row, 7).Style.NumberFormat.Format = "###0.##";
-                    ws.Cell(row, 9).Style.NumberFormat.Format = "###0.##";
+                        // format
+                    if(isKhoa)
+                    {
+                        ws.Cell(row, 5).Style.NumberFormat.Format = "###0.##";
+                    }
+                    else
+                    {
+                        ws.Cell(row, 5).Style.NumberFormat.Format = "###0.##";
+                        ws.Cell(row, 6).Style.NumberFormat.Format = "###0.##";
+                        ws.Cell(row, 7).Style.NumberFormat.Format = "###0.##";
+                        ws.Cell(row, 9).Style.NumberFormat.Format = "###0.##";
+                    }
 
-                    ws.Range(row, 1, row, 10).Style.Font.Bold = true;
-                    ws.Range(row, 1, row, 10).Style.Fill.BackgroundColor = XLColor.FromArgb(230, 230, 230);
-                    ws.Range(row, 1, row, 10).Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+                    ws.Range(row, 1, row, colCount).Style.Font.Bold = true;
+                    ws.Range(row, 1, row, colCount).Style.Fill.BackgroundColor = XLColor.FromArgb(230, 230, 230);
+                    ws.Range(row, 1, row, colCount).Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
 
                     row++;
                 }
@@ -758,19 +1091,28 @@ namespace API.Controllers
                 // ===== Dòng tổng cộng toàn bộ =====
                 ws.Cell(row, 2).Value = "Tổng cộng";
 
-                ws.Cell(row, 5).Value = tongAllThanhTien;
-                ws.Cell(row, 6).Value = tongAllChiPhiVattu;
-                ws.Cell(row, 7).Value = tongAllConLai;
-                ws.Cell(row, 9).Value = tongAllDiem;
+                if(isKhoa)
+                {
+                    ws.Cell(row, 5).Value = tongAllDiem;
 
-                ws.Cell(row, 5).Style.NumberFormat.Format = "###0.##";
-                ws.Cell(row, 6).Style.NumberFormat.Format = "###0.##";
-                ws.Cell(row, 7).Style.NumberFormat.Format = "###0.##";
-                ws.Cell(row, 9).Style.NumberFormat.Format = "###0.##";
+                    ws.Cell(row, 5).Style.NumberFormat.Format = "###0.##";
+                }
+                else
+                {
+                    ws.Cell(row, 5).Value = tongAllThanhTien;
+                    ws.Cell(row, 6).Value = tongAllChiPhiVattu;
+                    ws.Cell(row, 7).Value = tongAllConLai;
+                    ws.Cell(row, 9).Value = tongAllDiem;
 
-                ws.Range(row, 1, row, 10).Style.Font.Bold = true;
-                ws.Range(row, 1, row, 10).Style.Fill.BackgroundColor = XLColor.FromArgb(200, 200, 200);
-                ws.Range(row, 1, row, 10).Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+                    ws.Cell(row, 5).Style.NumberFormat.Format = "###0.##";
+                    ws.Cell(row, 6).Style.NumberFormat.Format = "###0.##";
+                    ws.Cell(row, 7).Style.NumberFormat.Format = "###0.##";
+                    ws.Cell(row, 9).Style.NumberFormat.Format = "###0.##";
+                }
+
+                ws.Range(row, 1, row, colCount).Style.Font.Bold = true;
+                ws.Range(row, 1, row, colCount).Style.Fill.BackgroundColor = XLColor.FromArgb(200, 200, 200);
+                ws.Range(row, 1, row, colCount).Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
 
                 row++;
 
@@ -780,13 +1122,22 @@ namespace API.Controllers
                 ws.Column(1).Width = 8;
                 ws.Column(2).Width = 55;
                 ws.Column(3).Width = 10;
-                ws.Column(4).Width = 16;
-                ws.Column(5).Width = 16;
-                ws.Column(6).Width = 18;
-                ws.Column(7).Width = 16;
-                ws.Column(8).Width = 10;
-                ws.Column(9).Width = 14;
-                ws.Column(10).Width = 12;
+                if(isKhoa)
+                {
+                    ws.Column(8).Width = 10;
+                    ws.Column(9).Width = 14;
+                    ws.Column(10).Width = 12;
+                }
+                else
+                {
+                    ws.Column(4).Width = 16;
+                    ws.Column(5).Width = 16;
+                    ws.Column(6).Width = 18;
+                    ws.Column(7).Width = 16;
+                    ws.Column(8).Width = 10;
+                    ws.Column(9).Width = 14;
+                    ws.Column(10).Width = 12;
+                }
 
                 ws.Row(1).Height = 22;
                 ws.Row(2).Height = 22;
@@ -794,7 +1145,7 @@ namespace API.Controllers
                 ws.Row(4).Height = 22;
                 ws.Row(6).Height = 34;
 
-                var usedRange = ws.Range(1, 1, Math.Max(row - 1, 6), 10);
+                var usedRange = ws.Range(1, 1, Math.Max(row - 1, 6), colCount);
                 usedRange.Style.Font.FontName = "Times New Roman";
                 usedRange.Style.Font.FontSize = 11;
                 usedRange.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
@@ -814,82 +1165,13 @@ namespace API.Controllers
                 return StatusCode(500, new { message = "Lỗi server", detail = ex.Message });
             }
         }
-        private async Task<List<BcDoanhThuBscdDto>> GetDoanhThuBsthFunc(DateTime tuNgay, DateTime denNgay, string? maBacSi, string dbName)
+        private async Task<List<BcDoanhThuBscdDto>> GetDoanhThuBsthFunc(DateTime tuNgay, DateTime denNgay, string? maBacSi, string dbName, string bonusFields)
         {
-            var isAdmin = User.IsInRole("ADMIN");
-            if (!isAdmin)
-            {
-                // nếu k phải admin thì kiểm tra:
-                // 1. Nếu là tk của khoa thì kiểm tra mã bác sĩ được chọn có nằm ở khoa hiện tại trong thời gian đang chọn không. Vì mỗi tháng các bác sĩ có thể chuyển sang khoa khác
-                // 2. Nếu k phải tk khoa ( mà là tk nhập liệu,...) thì lấy dữ liệu tất cả các khoa
-                var userName = User.FindFirst(ClaimTypes.Name)?.Value
-                    ?? User.FindFirst("USER_NAME")?.Value;
-                var sqlOfficer = $"SELECT a.* FROM org_officer a LEFT JOIN adm_user b ON a.OFFICER_ID = b.OFFICER_ID WHERE b.USER_NAME ='{userName}'";
-                var officer = await _context.org_officer
-                    .FromSqlRaw(sqlOfficer)
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync();
-                var currentUserkhoaId = officer.khoaid;
-                if (officer.officer_name.ToLower().StartsWith("khoa"))
-                {
-                    var tuThang = tuNgay.Month;
-                    var tuNam = tuNgay.Year;
-
-                    var denThang = denNgay.Month;
-                    var denNam = denNgay.Year;
-
-                    var endPointMonth = Math.Max((denNam - tuNam) * 12, denThang);
-                    var arrThangNam = new List<int>();
-                    for (var year = tuNam; year <= denNam; year++)
-                    {
-                        for (var month = tuThang; month <= endPointMonth; month++)
-                        {
-                            var tempM = month % 12 == 0 ? 12 : month % 12;
-                            arrThangNam.Add(Convert.ToInt32($"{tempM}{year}"));
-                        }
-                    }
-
-                    var sqlT = $@"SELECT dkh.* FROM `{dbName}`.bc_diemkehoach dkh LEFT JOIN his_common.org_officer o ON o.BACSIID = dkh.BACSIID " + $"WHERE dkh.THANGNAM IN (" + GenerateDynamicParamThangNam(arrThangNam) + ") AND o.MA_BAC_SI =@maBacSiT AND dkh.KHOAID = @khoaIdT;";
-                    var connT = _context.Database.GetDbConnection();
-                    using var tempCmdT = connT.CreateCommand();
-
-                    var paramListT = new List<DbParameter>();
-
-                    for (var i = 0; i < arrThangNam.Count; i++)
-                    {
-                        var p = tempCmdT.CreateParameter();
-                        p.ParameterName = $"pThangNam{i}";
-                        p.Value = arrThangNam[i];
-                        paramListT.Add(p);
-                    }
-
-                    var p1T = tempCmdT.CreateParameter();
-                    p1T.ParameterName = "@maBacSiT";
-                    p1T.Value = string.IsNullOrWhiteSpace(maBacSi)
-                        ? DBNull.Value
-                        : maBacSi.Trim();
-                    paramListT.Add(p1T);
-
-                    var p2T = tempCmdT.CreateParameter();
-                    p2T.ParameterName = "@khoaIdT";
-                    p2T.Value = currentUserkhoaId;
-                    paramListT.Add(p1T);
-
-                    var dkhBS = await _context.diemkehoachTemp
-                            .FromSqlRaw(sqlT, paramListT.ToArray())
-                            .AsNoTracking()
-                            .ToListAsync();
-                    if (dkhBS.Count == 0) throw new Exception("Không có dữ liệu bác sĩ tại Khoa trong khoảng thời gian đã chọn");
-
-                }
-            }
+            
             var sql = $@"
-                    SELECT NHOM_MABHYT_ID, MA_DICH_VU, TEN_DICH_VU, TENNHOM, DON_GIA_BH, CHIPHI, SOLUONG,
-                        CHIPHI * SOLUONG AS CHIPHI_VATTU,
-                        DON_GIA_BH * SOLUONG AS THANH_TIEN,
-                        ((DON_GIA_BH - CHIPHI) * SOLUONG) AS SOTIEN_CONLAI,
-                        IF(bs.officer_type = 4, IF(IFNULL(HESO_CLS_BS, 0) > 0,HESO_CLS_BS, HESO ) ,IF(IFNULL(HESO_CLS_DD, 0) > 0,HESO_CLS_DD, HESO )) HESO,
-                        IF(bs.officer_type = 4, IF(IFNULL(HESO_CLS_BS, 0) > 0,HESO_CLS_BS, HESO ) ,IF(IFNULL(HESO_CLS_DD, 0) > 0,HESO_CLS_DD, HESO )) * SOLUONG AS DIEM_THUCHIEN,
+                    SELECT NHOM_MABHYT_ID, MA_DICH_VU, TEN_DICH_VU, TENNHOM, SOLUONG, " +bonusFields+ $@"
+                        IF(bs.officer_type = 4, IF(IFNULL(HESO_CLS_BS, 0) > 0,HESO_CLS_BS, HESO ) ,IF(IFNULL(HESO_CLS_DD, 0) > 0,HESO_CLS_DD, IF(IFNULL(HESO_CLS_BS, 0) > 0,HESO_CLS_BS, HESO ) )) HESO,
+                        IF(bs.officer_type = 4, IF(IFNULL(HESO_CLS_BS, 0) > 0,HESO_CLS_BS, HESO ) ,IF(IFNULL(HESO_CLS_DD, 0) > 0,HESO_CLS_DD, IF(IFNULL(HESO_CLS_BS, 0) > 0,HESO_CLS_BS, HESO ) )) * SOLUONG AS DIEM_THUCHIEN,
                         bs.TEN_BACSI
                     FROM (
                         SELECT NHOM_MABHYT_ID, MA_DICH_VU, TEN_DICH_VU, TENNHOM, IFNULL(DON_GIA_BH,0) DON_GIA_BH, IFNULL(HESO,0) HESO, IFNULL(HESO_CLS_BS,0) HESO_CLS_BS,IFNULL(HESO_CLS_DD,0) HESO_CLS_DD, IFNULL(CHIPHI, 0) CHIPHI, IFNULL(SUM(SO_LUONG),0) SOLUONG
@@ -1854,7 +2136,7 @@ namespace API.Controllers
                         $"LEFT JOIN his_common.org_officer officer ON officer.BACSIID = t.BACSIID GROUP BY MA_BAC_SI ) t3 ON t2.MA_BAC_SI = t3.MA_BAC_SI " +
                         $"LEFT JOIN ( SELECT MA_BAC_SI ,SUM(SOLUONG) DIEMBANT FROM `{dbName}`.bc_benhnhan_15t t   " +
                         $"LEFT JOIN his_common.org_officer officer ON officer.BACSIID = t.BACSIID WHERE THANGNAM IN ( " + GenerateDynamicParamThangNam(arrThangNam) + ") AND BHYT = 1 GROUP BY MA_BAC_SI ) t4 ON t2.MA_BAC_SI = t4.MA_BAC_SI " +
-                        $"LEFT JOIN ( SELECT NGUOI_THUC_HIEN ,SUM(CASE WHEN NHOM_MABHYT_ID IN (6,26) THEN (SO_LUONG * IF(officer.officer_type = 4, IF(IFNULL(HESO_CLS_BS, 0) > 0,HESO_CLS_BS, HESO ) ,IF(IFNULL(HESO_CLS_DD, 0) > 0,HESO_CLS_DD, HESO ))) ELSE 0 END) DIEMPTTTHUCHIEN ,SUM(CASE WHEN NHOM_MABHYT_ID NOT IN (6,26) THEN (SO_LUONG * IF(officer.officer_type = 4, IF(IFNULL(HESO_CLS_BS, 0) > 0,HESO_CLS_BS, HESO ) ,IF(IFNULL(HESO_CLS_DD, 0) > 0,HESO_CLS_DD, HESO ))) ELSE 0 END) DIEMTHCLS " +
+                        $"LEFT JOIN ( SELECT NGUOI_THUC_HIEN ,SUM(CASE WHEN NHOM_MABHYT_ID IN (6,26) THEN (SO_LUONG * IF(officer.officer_type = 4, IF(IFNULL(HESO_CLS_BS, 0) > 0,HESO_CLS_BS, HESO ) ,IF(IFNULL(HESO_CLS_DD, 0) > 0,HESO_CLS_DD, IF(IFNULL(HESO_CLS_BS, 0) > 0,HESO_CLS_BS, HESO ) ))) ELSE 0 END) DIEMPTTTHUCHIEN ,SUM(CASE WHEN NHOM_MABHYT_ID NOT IN (6,26) THEN (SO_LUONG * IF(officer.officer_type = 4, IF(IFNULL(HESO_CLS_BS, 0) > 0,HESO_CLS_BS, HESO ) ,IF(IFNULL(HESO_CLS_DD, 0) > 0,HESO_CLS_DD, IF(IFNULL(HESO_CLS_BS, 0) > 0,HESO_CLS_BS, HESO ) ))) ELSE 0 END) DIEMTHCLS " +
                         $"FROM ( SELECT tPtt.NHOM_MABHYT_ID ,tPtt.SO_LUONG ,tPtt.HESO ,tPtt.HESO_CLS_BS ,tPtt.HESO_CLS_DD ,tPtt.MA_BAC_SI ,tPtt.MA_DICH_VU ,jt.NGUOI_THUC_HIEN FROM ( SELECT nhom.NHOM_MABHYT_ID ,IFNULL(b.SO_LUONG, 0) SO_LUONG ,IFNULL(dv.HESO, 0) HESO ,IFNULL(dv.HESO_CLS_BS, 0) HESO_CLS_BS ,IFNULL(dv.HESO_CLS_DD, 0) HESO_CLS_DD ,b.NGUOI_THUC_HIEN ,b.MA_BAC_SI, b.MA_DICH_VU FROM `{dbName}`.xml1 a ,`{dbName}`.xml3 b " +
                         $"LEFT JOIN his_common.dmc_dichvu dv ON IFNULL(b.MA_DICH_VU, b.MA_VAT_TU) = dv.MA_DICHVU AND IFNULL(b.TEN_DICH_VU, b.TEN_VAT_TU) = dv.TEN_DICHVU ,his_common.dmc_nhom_mabhyt nhom WHERE a.ma_lk = b.ma_lk AND b.ma_nhom = nhom.MANHOM_BHYT AND a.NGAY_RA >= @tuNgay AND a.NGAY_RA <= @denNgay AND nhom.NHOM_MABHYT_ID IN (3,4,5,6,26) ) tPtt " +
                         $"JOIN JSON_TABLE(CONCAT ( '[\"',REPLACE(tPtt.NGUOI_THUC_HIEN, ';', '\",\"') ,'\"]' ), '$[*]' COLUMNS(NGUOI_THUC_HIEN VARCHAR(255) PATH '$')) AS jt ) tPttSplit " +

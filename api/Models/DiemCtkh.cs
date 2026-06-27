@@ -6,12 +6,12 @@ namespace API.Models
     public class DiemCtkh
     {
         public int KhoaId { get; set; }
-        public string Khoa { get; set; }
+        public string? Khoa { get; set; }
         /// <summary>
         /// Tên bác sĩ, điều dưỡng
         /// </summary>
         [Column("OFFICER_NAME")]
-        public string OfficerName { get; set; } 
+        public string? OfficerName { get; set; } 
         [Column("OFFICER_TYPE")]
         public int OfficerType { get; set; } = 0;
         [Column("DIEM_KEHOACH")]

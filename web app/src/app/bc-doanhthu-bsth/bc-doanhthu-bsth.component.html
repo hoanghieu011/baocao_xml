@@ -54,10 +54,10 @@
                 <col style="width:40px" />
                 <col />
                 <col style="width:120px" />
-                <col style="width:200px" />
-                <!-- <col style="width:200px" />
-                <col style="width:200px" />
-                <col style="width:200px" /> -->
+                <col *ngIf="!isKhoa" style="width:200px" />
+                <col *ngIf="!isKhoa" style="width:200px" />
+                <col *ngIf="!isKhoa" style="width:200px" />
+                <col *ngIf="!isKhoa" style="width:200px" /> 
                 <col style="width:90px" />
                 <col style="width:90px" />
             </colgroup>
@@ -67,10 +67,10 @@
                     <th>STT</th>
                     <th>Nội dung</th>
                     <th>Số lượt</th>
-                    <th>Giá theo quy định</th>
-                    <!-- <th>Thành tiền</th>
-                    <th>Chi phí vật tư, hóa chất</th>
-                    <th>Số tiền còn lại</th> -->
+                    <th *ngIf="!isKhoa" >Giá theo quy định</th>
+                     <th *ngIf="!isKhoa">Thành tiền</th>
+                    <th *ngIf="!isKhoa">Chi phí vật tư, hóa chất</th>
+                    <th *ngIf="!isKhoa">Số tiền còn lại</th>
                     <th>Hệ số</th>
                     <th>Điểm thực hiện</th>
                 </tr>
@@ -87,10 +87,10 @@
                     <td class="text-center">{{ row.stt }}</td>
                     <td>{{ row.ten_dich_vu }}</td>
                     <td class="text-end">{{ row.soluong | number:'1.0-2' }}</td>
-                    <td class="text-end">{{ row.don_gia_bh | number:'1.0-2' }}</td>
-                    <!-- <td class="text-end">{{ row.thanh_tien | number:'1.0-2' }}</td>
-                    <td class="text-end">{{ row.chiphi_vattu | number:'1.0-2' }}</td>
-                    <td class="text-end">{{ row.sotien_conlai | number:'1.0-2' }}</td> -->
+                    <td class="text-end" *ngIf="!isKhoa">{{ row.don_gia_bh | number:'1.0-2' }}</td>
+                    <td class="text-end" *ngIf="!isKhoa">{{ row.thanh_tien | number:'1.0-2' }}</td>
+                    <td class="text-end" *ngIf="!isKhoa">{{ row.chiphi_vattu | number:'1.0-2' }}</td>
+                    <td class="text-end" *ngIf="!isKhoa">{{ row.sotien_conlai | number:'1.0-2' }}</td>
                     <td class="text-end">{{ row.heso | number:'1.0-2' }}</td>
                     <td class="text-end">{{ row.diem_thuchien | number:'1.0-2' }}</td>
                 </tr>
@@ -99,10 +99,10 @@
                     <td></td>
                     <td>Tổng</td>
                     <td></td>
-                    <td></td>
-                    <!-- <td class="text-end">{{ row.thanh_tien | number:'1.0-2' }}</td>
-                    <td class="text-end">{{ row.chiphi_vattu | number:'1.0-2' }}</td>
-                    <td class="text-end">{{ row.sotien_conlai | number:'1.0-2' }}</td> -->
+                    <td *ngIf="!isKhoa"></td>
+                    <td class="text-end" *ngIf="!isKhoa">{{ row.thanh_tien | number:'1.0-2' }}</td>
+                    <td class="text-end" *ngIf="!isKhoa">{{ row.chiphi_vattu | number:'1.0-2' }}</td>
+                    <td class="text-end" *ngIf="!isKhoa">{{ row.sotien_conlai | number:'1.0-2' }}</td>
                     <td></td>
                     <td class="text-end">{{ row.diem_thuchien | number:'1.0-2' }}</td>
                 </tr>
@@ -111,10 +111,10 @@
                     <td></td>
                     <td>Tổng cộng</td>
                     <td></td>
-                    <td></td>
-                    <!-- <td class="text-end">{{ row.thanh_tien | number:'1.0-2' }}</td>
-                    <td class="text-end">{{ row.chiphi_vattu | number:'1.0-2' }}</td>
-                    <td class="text-end">{{ row.sotien_conlai | number:'1.0-2' }}</td> -->
+                    <td *ngIf="!isKhoa"></td>
+                    <td class="text-end" *ngIf="!isKhoa">{{ row.thanh_tien | number:'1.0-2' }}</td>
+                    <td class="text-end" *ngIf="!isKhoa">{{ row.chiphi_vattu | number:'1.0-2' }}</td>
+                    <td class="text-end" *ngIf="!isKhoa">{{ row.sotien_conlai | number:'1.0-2' }}</td>
                     <td></td>
                     <td class="text-end">{{ row.diem_thuchien | number:'1.0-2' }}</td>
                 </tr>

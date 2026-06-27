@@ -7,6 +7,7 @@ import { Select2Module, Select2Data, Select2UpdateEvent, Select2SearchEvent } fr
 import { OfficerService } from '../services/officer.service';
 import { BaoCaoService } from '../services/bao-cao.service';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
+import { AuthService } from '../services/auth.service';
 
 type ReportRowType = 'group' | 'item' | 'total' | 'grandTotal';
 
@@ -35,7 +36,7 @@ interface ReportRow {
 
 export class BcDoanhthuBscdComponent implements OnInit {
   displayRows: ReportRow[] = [];
-
+  user: any;
   Math = Math;
 
   tuNgay: string = '';
@@ -49,11 +50,17 @@ export class BcDoanhthuBscdComponent implements OnInit {
   cur_officer: string = '';
   ds_officer: any[] = [];
 
-  constructor(private officerService: OfficerService, private baoCaoService: BaoCaoService) { }
+  isAdmin = false;
+  isKhoa = false;
+
+  constructor(private officerService: OfficerService, private baoCaoService: BaoCaoService, private authService: AuthService) { }
 
   ngOnInit(): void {
     this.setDefaultMonthRange();
     this.loadDsOfficer();
+    this.user = this.authService.getUserInfo();
+    this.isAdmin = this.user.roles.includes('ADMIN');
+    this.isKhoa = this.user.FULL_NAME?.toLowerCase()?.startsWith('khoa');
   }
 
   loadDsOfficer() {
