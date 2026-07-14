@@ -82,7 +82,7 @@ export class DiemKeHoachComponent  {
     this.officerService.getDsOfficer().subscribe({
       next: (res) => {
         let data: any[] = res.ds_officer ? res.ds_officer  : [];
-        data = data.filter(d => ([4,6].includes(d.officer_type) && d.ma_bac_si!=='' && d.ma_bac_si != null))
+        data = data.filter(d => ( d.ma_bac_si!=='' && d.ma_bac_si != null))
         this.ds_officer = [
           ...data.map((x: any) => ({
             value: x.bacsiid,
