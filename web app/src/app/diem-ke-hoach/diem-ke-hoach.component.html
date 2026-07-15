@@ -171,15 +171,17 @@
             <th class="w-40">Số buổi trực <span class="required-field"></span></th>
             <td class="w-60">
               <input type="number" class="form-control form-control-sm" formControlName="soBuoiTruc" placeholder="Số buổi trực"
-                (change)="onSoBuoiTrucChange($event)"
+               
               />
             </td>
           </tr>
           <tr>
-            <th *ngIf="!isThemMoi" class="w-40">Điểm trực (Số buổi trực x {{(selectedDiemKeHoach?.officerType && selectedDiemKeHoach?.officerType < hesoTruc.length) ? hesoTruc[selectedDiemKeHoach?.officerType] : 1 }}) <span class="required-field"></span></th>
-            <th *ngIf="isThemMoi" class="w-40">Điểm trực (Số buổi trực x {{(selected_bs?.officer_type && selected_bs?.officer_type < hesoTruc.length) ? hesoTruc[selected_bs?.officer_type] : 1 }}) <span class="required-field"></span></th>
+            <th *ngIf="!isThemMoi" class="w-40">Điểm trực  <span class="required-field"></span></th>
+            <th *ngIf="isThemMoi" class="w-40">Điểm trực  <span class="required-field"></span></th>
             <td class="w-60">
-              <span> {{formDataDiemKeHoach.value.diemTruc}}</span>
+              <input type="number" class="form-control form-control-sm" formControlName="diemTruc" placeholder="Điểm trực"
+               
+              />
             </td>
           </tr>
           <tr>

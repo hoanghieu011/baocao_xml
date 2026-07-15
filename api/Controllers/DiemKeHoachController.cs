@@ -391,8 +391,7 @@ namespace API.Controllers
             }
         }
 
-        [Authorize(Roles = "DELETE_DIEMKEHOACH, ADMIN")]
-        [Authorize(Roles = "DELETE_TANGCUONG")]
+        [Authorize(Policy = "XoaDkh")]
         [HttpDelete("xoa-diemkehoach/{id}")]
         public async Task<ActionResult<object>> XoaDiemKeHoach(int id)
         {

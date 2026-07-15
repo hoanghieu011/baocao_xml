@@ -65,9 +65,6 @@ builder.Services.AddAuthorization(options =>
             return hasAdmin || (hasAdd && hasEdit);
         })
     );
-});
-builder.Services.AddAuthorization(options =>
-{
     options.AddPolicy("CapnhatDkh", policy =>
         policy.RequireAssertion(ctx =>
         {
@@ -77,6 +74,17 @@ builder.Services.AddAuthorization(options =>
             var hasEditTc = ctx.User.IsInRole("EDIT_TANGCUONG");
 
             return hasAdmin || (hasEditDkh && hasEditTc);
+        })
+    );
+    options.AddPolicy("XoaDkh", policy =>
+        policy.RequireAssertion(ctx =>
+        {
+            var hasAdmin = ctx.User.IsInRole("ADMIN");
+
+            var hasDelDkh = ctx.User.IsInRole("DELETE_DIEMKEHOACH");
+            var hasDelTc = ctx.User.IsInRole("DELETE_TANGCUONG");
+
+            return hasAdmin || (hasDelDkh && hasDelTc);
         })
     );
 });
