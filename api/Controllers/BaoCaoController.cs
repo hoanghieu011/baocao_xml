@@ -71,6 +71,7 @@ namespace API.Controllers
                     // 1. Nếu là tk của khoa thì kiểm tra mã bác sĩ được chọn có nằm ở khoa hiện tại trong thời gian đang chọn không. Vì mỗi tháng các bác sĩ có thể chuyển sang khoa khác
                     // 2. Nếu k phải tk khoa ( mà là tk nhập liệu,...) thì lấy dữ liệu tất cả các khoa
                     var sqlOfficer = $"SELECT a.* FROM org_officer a LEFT JOIN adm_user b ON a.OFFICER_ID = b.OFFICER_ID WHERE b.USER_NAME ='{userName}'";
+                    fieldsToGet = "NHOM_MABHYT_ID,MA_DICH_VU, TEN_DICH_VU, TENNHOM, bs.OFFICER_NAME TEN_BACSI,0 AS DON_GIA_BH, HESO,0.0 AS CHIPHI, SOLUONG , 0.0 AS CHIPHI_VATTU, 0.0 AS THANH_TIEN, 0.0 AS SOTIEN_CONLAI, HESO * SOLUONG AS DIEM_THUCHIEN ";
                     var officer = await _context.org_officer
                         .FromSqlRaw(sqlOfficer)
                         .AsNoTracking()
@@ -122,8 +123,7 @@ namespace API.Controllers
                                 .AsNoTracking()
                                 .ToListAsync();
                         if (dkhBS.Count == 0) throw new Exception("Không có dữ liệu bác sĩ tại Khoa trong khoảng thời gian đã chọn");
-                        fieldsToGet = "NHOM_MABHYT_ID,MA_DICH_VU, TEN_DICH_VU, TENNHOM, bs.OFFICER_NAME TEN_BACSI,0 AS DON_GIA_BH, HESO,0.0 AS CHIPHI, SOLUONG , 0.0 AS CHIPHI_VATTU, 0.0 AS THANH_TIEN, 0.0 AS SOTIEN_CONLAI, HESO * SOLUONG AS DIEM_THUCHIEN ";
-
+                        
                     }
                 }
                     var doanhthu_bscd = await GetDoanhThuBSCDFunc(req.TuNgay, req.DenNgay, req.MaBacSy, dbData, fieldsToGet);
@@ -182,6 +182,7 @@ namespace API.Controllers
                     // 1. Nếu là tk của khoa thì kiểm tra mã bác sĩ được chọn có nằm ở khoa hiện tại trong thời gian đang chọn không. Vì mỗi tháng các bác sĩ có thể chuyển sang khoa khác
                     // 2. Nếu k phải tk khoa ( mà là tk nhập liệu,...) thì lấy dữ liệu tất cả các khoa
                     var sqlOfficer = $"SELECT a.* FROM org_officer a LEFT JOIN adm_user b ON a.OFFICER_ID = b.OFFICER_ID WHERE b.USER_NAME ='{userName}'";
+                    fieldsToGet = "NHOM_MABHYT_ID,MA_DICH_VU, TEN_DICH_VU, TENNHOM, bs.OFFICER_NAME TEN_BACSI,0 AS DON_GIA_BH, HESO,0.0 AS CHIPHI, SOLUONG , 0.0 AS CHIPHI_VATTU, 0.0 AS THANH_TIEN, 0.0 AS SOTIEN_CONLAI, HESO * SOLUONG AS DIEM_THUCHIEN ";
                     var officer = await _context.org_officer
                         .FromSqlRaw(sqlOfficer)
                         .AsNoTracking()
@@ -233,8 +234,6 @@ namespace API.Controllers
                                 .AsNoTracking()
                                 .ToListAsync();
                         if (dkhBS.Count == 0) throw new Exception("Không có dữ liệu bác sĩ tại Khoa trong khoảng thời gian đã chọn");
-                        fieldsToGet = "NHOM_MABHYT_ID,MA_DICH_VU, TEN_DICH_VU, TENNHOM, bs.OFFICER_NAME TEN_BACSI,0 AS DON_GIA_BH, HESO,0.0 AS CHIPHI, SOLUONG , 0.0 AS CHIPHI_VATTU, 0.0 AS THANH_TIEN, 0.0 AS SOTIEN_CONLAI, HESO * SOLUONG AS DIEM_THUCHIEN ";
-
                     }
                 }
 
@@ -269,7 +268,7 @@ namespace API.Controllers
                         benhVien?.tenbenhvien ?? "",
                         req.TuNgay,
                         req.DenNgay,
-                        isKhoa
+                        isAdmin
                     );
                 }
 
@@ -296,12 +295,12 @@ namespace API.Controllers
             string tenBenhVien,
             DateTime tuNgay,
             DateTime denNgay,
-            Boolean isKhoa
+            Boolean isAdmin
             )
         {
             var ws = wb.Worksheets.Add(sheetName);
-            var endCol = isKhoa ? "F" : "J";
-            var colCount = isKhoa ? 6 : 10;
+            var endCol = !isAdmin ? "F" : "J";
+            var colCount = !isAdmin ? 6 : 10;
             ws.Range($"A1:{endCol}1").Merge();
             ws.Cell("A1").Value = tenBenhVien;
             ws.Cell("A1").Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
@@ -338,7 +337,7 @@ namespace API.Controllers
                 "Điểm thực hiện",
                 "Ghi chú"
             ];
-            if(isKhoa)
+            if(!isAdmin)
             {
                 headers = [
                     "STT",
@@ -414,7 +413,7 @@ namespace API.Controllers
                     ws.Cell(row, 1).Value = $"{groupIndex}.{itemIndex}";
                     ws.Cell(row, 2).Value = item.ten_dich_vu ?? "";
                     ws.Cell(row, 3).Value = item.soluong ?? 0;
-                    if(isKhoa)
+                    if(!isAdmin)
                     {
                         ws.Cell(row, 4).Value = item.heso ?? 0;
                         ws.Cell(row, 5).Value = item.diem_thuchien ?? 0;
@@ -479,7 +478,7 @@ namespace API.Controllers
                     row++;
                 }
 
-                if(isKhoa)
+                if(!isAdmin)
                 {
                     ws.Cell(row, 2).Value = "Tổng";
                     ws.Cell(row, 5).Value = tongDiem;
@@ -507,7 +506,7 @@ namespace API.Controllers
                 row++;
             }
 
-            if(isKhoa)
+            if(!isAdmin)
             {
                 ws.Cell(row, 2).Value = "Tổng cộng";
                 ws.Cell(row, 5).Value = tongAllDiem;
@@ -533,7 +532,7 @@ namespace API.Controllers
 
             ws.SheetView.FreezeRows(6);
 
-            if(isKhoa)
+            if(!isAdmin)
             {
                 ws.Column(1).Width = 8;
                 ws.Column(2).Width = 55;
@@ -680,6 +679,10 @@ namespace API.Controllers
                     // 2. Nếu k phải tk khoa ( mà là tk nhập liệu,...) thì lấy dữ liệu tất cả các khoa
 
                     var sqlOfficer = $"SELECT a.* FROM org_officer a LEFT JOIN adm_user b ON a.OFFICER_ID = b.OFFICER_ID WHERE b.USER_NAME ='{userName}'";
+                    bonusFields = $@"0 AS DON_GIA_BH,0.0 AS CHIPHI,
+                        0.0 AS CHIPHI_VATTU,
+                        0.0 AS THANH_TIEN,
+                        0.0 AS SOTIEN_CONLAI, ";
                     var officer = await _context.org_officer
                         .FromSqlRaw(sqlOfficer)
                         .AsNoTracking()
@@ -735,10 +738,6 @@ namespace API.Controllers
                                 .AsNoTracking()
                                 .ToListAsync();
                         if (dkhBS.Count == 0) throw new Exception("Không có dữ liệu bác sĩ tại Khoa trong khoảng thời gian đã chọn");
-                        bonusFields = $@"0 AS DON_GIA_BH,0.0 AS CHIPHI,
-                        0.0 AS CHIPHI_VATTU,
-                        0.0 AS THANH_TIEN,
-                        0.0 AS SOTIEN_CONLAI, ";
                         isKhoa = true;
                     }
                 }
@@ -791,6 +790,10 @@ namespace API.Controllers
                     // 2. Nếu k phải tk khoa ( mà là tk nhập liệu,...) thì lấy dữ liệu tất cả các khoa
                     
                     var sqlOfficer = $"SELECT a.* FROM org_officer a LEFT JOIN adm_user b ON a.OFFICER_ID = b.OFFICER_ID WHERE b.USER_NAME ='{userName}'";
+                    bonusFields = $@"0 AS DON_GIA_BH,0.0 AS CHIPHI,
+                        0.0 AS CHIPHI_VATTU,
+                        0.0 AS THANH_TIEN,
+                        0.0 AS SOTIEN_CONLAI, ";
                     var officer = await _context.org_officer
                         .FromSqlRaw(sqlOfficer)
                         .AsNoTracking()
@@ -846,10 +849,7 @@ namespace API.Controllers
                                 .AsNoTracking()
                                 .ToListAsync();
                         if (dkhBS.Count == 0) throw new Exception("Không có dữ liệu bác sĩ tại Khoa trong khoảng thời gian đã chọn");
-                        bonusFields = $@"0 AS DON_GIA_BH,0.0 AS CHIPHI,
-                        0.0 AS CHIPHI_VATTU,
-                        0.0 AS THANH_TIEN,
-                        0.0 AS SOTIEN_CONLAI, ";
+                        
                         isKhoa = true;
                     }
                 }
@@ -859,8 +859,8 @@ namespace API.Controllers
                 using var wb = new XLWorkbook();
                 var ws = wb.Worksheets.Add("BSTH");
 
-                var endCol = isKhoa ? "F" : "J";
-                var colCount = isKhoa ? 6 : 10;
+                var endCol = !isAdmin ? "F" : "J";
+                var colCount = !isAdmin ? 6 : 10;
                 // ====== 4 dòng đầu ======
                 ws.Range($"A1:{endCol}1").Merge();
                 ws.Cell("A1").Value = benhVien?.tenbenhvien;
@@ -901,7 +901,7 @@ namespace API.Controllers
                     "Điểm thực hiện",
                     "Ghi chú"
                 ];
-                if(isKhoa)
+                if(!isAdmin)
                 {
                     headers = [
                         "STT",
@@ -981,7 +981,7 @@ namespace API.Controllers
                         ws.Cell(row, 1).Value = $"{groupIndex}.{itemIndex}";
                         ws.Cell(row, 2).Value = item.ten_dich_vu ?? "";
                         ws.Cell(row, 3).Value = item.soluong ?? 0;
-                       if(isKhoa)
+                       if(!isAdmin)
                         {
                             ws.Cell(row, 4).Value = item.heso ?? 0;
                             ws.Cell(row, 5).Value = item.diem_thuchien ?? 0;
@@ -1002,7 +1002,7 @@ namespace API.Controllers
                             ws.Cell(row, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
                         ws.Cell(row, 2).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
                         ws.Cell(row, 3).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
-                        if(isKhoa)
+                        if(!isAdmin)
                         {
                             ws.Cell(row, 4).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
                             ws.Cell(row, 5).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
@@ -1019,7 +1019,7 @@ namespace API.Controllers
 
                             // Định dạng số
                             ws.Cell(row, 3).Style.NumberFormat.Format = "###0.##";
-                        if(isKhoa)
+                        if(!isAdmin)
                         {
                             ws.Cell(row, 4).Style.NumberFormat.Format = "###0.##";
                             ws.Cell(row, 5).Style.NumberFormat.Format = "###0.##";
@@ -1050,14 +1050,14 @@ namespace API.Controllers
                         tongAllConLai += item.sotien_conlai ?? 0;
                         tongAllDiem += item.diem_thuchien ?? 0;
 
-                        ws.Range(row, 1, row, 10).Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+                        ws.Range(row, 1, row, colCount).Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
 
                         row++;
                     }
                     // ===== Dòng tổng =====
                     ws.Cell(row, 2).Value = "Tổng";
 
-                   if(isKhoa)
+                   if(!isAdmin)
                     {
                         ws.Cell(row, 5).Value = tongDiem;
                     }else
@@ -1069,7 +1069,7 @@ namespace API.Controllers
                     }
 
                         // format
-                    if(isKhoa)
+                    if(!isAdmin)
                     {
                         ws.Cell(row, 5).Style.NumberFormat.Format = "###0.##";
                     }
@@ -1091,7 +1091,7 @@ namespace API.Controllers
                 // ===== Dòng tổng cộng toàn bộ =====
                 ws.Cell(row, 2).Value = "Tổng cộng";
 
-                if(isKhoa)
+                if(!isAdmin)
                 {
                     ws.Cell(row, 5).Value = tongAllDiem;
 
@@ -1122,7 +1122,7 @@ namespace API.Controllers
                 ws.Column(1).Width = 8;
                 ws.Column(2).Width = 55;
                 ws.Column(3).Width = 10;
-                if(isKhoa)
+                if(!isAdmin)
                 {
                     ws.Column(8).Width = 10;
                     ws.Column(9).Width = 14;
