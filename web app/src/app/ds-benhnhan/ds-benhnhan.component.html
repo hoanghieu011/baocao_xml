@@ -51,6 +51,7 @@
         <col style="width:140px" />
         <col style="width:140px" />
         <col style="width:300px" />
+        <col style="width:70px" />
       </colgroup>
 
       <thead class="table-primary text-center align-middle">
@@ -65,6 +66,7 @@
           <th>Ngày vào viện</th>
           <th>Ngày ra viện</th>
           <th>Chẩn đoán ra viện</th>
+          <th>DVKT</th>
         </tr>
       </thead>
 
@@ -80,21 +82,32 @@
           </td>
           <td>{{ bn.ho_ten }}</td>
           <td class="text-center">
-            {{ bn.ngay_sinh ? (bn.ngay_sinh.slice(6,8) + '/' + bn.ngay_sinh.slice(4,6) + '/' + bn.ngay_sinh.slice(0,4)) : '' }}
-             </td>
-
-            <td class="text-center">
             {{ bn.gioi_tinh == '1' ? 'Nam' : (bn.gioi_tinh == '2' ? 'Nữ' : '') }}
-            </td>
+          </td>
+          <td class="text-center">
+            {{ bn.ngay_sinh ? (bn.ngay_sinh.slice(6,8) + '/' + bn.ngay_sinh.slice(4,6) + '/' + bn.ngay_sinh.slice(0,4)) : '' }}
+          </td>
           <td>{{ bn.ma_the_bhyt }}</td>
           <td>{{ bn.dia_chi }}</td>
           <td class="text-center">{{ formatDate(bn.ngay_vao) }}</td>
           <td class="text-center">{{ formatDate(bn.ngay_ra) }}</td>
           <td>{{ bn.chan_doan_rv }}</td>
+          <td class="text-center">
+            <button
+              type="button"
+              class="btn btn-outline-primary btn-sm dvkt-detail-button"
+              title="Xem dịch vụ kỹ thuật"
+              [attr.aria-label]="'Xem dịch vụ kỹ thuật của ' + (bn.ho_ten || 'bệnh nhân')"
+              [disabled]="!bn.ma_lk"
+              (click)="openDvktModal(bn)"
+            >
+              <i class="bi bi-eye" aria-hidden="true"></i>
+            </button>
+          </td>
         </tr>
 
         <tr *ngIf="!loading && (!dsBenhNhan || dsBenhNhan.length === 0)">
-          <td colspan="10" class="text-center">Không có dữ liệu</td>
+          <td colspan="11" class="text-center">Không có dữ liệu</td>
         </tr>
       </tbody>
     </table>
@@ -120,54 +133,172 @@
       </div>
       </div>
     </div>
+  </div>
+
+<div class="modal-backdrop" *ngIf="showDvktModal">
+  <div class="modal-card dvkt-modal-card">
+       <div class="modal-header">
+         <h5 class="modal-title">
+           Dịch vụ kỹ thuật - {{ selectedDvktPatient?.ho_ten || selectedDvktPatient?.ma_bn }}
+         </h5>
+         <button type="button" class="btn-close" aria-label="Đóng" (click)="closeDvktModal()"></button>
+       </div>
+
+       <div class="modal-body">
+         <div class="table-responsive dvkt-table-wrapper">
+           <table class="table table-bordered table-hover table-striped table-sm mb-0 dvkt-table">
+             <colgroup>
+               <col class="dvkt-col-stt" />
+               <col class="dvkt-col-name" />
+               <col class="dvkt-col-quantity" />
+               <col class="dvkt-col-money" span="5" />
+               <col class="dvkt-col-percent" />
+             </colgroup>
+             <thead class="table-primary text-center align-middle">
+               <tr>
+                 <th>STT</th>
+                 <th>Tên dịch vụ</th>
+                 <th>Số lượng</th>
+                 <th>Giá tiền</th>
+                 <th>Giá BH</th>
+                 <th>BHYT trả</th>
+                 <th>BNCCT</th>
+                 <th>BN trả</th>
+                 <th>TL %</th>
+                 <!-- <th>% mg</th>
+                 <th>Miễn giảm</th>
+                 <th>VAT</th> -->
+               </tr>
+             </thead>
+             <tbody>
+               <tr *ngIf="dvktLoading" class="dvkt-state-row">
+                 <td colspan="9" class="text-center py-4">
+                   <span class="spinner-border spinner-border-sm text-primary me-2" role="status" aria-hidden="true"></span>
+                   Đang tải dữ liệu
+                 </td>
+               </tr>
+
+               <tr *ngFor="let dvkt of dsDvkt; let i = index">
+                 <td class="text-center" data-label="STT">{{ dvkt.stt !== null ? dvkt.stt : dvktRowIndex(i) }}</td>
+                 <td data-label="Tên dịch vụ">{{ dvkt.tenDichVu || '-' }}</td>
+                 <td class="text-end" data-label="Số lượng">{{ dvkt.soLuong !== null ? (dvkt.soLuong | number:'1.0-2') : '-' }}</td>
+                 <td class="text-end" data-label="Giá tiền">{{ dvkt.giaTien !== null ? (dvkt.giaTien | number:'1.0-2') : '-' }}</td>
+                 <td class="text-end" data-label="Giá BH">{{ dvkt.giaBh !== null ? (dvkt.giaBh | number:'1.0-2') : '-' }}</td>
+                 <td class="text-end" data-label="BHYT trả">{{ dvkt.bhytTra !== null ? (dvkt.bhytTra | number:'1.0-2') : '-' }}</td>
+                 <td class="text-end" data-label="BNCCT">{{ dvkt.bncct !== null ? (dvkt.bncct | number:'1.0-2') : '-' }}</td>
+                 <td class="text-end" data-label="BN trả">{{ dvkt.bnTra !== null ? (dvkt.bnTra | number:'1.0-2') : '-' }}</td>
+                 <td class="text-end" data-label="TL %">{{ dvkt.tyLeThanhToan !== null ? (dvkt.tyLeThanhToan | number:'1.0-2') : '-' }}</td>
+                 <!-- <td class="text-end">{{ dvkt.phanTramMienGiam !== null ? (dvkt.phanTramMienGiam | number:'1.0-2') : '-' }}</td>
+                 <td class="text-end">{{ dvkt.mienGiam !== null ? (dvkt.mienGiam | number:'1.0-2') : '-' }}</td>
+                 <td class="text-end">{{ dvkt.vat !== null ? (dvkt.vat | number:'1.0-2') : '-' }}</td> -->
+               </tr>
+
+               <tr *ngIf="!dvktLoading && dsDvkt.length === 0" class="dvkt-state-row">
+                 <td colspan="9" class="text-center py-4">Không có dữ liệu dịch vụ kỹ thuật</td>
+               </tr>
+             </tbody>
+           </table>
+         </div>
+       </div>
+
+       <div class="modal-footer dvkt-modal-footer">
+         <div class="d-flex align-items-center gap-2">
+           <button
+             type="button"
+             class="btn btn-outline-secondary btn-sm"
+             [disabled]="dvktLoading || dvktPageNumber <= 1"
+             (click)="onDvktPrev()"
+           >
+             Prev
+           </button>
+           <button
+             type="button"
+             class="btn btn-outline-secondary btn-sm"
+             [disabled]="dvktLoading || dvktPageNumber >= Math.ceil(dvktTotalRecords / dvktPageSize) || dvktTotalRecords === 0"
+             (click)="onDvktNext()"
+           >
+             Next
+           </button>
+           <span class="small text-muted">
+             Trang {{ dvktPageNumber }} / {{ Math.max(1, Math.ceil(dvktTotalRecords / dvktPageSize)) }}
+             — Tổng: {{ dvktTotalRecords | number }}
+           </span>
+         </div>
+         <div class="d-flex align-items-center gap-3 dvkt-footer-actions">
+           <div class="d-flex align-items-center gap-2">
+             <label class="small mb-0" for="dvktPageSize">Bản ghi / trang</label>
+             <select
+               id="dvktPageSize"
+               class="form-select form-select-sm"
+               [(ngModel)]="dvktPageSize"
+               [disabled]="dvktLoading"
+               (ngModelChange)="onDvktPageSizeChange($event)"
+             >
+               <option *ngFor="let s of pageSizeOptions" [value]="s">{{ s }}</option>
+             </select>
+           </div>
+           <button type="button" class="btn btn-secondary" (click)="closeDvktModal()">Đóng</button>
+         </div>
+       </div>
+  </div>
 </div>
 
 <div class="modal-backdrop" *ngIf="showModal">
-  <div class="modal-card">
-    <div class="modal-header">
-      <h5 class="modal-title">Thông tin bệnh nhân</h5>
-      <button type="button" class="btn-close" aria-label="Close" (click)="closeModal()"></button>
+  <div
+    class="modal-card patient-modal-card"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="patientModalTitle"
+  >
+    <div class="modal-header patient-modal-header">
+      <div class="patient-modal-heading">
+        <div class="patient-avatar" aria-hidden="true">
+          <i class="bi bi-person-fill"></i>
+        </div>
+        <div>
+          <h5 id="patientModalTitle" class="modal-title">Thông tin bệnh nhân</h5>
+          <div class="patient-modal-meta">
+            <strong>{{ selectedBN?.ho_ten || 'Chưa có tên bệnh nhân' }}</strong>
+            <span>Mã BN: {{ selectedBN?.ma_bn || '-' }}</span>
+            <span>Mã LK: {{ selectedBN?.ma_lk || '-' }}</span>
+          </div>
+        </div>
+      </div>
+      <button
+        type="button"
+        class="btn-close patient-modal-close"
+        aria-label="Đóng"
+        (click)="closeModal()"
+      ></button>
     </div>
 
-    <div class="modal-body">
-      <div class="row">
-        <div class="col-12 col-md-4">
-          <table class="table table-sm mb-0 patient-modal-table">
-            <tbody>
-              <tr *ngFor="let f of fields | slice:0:colSize">
-                <th class="w-40">{{ f.label }}</th>
-                <td class="w-60">{{ getValue(f.key) }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div class="col-12 col-md-4">
-          <table class="table table-sm mb-0 patient-modal-table">
-            <tbody>
-              <tr *ngFor="let f of fields | slice:colSize:colSize*2">
-                <th class="w-40">{{ f.label }}</th>
-                <td class="w-60">{{ getValue(f.key) }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div class="col-12 col-md-4">
-          <table class="table table-sm mb-0 patient-modal-table">
-            <tbody>
-              <tr *ngFor="let f of fields | slice:colSize*2:colSize*3">
-                <th class="w-40">{{ f.label }}</th>
-                <td class="w-60">{{ getValue(f.key) }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+    <div class="modal-body patient-modal-body">
+      <div class="patient-info-groups">
+        <section class="patient-info-section" *ngFor="let group of patientFieldGroups">
+          <div class="patient-section-header">
+            <i class="bi" [ngClass]="group.icon" aria-hidden="true"></i>
+            <h6>{{ group.title }}</h6>
+          </div>
+          <div class="patient-fields-grid">
+            <div
+              class="patient-field"
+              [class.patient-field-wide]="field.wide"
+              *ngFor="let field of group.fields"
+            >
+              <span class="patient-field-label">{{ field.label }}</span>
+              <span class="patient-field-value">{{ getPatientValue(field) }}</span>
+            </div>
+          </div>
+        </section>
       </div>
     </div>
 
-    <div class="modal-footer"  style="justify-content: flex-end;">
-      <button class="btn btn-secondary" (click)="closeModal()">Đóng</button>
+    <div class="modal-footer patient-modal-footer">
+      <span class="patient-footer-hint">
+        <i class="bi bi-info-circle me-1" aria-hidden="true"></i>
+        Thông tin từ hồ sơ bệnh nhân
+      </span>
+      <button type="button" class="btn btn-secondary" (click)="closeModal()">Đóng</button>
     </div>
   </div>
 </div>

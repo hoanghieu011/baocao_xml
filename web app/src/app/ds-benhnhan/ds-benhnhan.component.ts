@@ -1,9 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { BenhNhanService } from '../services/benh-nhan.service';
+import { BenhNhanService, Dvkt } from '../services/benh-nhan.service';
 import { BorderDirective, TableDirective } from '@coreui/angular';
 import { ToastModule } from '@coreui/angular';
+import { Subscription } from 'rxjs';
 
 interface BenhNhan {
   id?: number;
@@ -75,6 +76,21 @@ interface BenhNhan {
   csytid?: string;
 }
 
+type PatientFieldFormat = 'date' | 'gender' | 'money';
+
+interface PatientField {
+  key: keyof BenhNhan;
+  label: string;
+  format?: PatientFieldFormat;
+  wide?: boolean;
+}
+
+interface PatientFieldGroup {
+  title: string;
+  icon: string;
+  fields: PatientField[];
+}
+
 @Component({
   selector: 'app-ds-benhnhan',
   standalone: true,
@@ -82,7 +98,7 @@ interface BenhNhan {
   templateUrl: './ds-benhnhan.component.html',
   styleUrls: ['./ds-benhnhan.component.css']
 })
-export class DsBenhnhanComponent implements OnInit {
+export class DsBenhnhanComponent implements OnDestroy, OnInit {
   Math = Math;
 
   tuNgay: string = '';
@@ -100,11 +116,24 @@ export class DsBenhnhanComponent implements OnInit {
   selectedBN: BenhNhan | null = null;
   showModal = false;
 
+  selectedDvktPatient: BenhNhan | null = null;
+  dsDvkt: Dvkt[] = [];
+  showDvktModal = false;
+  dvktLoading = false;
+  dvktPageNumber = 1;
+  dvktPageSize = 10;
+  dvktTotalRecords = 0;
+  private dvktRequest?: Subscription;
+
   constructor(private benhNhanService: BenhNhanService) {}
 
   ngOnInit(): void {
     this.setDefaultMonthRange();
     this.loadData(true);
+  }
+
+  ngOnDestroy(): void {
+    this.dvktRequest?.unsubscribe();
   }
 
   private setDefaultMonthRange() {
@@ -164,7 +193,6 @@ export class DsBenhnhanComponent implements OnInit {
         this.pageNumber = res?.pageIndex ?? this.pageNumber;
         this.pageSize = res?.pageSize ?? this.pageSize;
         this.dsBenhNhan = res?.dsBenhNhan ?? [];
-        console.log(res?.dsBenhNhan)
         this.loading = false;
       },
       error: (err) => {
@@ -205,6 +233,84 @@ export class DsBenhnhanComponent implements OnInit {
     this.selectedBN = null;
   }
 
+  openDvktModal(bn: BenhNhan) {
+    if (!bn.ma_lk) {
+      this.addToast('Không tìm thấy mã liên kết của bệnh nhân');
+      return;
+    }
+
+    this.selectedDvktPatient = bn;
+    this.showDvktModal = true;
+    this.dvktPageNumber = 1;
+    this.dvktTotalRecords = 0;
+    this.dsDvkt = [];
+    this.loadDvkt();
+  }
+
+  closeDvktModal() {
+    this.dvktRequest?.unsubscribe();
+    this.dvktLoading = false;
+    this.showDvktModal = false;
+    this.selectedDvktPatient = null;
+    this.dsDvkt = [];
+    this.dvktPageNumber = 1;
+    this.dvktTotalRecords = 0;
+  }
+
+  loadDvkt() {
+    const maLk = this.selectedDvktPatient?.ma_lk;
+    if (!maLk) {
+      this.addToast('Không tìm thấy mã liên kết của bệnh nhân');
+      return;
+    }
+
+    this.dvktRequest?.unsubscribe();
+    this.dvktLoading = true;
+    this.dsDvkt = [];
+    this.dvktRequest = this.benhNhanService.getDsDvktByMaLk(
+      maLk,
+      this.dvktPageNumber,
+      this.dvktPageSize
+    ).subscribe({
+      next: (res) => {
+        this.dvktTotalRecords = res.totalRecords;
+        this.dvktPageNumber = res.pageIndex;
+        this.dvktPageSize = res.pageSize;
+        this.dsDvkt = res.dsDvkt;
+        this.dvktLoading = false;
+      },
+      error: () => {
+        this.addToast('Không thể tải danh sách dịch vụ kỹ thuật');
+        this.dvktLoading = false;
+      }
+    });
+  }
+
+  onDvktPrev() {
+    if (this.dvktPageNumber > 1) {
+      this.dvktPageNumber--;
+      this.loadDvkt();
+    }
+  }
+
+  onDvktNext() {
+    const maxPage = Math.max(1, Math.ceil(this.dvktTotalRecords / this.dvktPageSize));
+    if (this.dvktPageNumber < maxPage) {
+      this.dvktPageNumber++;
+      this.loadDvkt();
+    }
+  }
+
+  onDvktPageSizeChange(newSize: number) {
+    this.dvktPageSize = Number(newSize);
+    this.dvktPageNumber = 1;
+    this.loadDvkt();
+  }
+
+  dvktRowIndex(i: number) {
+    return (this.dvktPageNumber - 1) * this.dvktPageSize + i + 1;
+  }
+
   // helper hiển thị ngày theo format dd/MM/yyyy
 formatDate(value: any): string {
   if (!value) return '-';
@@ -231,91 +337,137 @@ formatDate(value: any): string {
     return (this.pageNumber - 1) * this.pageSize + i + 1;
   }
 
-  fields = [
-    { key: 'ma_bn', label: 'Mã BN' },
-    { key: 'ho_ten', label: 'Họ tên' },
-    { key: 'gioi_tinh', label: 'Giới tính' },
-    { key: 'ngay_sinh', label: 'Ngày sinh' },
-    { key: 'ma_the_bhyt', label: 'Mã BHYT' },
-    { key: 'dia_chi', label: 'Địa chỉ' },
-    { key: 'ngay_vao', label: 'Ngày vào viện' },
-    { key: 'ngay_ra', label: 'Ngày ra viện' },
-    { key: 'chan_doan_rv', label: 'Chẩn đoán ra viện' },
-    { key: 'ma_lk', label: 'Mã LK' },
-    { key: 'so_cccd', label: 'Số CCCD' },
-    { key: 'nhom_mau', label: 'Nhóm máu' },
-    { key: 'ma_quoctich', label: 'Mã quốc tịch' },
-    { key: 'ma_dantoc', label: 'Mã dân tộc' },
-    { key: 'ma_nghe_nghiep', label: 'Mã nghề nghiệp' },
-    { key: 'matinh_cu_tru', label: 'Mã tỉnh cư trú' },
-    { key: 'mahuyen_cu_tru', label: 'Mã huyện cư trú' },
-    { key: 'maxa_cu_tru', label: 'Mã xã cư trú' },
-    { key: 'dien_thoai', label: 'Điện thoại' },
-    { key: 'ma_dkbd', label: 'Mã ĐKBD' },
-    { key: 'gt_the_tu', label: 'GT thẻ từ' },
-    { key: 'gt_the_den', label: 'GT thẻ đến' },
-    { key: 'ngay_mien_cct', label: 'Ngày miễn CCT' },
-    { key: 'ly_do_vv', label: 'Lý do vào viện' },
-    { key: 'ly_do_vnt', label: 'Lý do VNT' },
-    { key: 'ma_ly_do_vnt', label: 'Mã lý do VNT' },
-    { key: 'chan_doan_vao', label: 'Chẩn đoán vào' },
-    { key: 'ma_benh_chinh', label: 'Mã bệnh chính' },
-    { key: 'ma_benh_kt', label: 'Mã bệnh kèm theo' },
-    { key: 'ma_benh_yhct', label: 'Mã bệnh YHCT' },
-    { key: 'ma_pttt_qt', label: 'Mã PTTT/QT' },
-    { key: 'ma_doituong_kcb', label: 'Mã đối tượng KCB' },
-    { key: 'ma_noi_di', label: 'Mã nơi đi' },
-    { key: 'ma_noi_den', label: 'Mã nơi đến' },
-    { key: 'ma_tai_nan', label: 'Mã tai nạn' },
-    { key: 'ngay_vao_noi_tru', label: 'Ngày vào nội trú' },
-    { key: 'giay_chuyen_tuyen', label: 'Giấy chuyển tuyến' },
-    { key: 'so_ngay_dtri', label: 'Số ngày điều trị' },
-    { key: 'pp_dieu_tri', label: 'PP điều trị' },
-    { key: 'ket_qua_dtri', label: 'Kết quả điều trị' },
-    { key: 'ma_loai_rv', label: 'Mã loại RV' },
-    { key: 'ghi_chu', label: 'Ghi chú' },
-    { key: 'ngay_ttoan', label: 'Ngày t.toán' },
-    { key: 't_thuoc', label: 'T thuốc' },
-    { key: 't_vtyt', label: 'T VTYT' },
-    { key: 't_tongchi_bv', label: 'T tổng chi BV' },
-    { key: 't_tongchi_bh', label: 'T tổng chi BH' },
-    { key: 't_bntt', label: 'T BN TT' },
-    { key: 't_bncct', label: 'T BN CCT' },
-    { key: 't_bhtt', label: 'T BHTT' },
-    { key: 't_nguonkhac', label: 'T nguồn khác' },
-    { key: 't_bhtt_gdv', label: 'T BHTT GDV' },
-    { key: 'nam_qt', label: 'Năm QT' },
-    { key: 'thang_qt', label: 'Tháng QT' },
-    { key: 'ma_loai_kcb', label: 'Mã loại KCB' },
-    { key: 'ma_khoa', label: 'Mã khoa' },
-    { key: 'ma_cskcb', label: 'Mã CSKCB' },
-    { key: 'ma_khuvuc', label: 'Mã khu vực' },
-    { key: 'can_nang', label: 'Cân nặng' },
-    { key: 'can_nang_con', label: 'Cân nặng con' },
-    { key: 'nam_nam_lien_tuc', label: 'Năm năm liên tục' },
-    { key: 'ngay_tai_kham', label: 'Ngày tái khám' },
-    { key: 'ma_hsba', label: 'Mã HSBA' },
-    { key: 'ma_ttdv', label: 'Mã TTDV' },
-    { key: 'du_phong', label: 'Dự phòng' }
+  patientFieldGroups: PatientFieldGroup[] = [
+    {
+      title: 'Thông tin hành chính',
+      icon: 'bi-person-vcard',
+      fields: [
+        { key: 'ma_bn', label: 'Mã BN' },
+        { key: 'ho_ten', label: 'Họ tên', wide: true },
+        { key: 'gioi_tinh', label: 'Giới tính', format: 'gender' },
+        { key: 'ngay_sinh', label: 'Ngày sinh', format: 'date' },
+        { key: 'so_cccd', label: 'Số CCCD' },
+        { key: 'nhom_mau', label: 'Nhóm máu' },
+        { key: 'ma_quoctich', label: 'Mã quốc tịch' },
+        { key: 'ma_dantoc', label: 'Mã dân tộc' },
+        { key: 'ma_nghe_nghiep', label: 'Mã nghề nghiệp' },
+        { key: 'dien_thoai', label: 'Điện thoại' },
+        { key: 'dia_chi', label: 'Địa chỉ', wide: true },
+        { key: 'matinh_cu_tru', label: 'Mã tỉnh cư trú' },
+        { key: 'mahuyen_cu_tru', label: 'Mã huyện cư trú' },
+        { key: 'maxa_cu_tru', label: 'Mã xã cư trú' }
+      ]
+    },
+    {
+      title: 'Thông tin BHYT',
+      icon: 'bi-shield-check',
+      fields: [
+        { key: 'ma_the_bhyt', label: 'Mã BHYT', wide: true },
+        { key: 'ma_dkbd', label: 'Mã ĐKBD' },
+        { key: 'ma_doituong_kcb', label: 'Mã đối tượng KCB' },
+        { key: 'gt_the_tu', label: 'GT thẻ từ', format: 'date' },
+        { key: 'gt_the_den', label: 'GT thẻ đến', format: 'date' },
+        { key: 'ngay_mien_cct', label: 'Ngày miễn CCT', format: 'date' },
+        { key: 'nam_nam_lien_tuc', label: 'Năm năm liên tục' },
+        { key: 'ma_khuvuc', label: 'Mã khu vực' }
+      ]
+    },
+    {
+      title: 'Tiếp nhận và ra viện',
+      icon: 'bi-hospital',
+      fields: [
+        { key: 'ma_lk', label: 'Mã LK' },
+        { key: 'ngay_vao', label: 'Ngày vào viện', format: 'date' },
+        { key: 'ngay_vao_noi_tru', label: 'Ngày vào nội trú', format: 'date' },
+        { key: 'ngay_ra', label: 'Ngày ra viện', format: 'date' },
+        { key: 'ly_do_vv', label: 'Lý do vào viện', wide: true },
+        { key: 'ly_do_vnt', label: 'Lý do VNT', wide: true },
+        { key: 'ma_ly_do_vnt', label: 'Mã lý do VNT' },
+        { key: 'ma_noi_di', label: 'Mã nơi đi' },
+        { key: 'ma_noi_den', label: 'Mã nơi đến' },
+        { key: 'ma_tai_nan', label: 'Mã tai nạn' },
+        { key: 'giay_chuyen_tuyen', label: 'Giấy chuyển tuyến', wide: true },
+        { key: 'ma_loai_kcb', label: 'Mã loại KCB' },
+        { key: 'ma_khoa', label: 'Mã khoa' },
+        { key: 'ma_cskcb', label: 'Mã CSKCB' }
+      ]
+    },
+    {
+      title: 'Chẩn đoán và điều trị',
+      icon: 'bi-clipboard2-pulse',
+      fields: [
+        { key: 'chan_doan_vao', label: 'Chẩn đoán vào', wide: true },
+        { key: 'chan_doan_rv', label: 'Chẩn đoán ra viện', wide: true },
+        { key: 'ma_benh_chinh', label: 'Mã bệnh chính' },
+        { key: 'ma_benh_kt', label: 'Mã bệnh kèm theo' },
+        { key: 'ma_benh_yhct', label: 'Mã bệnh YHCT' },
+        { key: 'ma_pttt_qt', label: 'Mã PTTT/QT' },
+        { key: 'so_ngay_dtri', label: 'Số ngày điều trị' },
+        { key: 'pp_dieu_tri', label: 'PP điều trị', wide: true },
+        { key: 'ket_qua_dtri', label: 'Kết quả điều trị', wide: true },
+        { key: 'ma_loai_rv', label: 'Mã loại RV' },
+        { key: 'ngay_tai_kham', label: 'Ngày tái khám', format: 'date' },
+        { key: 'ghi_chu', label: 'Ghi chú', wide: true }
+      ]
+    },
+    {
+      title: 'Thông tin thanh toán',
+      icon: 'bi-cash-stack',
+      fields: [
+        { key: 'ngay_ttoan', label: 'Ngày thanh toán', format: 'date' },
+        { key: 'nam_qt', label: 'Năm QT' },
+        { key: 'thang_qt', label: 'Tháng QT' },
+        { key: 't_thuoc', label: 'T thuốc', format: 'money' },
+        { key: 't_vtyt', label: 'T VTYT', format: 'money' },
+        { key: 't_tongchi_bv', label: 'T tổng chi BV', format: 'money' },
+        { key: 't_tongchi_bh', label: 'T tổng chi BH', format: 'money' },
+        { key: 't_bntt', label: 'T BN TT', format: 'money' },
+        { key: 't_bncct', label: 'T BN CCT', format: 'money' },
+        { key: 't_bhtt', label: 'T BHTT', format: 'money' },
+        { key: 't_nguonkhac', label: 'T nguồn khác', format: 'money' },
+        { key: 't_bhtt_gdv', label: 'T BHTT GDV', format: 'money' }
+      ]
+    },
+    {
+      title: 'Thông tin bổ sung',
+      icon: 'bi-info-circle',
+      fields: [
+        { key: 'can_nang', label: 'Cân nặng' },
+        { key: 'can_nang_con', label: 'Cân nặng con' },
+        { key: 'ma_hsba', label: 'Mã HSBA' },
+        { key: 'ma_ttdv', label: 'Mã TTDV' },
+        { key: 'du_phong', label: 'Dự phòng', wide: true }
+      ]
+    }
   ];
-  get colSize(): number {
-    return Math.ceil(this.fields.length / 3);
-  }
-  getValue(key: string): string {
-   const val = (this.selectedBN as any)?.[key];
-   if (val === null || val === undefined || val === '') return '-';
-   if (key.toLowerCase().includes('ngay') || key.toLowerCase().includes('gt_the') || key.toLowerCase().includes('gt_the') || key.toLowerCase().includes('nam_nam_lien_tuc')) {
-     return this.formatDate(val);
-   }
-  if (key.toLowerCase().includes('t_')) {
-    const num = Number(val);
-    if (isNaN(num)) return '-';
 
-    return new Intl.NumberFormat('vi-VN', {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(num);
-  }
-   return String(val);
+  getPatientValue(field: PatientField): string {
+    const value = this.selectedBN?.[field.key];
+    if (value === null || value === undefined || value === '') {
+      return '-';
+    }
+
+    if (field.format === 'date') {
+      return this.formatDate(value);
+    }
+
+    if (field.format === 'gender') {
+      const gender = String(value);
+      return gender === '1' ? 'Nam' : gender === '2' ? 'Nữ' : gender;
+    }
+
+    if (field.format === 'money') {
+      const numberValue = Number(value);
+      if (!Number.isFinite(numberValue)) {
+        return '-';
+      }
+
+      return new Intl.NumberFormat('vi-VN', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+      }).format(numberValue);
+    }
+
+    return String(value);
   }
 }

@@ -22,13 +22,13 @@ namespace api.Models
         public decimal? SO_LUONG { get; set; }
         public decimal? DON_GIA_BV { get; set; }
         public decimal? DON_GIA_BH { get; set; }
-        public int? TT_THAU { get; set; }
+        public string? TT_THAU { get; set; }
         public int? TYLE_TT_DV { get; set; }
         public int? TYLE_TT_BH { get; set; }
         public int? THANH_TIEN_BV { get; set; }
         public int? THANH_TIEN_BH { get; set; }
         public int? T_TRANTT { get; set; }
-        public int? MUC_HUONG { get; set; }
+        public string? MUC_HUONG { get; set; }
         public int? T_NGUONKHAC_NSNN { get; set; }
         public int? T_NGUONKHAC_VTNN { get; set; }
         public int? T_NGUONKHAC_VTTN { get; set; }
@@ -55,5 +55,6 @@ namespace api.Models
         public string? TAI_SU_DUNG { get; set; }
         public string? DU_PHONG { get; set; }
         public int? CSYTID { get; set; }
+        public DateTime? VERSION { get; set; }
     }
 }

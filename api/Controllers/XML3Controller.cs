@@ -24,17 +24,20 @@ namespace API.Controllers
         }
         [Authorize]
         [HttpPost("get_ds_dvkt_by_malk")]
-        public async Task<ActionResult<object>> GetDsDvktByMaLk([FromBody] GetDsDvktByMaLkRequest req)
+        public async Task<ActionResult<object>> GetDsDvktByMaLk([FromBody] GetDsDvktByMaLkRequest? req)
         {
-            if (req.MaLk == null)
+            if (req == null)
+            {
+                return BadRequest("Yêu cầu không hợp lệ.");
+            }
+
+            if (string.IsNullOrWhiteSpace(req.MaLk))
             {
                 return BadRequest("Chưa chọn bệnh nhân");
             }
+
             try
             {
-                if (req == null)
-                    return BadRequest("Yêu cầu không hợp lệ.");
-
                 var userName = User.FindFirst(ClaimTypes.Name)?.Value
                     ?? User.FindFirst("USER_NAME")?.Value;
 
@@ -50,17 +53,16 @@ namespace API.Controllers
                 var pageSize = Math.Clamp(req.PageSize, 1, 1000);
                 var offset = (pageNumber - 1) * pageSize;
 
-                var whereBuilder = new System.Text.StringBuilder($" WHERE MA_LK =  {req.MaLk}");
+                var whereBuilder = new System.Text.StringBuilder(" WHERE MA_LK = @maLk");
                 var paramList = new List<DbParameter>();
 
                 var conn = _context.Database.GetDbConnection();
                 using var tempCmd = conn.CreateCommand();
 
-                // var p = tempCmd.CreateParameter();
-                // p.ParameterName = "@malk";
-                // p.Value = req.MaLk;
-                // paramList.Add(p);
-                
+                var maLkParam = tempCmd.CreateParameter();
+                maLkParam.ParameterName = "@maLk";
+                maLkParam.Value = req.MaLk.Trim();
+                paramList.Add(maLkParam);
 
                 if (!string.IsNullOrWhiteSpace(req.SearchTerm) && req.SearchTerm != "All")
                 {
@@ -85,7 +87,7 @@ namespace API.Controllers
                 int totalRecords;
                 using (var cmd = conn.CreateCommand())
                 {
-                    cmd.CommandText = $"SELECT COUNT(*) FROM `{dbData}`.xml3" + whereBuilder.ToString();
+                    cmd.CommandText = $"SELECT CAST(COUNT(*) AS SIGNED) FROM `{dbData}`.xml3" + whereBuilder.ToString();
 
                     cmd.Parameters.Clear();
                     foreach (var p in paramList)
@@ -97,7 +99,7 @@ namespace API.Controllers
                     }
 
                     var scalar = await cmd.ExecuteScalarAsync();
-                    totalRecords = Convert.ToInt32(scalar ?? 0);
+                    totalRecords = int.TryParse(scalar?.ToString(), out int result) ? result : 0;
                 }
 
                 return Ok(new
