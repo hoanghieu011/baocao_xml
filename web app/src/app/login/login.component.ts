@@ -19,6 +19,8 @@ export class LoginComponent implements OnInit {
   loginFalse: boolean = false;
   connectFalse: boolean = false;
   hidePassword: boolean = true;
+  isSubmitting: boolean = false;
+  currentLanguage: string = 'vi';
 
   captchaText: string = '';
   userCaptcha: string = '';
@@ -29,12 +31,14 @@ export class LoginComponent implements OnInit {
     this.generateCaptcha();
     this.translate.setDefaultLang('vi'); 
     const savedLang = localStorage.getItem('language') || 'vi';
+    this.currentLanguage = savedLang;
     this.translate.use(savedLang);
   }
   togglePasswordVisibility() {
     this.hidePassword = !this.hidePassword;
   }
   switchLanguage(lang: string) {
+    this.currentLanguage = lang;
     this.translate.use(lang);
     localStorage.setItem('language', lang);
   }
@@ -108,8 +112,10 @@ export class LoginComponent implements OnInit {
       this.connectFalse = false;
       return;
     }
+    this.isSubmitting = true;
     this.authService.login(this.user_name, this.password).subscribe(
       (isLoggedIn: boolean) => {
+        this.isSubmitting = false;
         if (isLoggedIn) {
           // localStorage.setItem('full_name')
           localStorage.setItem('user_name', this.user_name);
@@ -126,6 +132,7 @@ export class LoginComponent implements OnInit {
         }
       },
       (error) => {
+        this.isSubmitting = false;
         this.refreshCaptcha();
         if (error.status === 401) {
           this.loginFalse = true;

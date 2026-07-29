@@ -1,81 +1,188 @@
-<!DOCTYPE html>
-<html lang="vi">
+<div class="login-page">
+  <div class="login-decoration login-decoration-one" aria-hidden="true"></div>
+  <div class="login-decoration login-decoration-two" aria-hidden="true"></div>
 
-<head>
-    <title>Đăng nhập - Hệ thống quản lý báo cáo</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <meta name="keywords" content="Hệ thống quản lý nghỉ phép">
-    <script type="application/x-javascript">
-        addEventListener("load", function () {
-            setTimeout(hideURLbar, 0);
-        }, false);
-        function hideURLbar() {
-            window.scrollTo(0, 1);
-        }
-    </script>
-    <!-- <link href="https://fonts.googleapis.com/css?family=Raleway:100,200,300,400,500,600,700,800,900" rel="stylesheet"> -->
-    <link href="https://fonts.googleapis.com/css?family=Monoton" rel="stylesheet">
-</head>
-
-<body>
-    <div class="header-container">
-        <div class="language-switcher">
-            <button (click)="switchLanguage('vi')" style="color: #3970b0;">🇻🇳 VN</button>
-            <button (click)="switchLanguage('en')" style="color: #3970b0;">🇺🇸 EN</button>
-            <!-- <button (click)="switchLanguage('ja')">🇯🇵 JP</button> -->
-        </div>
+  <header class="login-topbar">
+    <div class="language-switcher" aria-label="Chọn ngôn ngữ">
+      <button
+        type="button"
+        [class.active]="currentLanguage === 'vi'"
+        (click)="switchLanguage('vi')"
+      >
+        <span aria-hidden="true">🇻🇳</span>
+        VN
+      </button>
+      <button
+        type="button"
+        [class.active]="currentLanguage === 'en'"
+        (click)="switchLanguage('vi')"
+      >
+        <span aria-hidden="true">🇺🇸</span>
+        EN
+      </button>
     </div>
-    <h1 class="w3ls" style="color: #3970b0;">{{ 'TITLE' | translate }}</h1>
-    <div class="content-w3ls">
-        <div class="content-agile1">
-            <!-- <img src="assets/images/logo-home-dark.png" alt="Logo" class="logo"> -->
+  </header>
+
+  <main class="login-shell">
+    <section class="login-brand-panel">
+      <div class="login-brand-content">
+        <span class="login-brand-badge">
+          <i class="bi bi-hospital" aria-hidden="true"></i>
+          VNPT Ninh Bình
+        </span>
+        <h1>{{ 'TITLE' | translate }}</h1>
+        <p>
+          Nền tảng quản lý tập trung giúp theo dõi dữ liệu, vận hành nghiệp vụ
+          và tổng hợp báo cáo nhanh chóng.
+        </p>
+
+        <div class="login-benefits">
+          <div class="login-benefit">
+            <span><i class="bi bi-grid-1x2-fill" aria-hidden="true"></i></span>
+            <div>
+              <strong>Quản lý tập trung</strong>
+              <small>Thông tin được tổ chức rõ ràng và nhất quán</small>
+            </div>
+          </div>
+          <div class="login-benefit">
+            <span><i class="bi bi-bar-chart-fill" aria-hidden="true"></i></span>
+            <div>
+              <strong>Báo cáo trực quan</strong>
+              <small>Tra cứu và tổng hợp dữ liệu thuận tiện</small>
+            </div>
+          </div>
+          <div class="login-benefit">
+            <span><i class="bi bi-shield-check" aria-hidden="true"></i></span>
+            <div>
+              <strong>Vận hành tin cậy</strong>
+              <small>Phân quyền truy cập theo từng vai trò</small>
+            </div>
+          </div>
         </div>
-        <div class="content-agile2">
-            <img src="assets/images/logo-home.png" alt="Logo" class="logo">
-            <form (ngSubmit)="onSubmit()">
+      </div>
+    </section>
 
-                <div class="form-control-1 w3layouts">
-                    <input type="text" id="firstname" [(ngModel)]="user_name" name="user_name"
-                        placeholder="{{ 'EMPLOYEE_ID' | translate }}" required>
-                </div>
-                <div class="form-control-1 agileinfo">
-                    <div class="captcha-container">
-                        <input [type]="hidePassword ? 'password' : 'text'" class="lock" name="password" id="password1"
-                            [(ngModel)]="password" placeholder="{{ 'PASSWORD' | translate }}" required>
-                        <i class="bi bi-eye-slash"
-                            (click)="togglePasswordVisibility()"
-                            style="cursor: pointer; color: #3970b0; margin-left: -33px;"></i>
-                    </div>
-                </div>
+    <section class="login-form-panel">
+      <div class="login-logo-wrap">
+        <img src="assets/images/logo-home.png" alt="VNPT Ninh Bình" class="login-logo">
+      </div>
 
+      <div class="login-heading">
+        <!-- <span class="login-eyebrow">Chào mừng trở lại</span> -->
+        <!-- <h2>{{ 'LOGIN' | translate }}</h2> -->
+        <p>Vui lòng nhập thông tin tài khoản để tiếp tục.</p>
+      </div>
 
-                <div class="form-control-1 agileinfo">
-                    <div class="captcha-container">
-                        <input type="text" id="cap" [(ngModel)]="userCaptcha" name="captcha"
-                            placeholder="{{ 'CAPTCHA' | translate }}" required class="captcha-input">
-                        <img [src]="captchaImage" alt="Captcha" class="captcha-image">
-                    </div>
-                </div>
-                <div *ngIf="!captchaValid" class="invalid-feedback">{{ 'INVALID_CAPTCHA' | translate }}</div>
-                <div *ngIf="loginFalse" class="invalid-feedback">{{ 'INVALID_LOGIN' | translate }}</div>
-                <div *ngIf="connectFalse" class="invalid-feedback">{{ 'SERVER_ERROR' | translate }}</div>
-
-                <div class="form-check">
-                    <input type="checkbox" id="rememberMe" [(ngModel)]="rememberMe" name="rememberMe">
-                    <label style="color: #3970b0;" for="rememberMe">{{ 'REMEMBER_ME' | translate }}</label>
-                </div>
-
-                <input type="submit" class="register" value="{{ 'LOGIN' | translate }}">
-            </form>
+      <form class="login-form" (ngSubmit)="onSubmit()">
+        <div class="login-field">
+          <label for="loginUsername">{{ 'EMPLOYEE_ID' | translate }}</label>
+          <div class="login-input-wrap">
+            <i class="bi bi-person" aria-hidden="true"></i>
+            <input
+              id="loginUsername"
+              type="text"
+              [(ngModel)]="user_name"
+              name="user_name"
+              [placeholder]="'EMPLOYEE_ID' | translate"
+              autocomplete="username"
+              required
+            >
+          </div>
         </div>
-        <div class="clear"></div>
-    </div>
 
-    <p class="copyright w3l" style="color: #3970b0;">
-        {{'DESIGNED_&_OPERATED' | translate}} <a href="https://ninhbinh.vnpt.vn/" target="_blank">VNPT Ninh Bình</a> &copy;
-        2026
-    </p>
-</body>
+        <div class="login-field">
+          <label for="loginPassword">{{ 'PASSWORD' | translate }}</label>
+          <div class="login-input-wrap">
+            <i class="bi bi-lock" aria-hidden="true"></i>
+            <input
+              id="loginPassword"
+              [type]="hidePassword ? 'password' : 'text'"
+              [(ngModel)]="password"
+              name="password"
+              [placeholder]="'PASSWORD' | translate"
+              autocomplete="current-password"
+              required
+            >
+            <button
+              type="button"
+              class="password-toggle"
+              [attr.aria-label]="hidePassword ? 'Hiện mật khẩu' : 'Ẩn mật khẩu'"
+              (click)="togglePasswordVisibility()"
+            >
+              <i class="bi" [ngClass]="hidePassword ? 'bi-eye' : 'bi-eye-slash'" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>
 
-</html>
+        <div class="login-field">
+          <label for="loginCaptcha">{{ 'CAPTCHA' | translate }}</label>
+          <div class="captcha-row">
+            <div class="login-input-wrap">
+              <i class="bi bi-key" aria-hidden="true"></i>
+              <input
+                id="loginCaptcha"
+                type="text"
+                [(ngModel)]="userCaptcha"
+                name="captcha"
+                [placeholder]="'CAPTCHA' | translate"
+                autocomplete="off"
+                required
+              >
+            </div>
+            <button
+              type="button"
+              class="captcha-preview"
+              title="Tạo mã captcha mới"
+              aria-label="Tạo mã captcha mới"
+              (click)="refreshCaptcha()"
+            >
+              <img [src]="captchaImage" alt="Captcha">
+              <i class="bi bi-arrow-clockwise" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="login-message login-message-error" *ngIf="!captchaValid">
+          <i class="bi bi-exclamation-circle" aria-hidden="true"></i>
+          {{ 'INVALID_CAPTCHA' | translate }}
+        </div>
+        <div class="login-message login-message-error" *ngIf="loginFalse">
+          <i class="bi bi-exclamation-circle" aria-hidden="true"></i>
+          {{ 'INVALID_LOGIN' | translate }}
+        </div>
+        <div class="login-message login-message-error" *ngIf="connectFalse">
+          <i class="bi bi-wifi-off" aria-hidden="true"></i>
+          {{ 'SERVER_ERROR' | translate }}
+        </div>
+
+        <div class="login-options">
+          <label class="remember-option" for="rememberMe">
+            <input
+              id="rememberMe"
+              type="checkbox"
+              [(ngModel)]="rememberMe"
+              name="rememberMe"
+            >
+            <span>{{ 'REMEMBER_ME' | translate }}</span>
+          </label>
+        </div>
+
+        <button type="submit" class="login-submit" [disabled]="isSubmitting">
+          <span *ngIf="!isSubmitting">{{ 'LOGIN' | translate }}</span>
+          <span *ngIf="isSubmitting" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+        </button>
+      </form>
+
+      <div class="login-security-note">
+        <i class="bi bi-shield-lock" aria-hidden="true"></i>
+        <span>Phiên đăng nhập được bảo vệ theo quyền truy cập của tài khoản.</span>
+      </div>
+    </section>
+  </main>
+
+  <footer class="login-footer">
+    {{ 'DESIGNED_&_OPERATED' | translate }}
+    <a href="https://ninhbinh.vnpt.vn/" target="_blank" rel="noopener noreferrer">VNPT Ninh Bình</a>
+    <span>&copy; 2026</span>
+  </footer>
+</div>
