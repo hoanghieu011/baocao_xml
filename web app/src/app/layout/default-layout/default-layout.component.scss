@@ -1,52 +1,180 @@
 :host {
-  .ng-scrollbar {
-    --scrollbar-padding: 1px;
-    --scrollbar-size: 5px;
-    --scrollbar-thumb-color: var(--cui-gray-500, #999);
-    --scrollbar-thumb-hover-color: var(--cui-gray-400, #999);
-    --scrollbar-hover-size: calc(var(--scrollbar-size) * 1.5);
-  }
+  display: block;
 }
 
-:host ::ng-deep .sidebar .nav-link,
-:host ::ng-deep .sidebar .nav-group-toggle {
-  white-space: normal !important;
-  overflow: visible !important;
-  text-overflow: unset !important;
-  line-height: 1.4;
-  height: auto !important;
+:host .ng-scrollbar {
+  --scrollbar-hover-size: 7px;
+  --scrollbar-padding: 2px;
+  --scrollbar-size: 5px;
+  --scrollbar-thumb-color: rgba(255, 255, 255, 0.28);
+  --scrollbar-thumb-hover-color: rgba(255, 255, 255, 0.5);
+}
 
+.app-sidebar {
+  --cui-sidebar-width: 310px;
+  background:
+    radial-gradient(circle at top left, rgba(47, 128, 237, 0.32), transparent 16rem),
+    linear-gradient(180deg, #063b8b 0%, #052f6f 55%, #042657 100%);
+  border: 0;
+  box-shadow: 8px 0 26px rgba(15, 35, 65, 0.14);
+}
+
+.app-sidebar-header {
+  background: #fff;
+  border: 0;
+  box-shadow: 0 1px 0 rgba(18, 42, 77, 0.1);
+  min-height: 78px;
+  padding: 0.65rem 1rem;
+}
+
+.app-sidebar-brand {
+  align-items: center;
   display: flex;
-  align-items: flex-start;
-  gap: 8px;
+  justify-content: center;
+  width: 100%;
 }
 
-:host ::ng-deep .sidebar .nav-icon {
-  flex-shrink: 0;
+.app-sidebar-logo {
+  height: auto;
+  max-height: 54px;
+  max-width: 250px;
+  object-fit: contain;
+  width: 100%;
 }
 
-:host ::ng-deep .sidebar .nav-link span,
-:host ::ng-deep .sidebar .nav-group-toggle span {
+.app-sidebar-scroll {
+  padding-block: 0.6rem;
+}
+
+.app-sidebar-nav {
+  gap: 0.35rem;
+  padding-bottom: 0.75rem;
+}
+
+:host ::ng-deep .app-sidebar .sidebar-nav {
+  padding-inline: 0.55rem;
+}
+
+:host ::ng-deep .app-sidebar .nav-link,
+:host ::ng-deep .app-sidebar .nav-group-toggle {
+  align-items: center;
+  border: 1px solid transparent;
+  border-radius: 0.55rem;
+  color: rgba(255, 255, 255, 0.82);
+  display: flex;
+  font-size: 0.86rem;
+  font-weight: 500;
+  gap: 0.65rem;
+  height: auto !important;
+  line-height: 1.35;
+  margin-block: 0.12rem;
+  min-height: 42px;
+  overflow: visible !important;
+  padding: 0.62rem 0.75rem;
+  text-overflow: unset !important;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
+  white-space: normal !important;
+}
+
+:host ::ng-deep .app-sidebar .nav-link:hover,
+:host ::ng-deep .app-sidebar .nav-group-toggle:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  transform: translateX(2px);
+}
+
+:host ::ng-deep .app-sidebar .nav-link.active {
+  background: #fff;
+  border-color: #fff;
+  box-shadow: 0 5px 16px rgba(2, 24, 57, 0.22);
+  color: #063b8b;
+  font-weight: 700;
+}
+
+:host ::ng-deep .app-sidebar .nav-group.show > .nav-group-toggle {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+:host ::ng-deep .app-sidebar .nav-group-items {
+  margin-left: 0.5rem;
+  padding-left: 0.45rem;
+  position: relative;
+}
+
+:host ::ng-deep .app-sidebar .nav-group-items::before {
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: 1px;
+  bottom: 0.35rem;
+  content: "";
+  left: 0;
+  position: absolute;
+  top: 0.35rem;
+  width: 2px;
+}
+
+:host ::ng-deep .app-sidebar .nav-icon {
+  color: currentColor;
+  flex: 0 0 1.15rem;
+  height: 1.15rem;
+  margin: 0 !important;
+  width: 1.15rem;
+}
+
+:host ::ng-deep .app-sidebar .nav-link span,
+:host ::ng-deep .app-sidebar .nav-group-toggle span {
   display: inline-block;
+  overflow-wrap: anywhere;
   white-space: normal;
-  word-break: break-word;
 }
 
-// chỉnh kích thước slidebar
-.sidebar {
-  --cui-sidebar-width: 330px;
+.app-shell {
+  background: transparent;
+  padding-left: 310px;
+  transition: padding-left 180ms ease;
 }
 
-.wrapper {
-  padding-left: 330px;
-}
-
-.sidebar:not(.show) ~ .wrapper {
+.sidebar:not(.show) ~ .app-shell {
   padding-left: 0;
 }
 
-@media (max-width: 991px) {
-  .wrapper {
+.app-header {
+  z-index: 1025;
+}
+
+.app-main {
+  padding-block: 1rem 1.5rem;
+}
+
+.app-content {
+  padding-inline: clamp(0.9rem, 2vw, 1.5rem);
+}
+
+.app-footer {
+  margin-top: auto;
+}
+
+@media (max-width: 991.98px) {
+  .app-shell {
     padding-left: 0;
+  }
+
+  .app-sidebar {
+    box-shadow: 12px 0 35px rgba(15, 35, 65, 0.24);
+  }
+}
+
+@media (max-width: 575.98px) {
+  .app-main {
+    padding-block: 0.75rem 1rem;
+  }
+
+  .app-content {
+    padding-inline: 0.65rem;
   }
 }

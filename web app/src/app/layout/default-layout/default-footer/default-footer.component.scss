@@ -1,0 +1,54 @@
+:host {
+  background: rgba(255, 255, 255, 0.86);
+  border-top: 1px solid #dfe5ee;
+  color: #68758a;
+  display: block;
+  font-size: 0.78rem;
+  padding: 0.8rem clamp(1rem, 2vw, 1.5rem);
+}
+
+.footer-content,
+.footer-brand {
+  align-items: center;
+  display: flex;
+}
+
+.footer-content {
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+.footer-brand {
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.footer-mark {
+  background: linear-gradient(180deg, #063b8b, #0d6efd);
+  border-radius: 50%;
+  height: 8px;
+  margin-right: 0.2rem;
+  width: 8px;
+}
+
+a {
+  color: #063b8b;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+a:hover {
+  color: #0d6efd;
+}
+
+.footer-year {
+  white-space: nowrap;
+}
+
+@media (max-width: 575.98px) {
+  .footer-content {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+}

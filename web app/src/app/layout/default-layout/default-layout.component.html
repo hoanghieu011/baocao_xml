@@ -1,16 +1,16 @@
 <!--sidebar-->
-<c-sidebar #sidebar1="cSidebar" class="d-print-none sidebar sidebar-fixed border-end" colorScheme="light" id="sidebar1"
+<c-sidebar #sidebar1="cSidebar" class="d-print-none sidebar sidebar-fixed app-sidebar" colorScheme="dark" id="sidebar1"
   visible>
-  <c-sidebar-header class="border-bottom">
-    <c-sidebar-brand [routerLink]="[]">
-      <img src="assets/images/logo-home.png" alt="Logo" style="width: 265px; height: auto;" />
+  <c-sidebar-header class="app-sidebar-header">
+    <c-sidebar-brand [routerLink]="[]" class="app-sidebar-brand">
+      <img src="assets/images/logo-home.png" alt="Logo" class="app-sidebar-logo" />
       <svg cIcon class="sidebar-brand-narrow" height="32" name="signet" title="Logo"></svg>
     </c-sidebar-brand>
   </c-sidebar-header>
 
-  <ng-scrollbar #scrollbar="ngScrollbar" (updated)="onScrollbarUpdate(scrollbar.state)" class="overflow"
+  <ng-scrollbar #scrollbar="ngScrollbar" (updated)="onScrollbarUpdate(scrollbar.state)" class="overflow app-sidebar-scroll"
     pointerEventsMethod="scrollbar" visibility="hover">
-    <div class="col">
+    <div class="col app-sidebar-nav">
       <c-sidebar-nav #overflow [navItems]="navItems" dropdownMode="close" compact />
       <c-sidebar-nav #overflow [navItems]="navItems1" dropdownMode="close" compact (click)="logout()" />
     </div>
@@ -24,16 +24,16 @@
 </c-sidebar>
 
 <!--main-->
-<div class="wrapper d-flex flex-column min-vh-100">
+<div class="wrapper app-shell d-flex flex-column min-vh-100">
   <!--app-header-->
-  <app-default-header [cShadowOnScroll]="'sm'" class="mb-4 d-print-none header header-sticky p-0 shadow-sm"
+  <app-default-header [cShadowOnScroll]="'sm'" class="d-print-none header header-sticky app-header p-0"
     position="sticky" sidebarId="sidebar1" />
   <!--app-body-->
-  <div class="body flex-grow-1">
-    <c-container breakpoint="lg" class="h-auto px-4">
+  <div class="body app-main flex-grow-1">
+    <c-container breakpoint="lg" class="app-content h-auto">
       <router-outlet />
     </c-container>
   </div>
   <!--app footer-->
-  <app-default-footer />
+  <app-default-footer class="app-footer" />
 </div>
