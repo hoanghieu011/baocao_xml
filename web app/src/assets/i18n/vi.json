@@ -240,11 +240,12 @@
   "DIEM_KE_HOACH" : {
     "LAY_MAU_XN": "Lấy mẫu xét nghiệm",
     "BN_NHAP_VIEN_NG": "Bệnh nhân nhập viện NG",
-    "DIEM_TANG_CUONG": "Tăng cường"
+    "DIEM_TANG_CUONG": "Tăng cường",
+    "SO_BN_NHAPVIEN_NGOAIGIO": "Số BN Nhập viện ngoài giờ"
   },
   "BC_DIEM_CTKH": {
     "KHOA_BAC_SY": "Khoa, bác sỹ",
-    "DIEM_TH_CLS":"Điểm thực hiện CLS",
+    "DIEM_TH_CLS": "Điểm thực hiện CLS",
     "DIEU_DUONG": "Điều dưỡng",
     "DIEM_KE_HOACH": "Điểm kế hoạch",
     "DIEM_TH_THEO_BS": "Điểm T.H tại khoa theo Bs, Dược (phát thuốc)",
@@ -262,7 +263,7 @@
     "DIEM_CD_KHAM": "Điểm CĐ Khám, điều trị, phát thuốc (Dược)",
     "DIEM_CD_NHAPVIEN": "Điểm CĐ nhập viện, Dược(hc)",
     "PTT": "Phẫu, thủ thuật",
-    "DIEM_TANGCUONG": "Điểm BH/ĐT; Tăng cường", 
+    "DIEM_TANGCUONG": "Điểm BH/ĐT; Tăng cường",
     "DIEM_TRUC": "Trực",
     "SO_BUOI_TRUC": "Số buổi trực",
     "DIEM_CONG_BANT": "Điểm cộng BA ngoại trú; TH siêu âm, Dược",
@@ -278,6 +279,7 @@
     "CD_NHAP_VIEN": "CĐ nhập viện",
     "DIEM_KH": "Điểm K.H",
     "TONG_DIEM_TH": "Tổng điểm T.H",
-    "DAT_CTKH": "Đạt CTKH"
+    "DAT_CTKH": "Đạt CTKH",
+    "NHAP_VIEN_NGOAI_GIO": "Nhập viện ngoài giờ x2"
   }
 }

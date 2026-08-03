@@ -48,6 +48,9 @@ namespace API.Models
         public decimal? DiemTangCuong { get; set; } = 0;
         [Column("SONGAYTANGCUONG")]
         public decimal? SoNgayTangCuong { get; set; } = 0;
+
+        [Column("SO_BN_NHAPVIEN_NGOAIGIO")]
+        public decimal? SoBnNhapVienNgoaiGio { get; set; } = 0;
         /// <summary>
         /// Điểm trực
         /// </summary>

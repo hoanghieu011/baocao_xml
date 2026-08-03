@@ -31,6 +31,8 @@ namespace API.Models
         public int? thangNam  { get; set; }
         [Column("OFFICER_TYPE")]
         public int? officerType  { get; set; }
+        [Column("SO_BN_NHAPVIEN_NGOAIGIO")]
+        public int? soBnNhapVienNgoaiGio { get; set; }
         //[Column("NGAYTAO")]
         //public DateTime? ngayTao { get; set; }
     }

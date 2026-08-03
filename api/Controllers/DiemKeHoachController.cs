@@ -65,7 +65,7 @@ namespace API.Controllers
                     (req.ThangNam != null ? $" AND THANGNAM = {req.ThangNam} " : "") +
                     (req.KhoaId != null ? $" AND KHOAID={req.KhoaId} " : "");
 
-                var sql = $"SELECT ifnull(t2.DIEMKEHOACHID, 0) DIEMKEHOACHID, ifnull(t2.DIEM_KEHOACH, 0) DIEM_KEHOACH, ifnull(t2.SO_BUOITRUC, 0) SO_BUOITRUC, ifnull(t2.SO_BENHNHAN, 0) SO_BENHNHAN, ifnull(t2.DIEM_TRUC, 0) DIEM_TRUC, ifnull(t2.DIEM_TRUC_CC, 0) DIEM_TRUC_CC, ifnull(t2.DIEM_LAYMAU, 0) DIEM_LAYMAU, ifnull(t2.THANGNAM, 0) THANGNAM, ifnull(t2.DIEMTANGCUONG, 0) DIEMTANGCUONG ,b.OFFICER_TYPE, org.ORG_NAME KHOA, b.OFFICER_NAME, `b`.`BACSIID`, t2.KHOAID FROM " +
+                var sql = $"SELECT ifnull(t2.DIEMKEHOACHID, 0) DIEMKEHOACHID, ifnull(t2.DIEM_KEHOACH, 0) DIEM_KEHOACH, ifnull(t2.SO_BUOITRUC, 0) SO_BUOITRUC, ifnull(t2.SO_BN_NHAPVIEN_NGOAIGIO, 0) SO_BN_NHAPVIEN_NGOAIGIO, ifnull(t2.SO_BENHNHAN, 0) SO_BENHNHAN, ifnull(t2.DIEM_TRUC, 0) DIEM_TRUC, ifnull(t2.DIEM_TRUC_CC, 0) DIEM_TRUC_CC, ifnull(t2.DIEM_LAYMAU, 0) DIEM_LAYMAU, ifnull(t2.THANGNAM, 0) THANGNAM, ifnull(t2.DIEMTANGCUONG, 0) DIEMTANGCUONG ,b.OFFICER_TYPE, org.ORG_NAME KHOA, b.OFFICER_NAME, `b`.`BACSIID`, t2.KHOAID FROM " +
                     " (" + sql2 + ") t2 " +
                     $"LEFT JOIN his_common.org_officer b ON b.BACSIID = t2.BACSIID " +
                     $"LEFT JOIN his_common.org_organization org ON org.ORG_ID = t2.KHOAID WHERE 1=1 ";
@@ -231,7 +231,7 @@ namespace API.Controllers
                 using var cmd = conn.CreateCommand();
                 cmd.CommandText = $"UPDATE `{dbData}`.bc_diemkehoach " 
                     + " SET DIEM_KEHOACH = @DIEM_KEHOACH, SO_BUOITRUC = @SO_BUOITRUC, SO_BENHNHAN = @SO_BENHNHAN, "
-                    + " DIEM_TRUC = @DIEM_TRUC, DIEM_TRUC_CC = @DIEM_TRUC_CC, DIEM_LAYMAU = @DIEM_LAYMAU "
+                    + " DIEM_TRUC = @DIEM_TRUC, DIEM_TRUC_CC = @DIEM_TRUC_CC, DIEM_LAYMAU = @DIEM_LAYMAU , SO_BN_NHAPVIEN_NGOAIGIO = @SO_BN_NHAPVIEN_NGOAIGIO"
                     + " WHERE DIEMKEHOACHID = @DIEMKEHOACHID";
 
                 var p1 = cmd.CreateParameter();
@@ -274,6 +274,11 @@ namespace API.Controllers
                 p7.ParameterName = "@DIEMKEHOACHID";
                 p7.Value = req.DiemKeHoachId;
                 cmd.Parameters.Add(p7);
+
+                var p8 = cmd.CreateParameter();
+                p8.ParameterName = "@SO_BN_NHAPVIEN_NGOAIGIO";
+                p8.Value = req.SoBnNhapVienNgoaiGio;
+                cmd.Parameters.Add(p8);
 
                 var affectedRows = await cmd.ExecuteNonQueryAsync();
 
@@ -319,8 +324,8 @@ namespace API.Controllers
                     await conn.OpenAsync();
 
                 using var cmd = conn.CreateCommand();
-                cmd.CommandText = $"INSERT INTO `{dbData}`.bc_diemkehoach (KHOAID, BACSIID, BACSI, DIEM_KEHOACH, SO_BUOITRUC, SO_BENHNHAN, DIEM_TRUC, DIEM_TRUC_CC, DIEM_LAYMAU, THANGNAM, NGAYTAO)" +
-                    "VALUES(@khoaId, @bacSiId, @bacSi, @diemKeHoach, @soBuoiTruc, @soBenhNhan, @diemTruc, @diemTrucCc, @diemLaymau, @thangNam, @ngayTao); SELECT LAST_INSERT_ID();";
+                cmd.CommandText = $"INSERT INTO `{dbData}`.bc_diemkehoach (KHOAID, BACSIID, BACSI, DIEM_KEHOACH, SO_BN_NHAPVIEN_NGOAIGIO ,SO_BUOITRUC, SO_BENHNHAN, DIEM_TRUC, DIEM_TRUC_CC, DIEM_LAYMAU, THANGNAM, NGAYTAO)" +
+                    "VALUES(@khoaId, @bacSiId, @bacSi, @diemKeHoach, @soBnNhapVienNgoaiGio, @soBuoiTruc, @soBenhNhan, @diemTruc, @diemTrucCc, @diemLaymau, @thangNam, @ngayTao); SELECT LAST_INSERT_ID();";
 
                 var p1 = cmd.CreateParameter();
                 p1.ParameterName = "@khoaId";
@@ -376,6 +381,11 @@ namespace API.Controllers
                 p11.ParameterName = "@ngayTao";
                 p11.Value = DateOnly.FromDateTime(DateTime.Now);
                 cmd.Parameters.Add(p11);
+
+                var p12 = cmd.CreateParameter();
+                p12.ParameterName = "@soBnNhapVienNgoaiGio";
+                p12.Value = req.SoBnNhapVienNgoaiGio;
+                cmd.Parameters.Add(p12);
 
                 int newId = Convert.ToInt16( await cmd.ExecuteScalarAsync());
                 
@@ -451,6 +461,7 @@ namespace API.Controllers
         public decimal? SoBuoiTruc { get; set; }
         public int? SoBenhNhan { get; set; }
         public int? OfficerType { get; set; }
+        public int? SoBnNhapVienNgoaiGio { get; set; }
         public decimal? DiemTrucCc { get; set; }
         public decimal? DiemLayMau { get; set; }
     }
@@ -467,6 +478,7 @@ namespace API.Controllers
         public decimal? DiemKeHoach { get; set; }
         public decimal? SoBuoiTruc { get; set; }
         public int? SoBenhNhan { get; set; }
+        public int? SoBnNhapVienNgoaiGio { get; set; }
         public decimal? DiemTruc { get; set; }
         public decimal? DiemTrucCc { get; set; }
         public decimal? DiemLayMau { get; set; }
