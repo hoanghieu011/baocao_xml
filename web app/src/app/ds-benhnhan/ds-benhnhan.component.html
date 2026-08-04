@@ -67,6 +67,7 @@
           <th>Ngày ra viện</th>
           <th>Chẩn đoán ra viện</th>
           <th>DVKT</th>
+          <th>Thuốc</th>
         </tr>
       </thead>
 
@@ -100,6 +101,18 @@
               [attr.aria-label]="'Xem dịch vụ kỹ thuật của ' + (bn.ho_ten || 'bệnh nhân')"
               [disabled]="!bn.ma_lk"
               (click)="openDvktModal(bn)"
+            >
+              <i class="bi bi-eye" aria-hidden="true"></i>
+            </button>
+          </td>
+          <td class="text-center">
+            <button
+              type="button"
+              class="btn btn-outline-primary btn-sm thuoc-detail-button"
+              title="Xem thuốc"
+              [attr.aria-label]="'Xem thuốc của ' + (bn.ho_ten || 'bệnh nhân')"
+              [disabled]="!bn.ma_lk"
+              (click)="openThuocModal(bn)"
             >
               <i class="bi bi-eye" aria-hidden="true"></i>
             </button>
@@ -238,6 +251,119 @@
              </select>
            </div>
            <button type="button" class="btn btn-secondary" (click)="closeDvktModal()">Đóng</button>
+         </div>
+       </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" *ngIf="showThuocModal">
+  <div class="modal-card thuoc-modal-card">
+       <div class="modal-header">
+         <h5 class="modal-title">
+           Thuốc - {{ selectedThuocPatient?.ho_ten || selectedThuocPatient?.ma_bn }}
+         </h5>
+         <button type="button" class="btn-close" aria-label="Đóng" (click)="closeThuocModal()"></button>
+       </div>
+
+       <div class="modal-body">
+         <div class="table-responsive thuoc-table-wrapper">
+           <table class="table table-bordered table-hover table-striped table-sm mb-0 thuoc-table">
+             <colgroup>
+               <col class="thuoc-col-stt" />
+               <col class="thuoc-col-name" />
+               <col class="thuoc-col-quantity" />
+               <col class="thuoc-col-money" span="5" />
+               <col class="thuoc-col-percent" />
+             </colgroup>
+             <thead class="table-primary text-center align-middle">
+               <tr>
+                 <th>STT</th>
+                 <th>Tên thuốc</th>
+                 <th>Đơn vị tính</th>
+                 <th>Hàm lượng</th>
+                 <th>Đường dùng</th>
+                 <th>Dạng bào chế</th>
+                 <th>Số lượng</th>
+                 <th>Giá tiền</th>
+                 <th>Giá BH</th>
+                 <th>BHYT trả</th>
+                 <th>BNCCT</th>
+                 <th>BN trả</th>
+                 <th>TL %</th>
+                 <!-- <th>% mg</th>
+                 <th>Miễn giảm</th>
+                 <th>VAT</th> -->
+               </tr>
+             </thead>
+             <tbody>
+               <tr *ngIf="thuocLoading" class="thuoc-state-row">
+                 <td colspan="9" class="text-center py-4">
+                   <span class="spinner-border spinner-border-sm text-primary me-2" role="status" aria-hidden="true"></span>
+                   Đang tải dữ liệu
+                 </td>
+               </tr>
+
+               <tr *ngFor="let thuoc of dsThuoc; let i = index">
+                 <td class="text-center" data-label="STT">{{ thuoc.stt !== null ? thuoc.stt : thuocRowIndex(i) }}</td>
+                 <td data-label="Tên thuốc">{{ thuoc.tenThuoc || '-' }}</td>
+                 <td data-label="Đơn vị tính">{{ thuoc.donViTinh || '-' }}</td>
+                 <td data-label="Hàm lượng">{{ thuoc.hamLuong || '-' }}</td>
+                 <td data-label="Đường dùng">{{ thuoc.duongDung || '-' }}</td>
+                 <td data-label="Dạng bào chế">{{ thuoc.dangBaoChe || '-' }}</td>
+                 <td class="text-end" data-label="Số lượng">{{ thuoc.soLuong !== null ? (thuoc.soLuong | number:'1.0-2') : '-' }}</td>
+                 <td class="text-end" data-label="Giá tiền">{{ thuoc.donGia !== null ? (thuoc.donGia | number:'1.0-2') : '-' }}</td>
+                 <td class="text-end" data-label="Giá BH">{{ thuoc.thanhTienBh !== null ? (thuoc.thanhTienBh | number:'1.0-2') : '-' }}</td>
+                 <td class="text-end" data-label="BHYT trả">{{ thuoc.bhytTra !== null ? (thuoc.bhytTra | number:'1.0-2') : '-' }}</td>
+                 <td class="text-end" data-label="BNCCT">{{ thuoc.bncct !== null ? (thuoc.bncct | number:'1.0-2') : '-' }}</td>
+                 <td class="text-end" data-label="BN trả">{{ thuoc.bnTra !== null ? (thuoc.bnTra | number:'1.0-2') : '-' }}</td>
+                 <td class="text-end" data-label="TL %">{{ thuoc.tyLeThanhToan !== null ? (thuoc.tyLeThanhToan | number:'1.0-2') : '-' }}</td>
+               </tr>
+
+               <tr *ngIf="!thuocLoading && dsThuoc.length === 0" class="thuoc-state-row">
+                 <td colspan="13" class="text-center py-4">Không có dữ liệu thuốc</td>
+               </tr>
+             </tbody>
+           </table>
+         </div>
+       </div>
+
+       <div class="modal-footer thuoc-modal-footer">
+         <div class="d-flex align-items-center gap-2">
+           <button
+             type="button"
+             class="btn btn-outline-secondary btn-sm"
+             [disabled]="thuocLoading || thuocPageNumber <= 1"
+             (click)="onThuocPrev()"
+           >
+             Prev
+           </button>
+           <button
+             type="button"
+             class="btn btn-outline-secondary btn-sm"
+             [disabled]="thuocLoading || thuocPageNumber >= Math.ceil(thuocTotalRecords / thuocPageSize) || thuocTotalRecords === 0"
+             (click)="onThuocNext()"
+           >
+             Next
+           </button>
+           <span class="small text-muted">
+             Trang {{ thuocPageNumber }} / {{ Math.max(1, Math.ceil(thuocTotalRecords / thuocPageSize)) }}
+             — Tổng: {{ thuocTotalRecords | number }}
+           </span>
+         </div>
+         <div class="d-flex align-items-center gap-3 thuoc-footer-actions">
+           <div class="d-flex align-items-center gap-2">
+             <label class="small mb-0" for="thuocPageSize">Bản ghi / trang</label>
+             <select
+               id="thuocPageSize"
+               class="form-select form-select-sm"
+               [(ngModel)]="thuocPageSize"
+               [disabled]="thuocLoading"
+               (ngModelChange)="onThuocPageSizeChange($event)"
+             >
+               <option *ngFor="let s of pageSizeOptions" [value]="s">{{ s }}</option>
+             </select>
+           </div>
+           <button type="button" class="btn btn-secondary" (click)="closeThuocModal()">Đóng</button>
          </div>
        </div>
   </div>
