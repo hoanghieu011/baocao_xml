@@ -1,7 +1,7 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { BenhNhanService, Dvkt } from '../services/benh-nhan.service';
+import { BenhNhanService, Dvkt, Thuoc } from '../services/benh-nhan.service';
 import { BorderDirective, TableDirective } from '@coreui/angular';
 import { ToastModule } from '@coreui/angular';
 import { Subscription } from 'rxjs';
@@ -125,6 +125,16 @@ export class DsBenhnhanComponent implements OnDestroy, OnInit {
   dvktTotalRecords = 0;
   private dvktRequest?: Subscription;
 
+  selectedThuocPatient: BenhNhan | null = null;
+  dsThuoc: Thuoc[] = [];
+  showThuocModal = false;
+  thuocLoading = false;
+  thuocPageNumber = 1;
+  thuocPageSize = 10;
+  thuocTotalRecords = 0;
+  private thuocRequest?: Subscription;
+  
+
   constructor(private benhNhanService: BenhNhanService) {}
 
   ngOnInit(): void {
@@ -134,6 +144,7 @@ export class DsBenhnhanComponent implements OnDestroy, OnInit {
 
   ngOnDestroy(): void {
     this.dvktRequest?.unsubscribe();
+    this.thuocRequest?.unsubscribe();
   }
 
   private setDefaultMonthRange() {
@@ -309,6 +320,84 @@ export class DsBenhnhanComponent implements OnDestroy, OnInit {
 
   dvktRowIndex(i: number) {
     return (this.dvktPageNumber - 1) * this.dvktPageSize + i + 1;
+  }
+
+  openThuocModal(bn: BenhNhan) {
+    if (!bn.ma_lk) {
+      this.addToast('Không tìm thấy mã liên kết của bệnh nhân');
+      return;
+    }
+ 
+    this.selectedThuocPatient = bn;
+    this.showThuocModal = true;
+    this.thuocPageNumber = 1;
+    this.thuocTotalRecords = 0;
+    this.dsThuoc = [];
+    this.loadThuoc();
+  }
+ 
+  closeThuocModal() {
+    this.thuocRequest?.unsubscribe();
+    this.thuocLoading = false;
+    this.showThuocModal = false;
+    this.selectedThuocPatient = null;
+    this.dsThuoc = [];
+    this.thuocPageNumber = 1;
+    this.thuocTotalRecords = 0;
+  }
+ 
+  loadThuoc() {
+    const maLk = this.selectedThuocPatient?.ma_lk;
+    if (!maLk) {
+      this.addToast('Không tìm thấy mã liên kết của bệnh nhân');
+      return;
+    }
+ 
+    this.thuocRequest?.unsubscribe();
+    this.thuocLoading = true;
+    this.dsThuoc = [];
+    this.thuocRequest = this.benhNhanService.getDsThuocByMaLk(
+      maLk,
+      this.thuocPageNumber,
+      this.thuocPageSize
+    ).subscribe({
+      next: (res) => {
+        this.thuocTotalRecords = res.totalRecords;
+        this.thuocPageNumber = res.pageIndex;
+        this.thuocPageSize = res.pageSize;
+        this.dsThuoc = res.dsThuoc;
+        this.thuocLoading = false;
+      },
+      error: () => {
+        this.addToast('Không thể tải danh sách thuốc');
+        this.thuocLoading = false;
+      }
+    });
+  }
+ 
+  onThuocPrev() {
+    if (this.thuocPageNumber > 1) {
+      this.thuocPageNumber--;
+      this.loadThuoc();
+    }
+  }
+ 
+  onThuocNext() {
+    const maxPage = Math.max(1, Math.ceil(this.thuocTotalRecords / this.thuocPageSize));
+    if (this.thuocPageNumber < maxPage) {
+      this.thuocPageNumber++;
+      this.loadThuoc();
+    }
+  }
+ 
+  onThuocPageSizeChange(newSize: number) {
+    this.thuocPageSize = Number(newSize);
+    this.thuocPageNumber = 1;
+    this.loadThuoc();
+  }
+ 
+  thuocRowIndex(i: number) {
+    return (this.thuocPageNumber - 1) * this.thuocPageSize + i + 1;
   }
 
   // helper hiển thị ngày theo format dd/MM/yyyy
