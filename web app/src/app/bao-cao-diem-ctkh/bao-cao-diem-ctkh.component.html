@@ -17,7 +17,7 @@
         <label for="">Từ</label>
         <select2 class="form-control" [overlay]="false" placeholder=""
           [data]="dsThang" [styleMode]="'borderless'" [value]="tuThang" (update)="onTuThangChange($event)"
-          id="tuThang" style="height: 38px; padding: 4px 0 0 0;">
+          id="tuThang" style="height: 38px; padding: 4px 0 0 0; width: 120px;">
         </select2>
       </div>
 
@@ -31,14 +31,14 @@
         <label for="">Đến</label>
         <select2 class="form-control" [overlay]="false" placeholder=""
           [data]="dsThang" [styleMode]="'borderless'" [value]="denThang" (update)="onDenThangChange($event)"
-          id="denThang" style="height: 38px; padding: 4px 0 0 0;">
+          id="denThang" style="height: 38px; padding: 4px 0 0 0; width: 120px;">
         </select2>
       </div>
 
       <div class="col-auto">
         <select2 class="form-control" [overlay]="false" placeholder=""
           [data]="dsNam" [styleMode]="'borderless'" [value]="denNam" (update)="onDenNamChange($event)"
-          id="denNam" style="height: 38px; padding: 4px 0 0 0;">
+          id="denNam" style="height: 38px; padding: 4px 0 0 0; ">
         </select2>
       </div>
       <div class="col-auto">
@@ -212,7 +212,8 @@
                                 <th class="text-center first-row" rowspan="2" style="width: 100px;">{{'BC_DIEM_CTKH.DIEM_CONG_THEO_BS_DIENTIM_CLS'|translate}}</th>
                                 <th class="text-center first-row" rowspan="2" style="width: 80px;">{{'BC_DIEM_CTKH.DIEM_TRUC'|translate}}</th>
                                 <th class="text-center first-row" rowspan="2" style="width: 120px;">{{'BC_DIEM_CTKH.DIEM_TH_TT1_DD'|translate}}</th>
-                                <th class="text-center first-row" colspan="2" style="width: 160px;">{{'BC_DIEM_CTKH.DIEM_BNND'|translate}}</th>
+                                <th class="text-center first-row" rowspan="2" style="width: 160px;">{{'BC_DIEM_CTKH.DIEM_BNND'|translate}} <br> {{'BC_DIEM_CTKH.THEO_BS' | translate}}</th>
+                                <th class="text-center first-row" rowspan="2" style="width: 100px;">{{'BC_DIEM_CTKH.NHAP_VIEN_NGOAI_GIO'|translate}}</th>
                                 <th class="text-center first-row" rowspan="2" style="width: 120px;">{{'BC_DIEM_CTKH.DIEM_TONG'|translate}}</th>
                                 <th class="text-center first-row" rowspan="2" style="width: 100px;">{{'BC_DIEM_CTKH.KHOA_CHIA_LAI_DIEM'|translate}}</th>
                                 <th class="text-center first-row" rowspan="2" style="width: 100px;">{{'BC_DIEM_CTKH.DAT_CTKH_DD'|translate}}</th>
@@ -222,8 +223,8 @@
                               <th class="text-center second-row-dd">{{'BC_DIEM_CTKH.TONG_DIEM' | translate}}</th>
                               <th class="text-center second-row-dd">{{'BC_DIEM_CTKH.SO_NGAY_DUOC_TC' | translate}}</th>
                               <th class="text-center second-row-dd">{{'BC_DIEM_CTKH.DIEM_TRU' | translate}}</th>
-                              <th class="text-center second-row-dd">{{'BC_DIEM_CTKH.THEO_BS' | translate}}</th>
-                              <th class="text-center second-row-dd">{{'BC_DIEM_CTKH.THEO_BN_NHAPVIEN' | translate}}</th>
+                              <!-- <th class="text-center second-row-dd">{{'BC_DIEM_CTKH.THEO_BS' | translate}}</th> -->
+                              <!-- <th class="text-center second-row-dd">{{'BC_DIEM_CTKH.THEO_BN_NHAPVIEN' | translate}}</th> -->
                             </tr>
                             <tr>
                               <th class="italic text-center third-row-dd" >C</th>

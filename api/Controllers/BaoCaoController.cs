@@ -2995,7 +2995,7 @@ namespace API.Controllers
                     new CtkhHeaderCell{row1="Trực",row2=[], row3=["25"]},
                     new CtkhHeaderCell{row1="Điểm TH thủ thuật 1 Điều dưỡng",row2=[], row3=["26"]},
                     new CtkhHeaderCell{row1="Điểm BNND Theo Bs",row2=[], row3=["27"]},
-                    new CtkhHeaderCell{row1="Số BN nhập viện ngoài giờ",row2=[], row3=["28"]},
+                    new CtkhHeaderCell{row1="Nhập viện ngoài giờ x2",row2=[], row3=["28"]},
                     new CtkhHeaderCell{row1="Tổng điểm",row2=[],row3=["29=18+...+28"]},
                     new CtkhHeaderCell{row1="Khoa chia lại điểm",row2=[],row3=["30"]},
                     new CtkhHeaderCell{row1="Đạt CTKH Điều dưỡng",row2=[], row3=["31=29/17"]},
