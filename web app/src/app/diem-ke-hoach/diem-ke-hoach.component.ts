@@ -9,6 +9,10 @@ import { TranslateModule } from '@ngx-translate/core';
 import { TangCuongService } from '../services/tang-cuong.service';
 import { forkJoin } from 'rxjs';
 import { OfficerService } from '../services/officer.service';
+import { Subject } from 'rxjs';
+import { switchMap, tap } from 'rxjs/operators';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { DestroyRef, inject } from '@angular/core';
 
 type TangCuong = {
   diemKeHoachId: number;
@@ -69,6 +73,9 @@ export class DiemKeHoachComponent  {
   cur_khoa: number = 0;
   cur_thang: number = new Date().getMonth() + 1;
   cur_nam: number = new Date().getFullYear();
+  private destroyRef = inject(DestroyRef);
+  private selectOfficer$ = new Subject<number>();
+
   constructor(private organizationService: OrganizationService, private diemKeHoachService: DiemKeHoachService, private tangCuongService: TangCuongService, private officerService: OfficerService ,private cd: ChangeDetectorRef) { }
   ngOnInit(): void {
     let currentYear = new Date().getFullYear();
@@ -77,6 +84,7 @@ export class DiemKeHoachComponent  {
     }
     this.loadDsOfficer();
     this.loadDsOrganization();
+    this.listenOfficerSelection();
   }
 
   loadDsOfficer() {
@@ -158,8 +166,56 @@ export class DiemKeHoachComponent  {
     this.selected_bs_id = event.value;
     this.selected_bs = this.ds_officer.find(b=> b.bacsiid == this.selected_bs_id)
     this.formDataDiemKeHoach.get('bacSiId')?.setValue(this.selected_bs_id);
-    
+    this.selectOfficer$.next(this.selected_bs_id);
   }
+
+  private listenOfficerSelection(): void {
+    this.selectOfficer$.pipe(
+      switchMap(id => {
+        const thangNam = `${this.cur_thang}${this.cur_nam}`;
+        return forkJoin({
+          officer: this.officerService.getTtOfficerByBacsiId(id),
+          diemKeHoach: this.diemKeHoachService.getTtDiemKeHoachByBacSiId(id, thangNam)
+        });
+      }),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
+      next: ({ officer, diemKeHoach }) =>
+        this.handleOfficerSelectionResult(officer.data, diemKeHoach.data),
+      error: (err) => {
+        console.error(err);
+        this.selected_khoa_id = 0;
+        this.addToast('Đã xảy ra lỗi khi lấy dữ liệu chi tiết bác sĩ', 'danger');
+      }
+    });
+  }
+  private handleOfficerSelectionResult(officerDetail: any, existing: any): void {
+    if (officerDetail?.khoaid) {
+      this.selected_khoa_id = officerDetail.khoaid;
+      this.selected_khoa = this.ds_khoa.find(k => k.value == this.selected_khoa_id);
+      this.formDataDiemKeHoach.get('khoa')?.setValue(this.selected_khoa_id);
+    } else {
+      this.selected_khoa_id = 0;
+      this.addToast('Bác sĩ/điều dưỡng chưa được gán khoa trong hệ thống', 'warning');
+    }
+
+    if (existing) {
+      this.selectedDiemKeHoach = existing;
+      this.isThemMoi = false;
+      this.formDataDiemKeHoach.patchValue({
+        diemKeHoach: existing.diemKeHoach,
+        soBuoiTruc: existing.soBuoiTruc,
+        diemTruc: existing.diemTruc,
+        diemLayMauXN: existing.diemLayMau,
+      });
+      this.getDsTangCuongByDiemKeHoachId();
+      this.addToast('Bác sĩ này đã có điểm kế hoạch trong tháng, đã tải dữ liệu hiện có', 'info');
+    } else {
+      this.selectedDiemKeHoach = null;
+      this.isThemMoi = true;
+    }
+  }
+
   onKhoaSelectThemChange(event: Select2UpdateEvent<any>){
     this.selected_khoa_id = event.value;
     this.selected_khoa = this.ds_khoa.find(k => k.value == this.selected_khoa_id)

@@ -87,4 +87,14 @@ export class DiemKeHoachService {
       { headers: this.httpConfig.getHeaders() }
     );
   }
+
+  getTtDiemKeHoachByBacSiId(bacSiId: number, thangNam: string) {
+    return this.http.get<any>(
+      `${this.apiUrl}/tt_diemkehoach_by_bacsiid`, 
+      {
+        params: { bacSiId, thangNam },
+        headers: this.httpConfig.getHeaders()
+      }
+    );
+  }
 }

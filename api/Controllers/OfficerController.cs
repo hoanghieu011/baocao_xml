@@ -43,7 +43,7 @@ namespace API.Controllers
                     SELECT max(OFFICER_NAME) OFFICER_NAME, max(OFFICER_CODE) OFFICER_CODE, max(BACSIID) BACSIID, OFFICER_TYPE ,MA_BAC_SI
                     FROM org_officer 
                     WHERE CSYTID = @csytid
-                    AND STATUS = 1 
+                    AND STATUS = 1  
                     AND MA_BAC_SI IS NOT NULL
                 ";
 
@@ -106,5 +106,34 @@ namespace API.Controllers
                 return StatusCode(500, new { message = "Lỗi server", detail = ex.Message });
             }
         }
-    }
+
+		/// <summary>
+		/// Lấy thông tin Officer theo BACSIID.
+		/// </summary>
+		[Authorize]
+		[HttpGet("tt_officer_by_bacsiid")]
+		public async Task<ActionResult<object>> GetTtOfficerByBacSiIdAsync([FromQuery] int bacSiId)
+		{
+			var csytIdClaim = User.FindFirst("CSYTID")?.Value;
+			if (string.IsNullOrEmpty(csytIdClaim) || !int.TryParse(csytIdClaim, out var csytId))
+			{
+				return Unauthorized();
+			}
+
+			try
+			{
+				var data = await _context.org_officer
+					.AsNoTracking()
+					.Where(o => o.csytid == csytId && o.bacsiid == bacSiId)
+					.FirstOrDefaultAsync();
+
+				return Ok(new { data });
+			}
+			catch (Exception ex)
+			{
+				return StatusCode(500, new { message = "Lỗi server", detail = ex.Message });
+			}
+		}
+
+	}
 }
