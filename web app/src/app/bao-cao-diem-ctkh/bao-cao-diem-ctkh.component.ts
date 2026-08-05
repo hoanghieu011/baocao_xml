@@ -39,6 +39,7 @@ type ReportRow = {
   diemBNNDCDNhapVien: number;
   diemBNNDTheoBs?: number;
   tongCong: number;
+  soBnNhapVienNgoaiGio: number;
   datCtkh: number;
   diemTHTheoBS?: number;
 
@@ -129,8 +130,8 @@ export class BCDiemCtkhComponent  {
   generateDataRow(data: any[], loaiBaoCao: 'BAC_SI' | 'DIEU_DUONG'): ReportRow[] {
     let dsDiemCtkh: ReportRow[] = [];
         let curKhoa = '';
-          let tongDiemKeHoach = 0, tongDiemCdKham = 0, tongDiemCdDieuTri = 0, tongDiemPTTCD = 0, tongDiemPTTTH = 0, tongDiemTHCLS = 0, tongDiemTangCuong = 0, tongSoNgayTangCuong = 0, tongDiemTruc = 0, tongDiemCongBANT = 0,tongDiemBNNDCD = 0,tongDiemBNNDTH = 0,tongDiemBNNDCDNhapVien = 0;
-          let diemKeHoachKhoa = 0, diemCdKhamKhoa = 0, diemCdDieuTriKhoa = 0, diemPTTCDKhoa = 0, diemPTTTHKhoa = 0, diemTHCLSKhoa = 0,diemTangCuongKhoa = 0, soNgayTangCuongKhoa = 0, diemTrucKhoa = 0, diemCongBANTKhoa = 0,diemBNNDCDKhoa = 0,diemBNNDTHKhoa = 0,diemBNNDCDNhapVienKhoa = 0;
+          let tongDiemKeHoach = 0, tongDiemCdKham = 0, tongDiemCdDieuTri = 0, tongDiemPTTCD = 0, tongDiemPTTTH = 0, tongDiemTHCLS = 0, tongDiemTangCuong = 0, tongSoNgayTangCuong = 0, tongDiemTruc = 0, tongDiemCongBANT = 0,tongDiemBNNDCD = 0,tongDiemBNNDTH = 0,tongDiemBNNDCDNhapVien = 0, tongSoBnNhapVienNgoaiGio = 0;
+          let diemKeHoachKhoa = 0, diemCdKhamKhoa = 0, diemCdDieuTriKhoa = 0, diemPTTCDKhoa = 0, diemPTTTHKhoa = 0, diemTHCLSKhoa = 0,diemTangCuongKhoa = 0, soNgayTangCuongKhoa = 0, diemTrucKhoa = 0, diemCongBANTKhoa = 0,diemBNNDCDKhoa = 0,diemBNNDTHKhoa = 0,diemBNNDCDNhapVienKhoa = 0, soBnNhapVienNgoaiGioKhoa = 0;
           let tongDiemTHBS = 0, tongDiemNhapVienBS = 0, tongDiemPTTTHTheoDD = 0, tongDiemBNNDTheoBS = 0;
           let tongDiemTHBSTheoKhoa = 0, tongDiemNhapVienBSTheoKhoa = 0, tongDiemPTTTHTheoDDKhoa = 0, tongDiemBNNDTheoBSKhoa = 0;
           let countGroup = 0;
@@ -142,7 +143,7 @@ export class BCDiemCtkhComponent  {
               countItem = 1;
               if(curKhoa != '') {
                 // tổng điểm TH của từng khoa sẽ bao gồm điểm TH của bác sĩ / điều dưỡng trong khoa đó + điểm PTTTHTheoDD (nếu là bác sĩ) hoặc điểm TH (nếu là điều dưỡng) + điểm BNNDTheoBS (nếu là điều dưỡng)
-                let tongDiemTHKhoa = loaiBaoCao==='BAC_SI' ? diemCdKhamKhoa + diemCdDieuTriKhoa + diemPTTCDKhoa + diemPTTTHKhoa + diemTHCLSKhoa + diemTangCuongKhoa + diemTrucKhoa + diemCongBANTKhoa + diemBNNDCDKhoa + diemBNNDTHKhoa + diemBNNDCDNhapVienKhoa : diemTrucKhoa + diemTangCuongKhoa + tongDiemPTTTHTheoDDKhoa + diemTHCLSKhoa;
+                let tongDiemTHKhoa = loaiBaoCao==='BAC_SI' ? diemCdKhamKhoa + diemCdDieuTriKhoa + diemPTTCDKhoa + diemPTTTHKhoa + diemTHCLSKhoa + diemTangCuongKhoa + diemTrucKhoa + diemCongBANTKhoa + diemBNNDCDKhoa + diemBNNDTHKhoa + diemBNNDCDNhapVienKhoa + soBnNhapVienNgoaiGioKhoa : diemTrucKhoa + diemTangCuongKhoa + tongDiemPTTTHTheoDDKhoa + diemTHCLSKhoa + soBnNhapVienNgoaiGioKhoa;
                 dsDiemCtkh[currentGroupIndex] = {
                   ...dsDiemCtkh[currentGroupIndex],
                   diemKeHoach: diemKeHoachKhoa,
@@ -151,6 +152,7 @@ export class BCDiemCtkhComponent  {
                   diemPTTCD: diemPTTCDKhoa,
                   diemPTTTH: diemPTTTHKhoa,
                   diemTHCLS: diemTHCLSKhoa,
+                  soBnNhapVienNgoaiGio: soBnNhapVienNgoaiGioKhoa,
                   diemTangCuong: diemTangCuongKhoa,
                   soNgayTangCuong: soNgayTangCuongKhoa,
                   diemTruc: diemTrucKhoa,
@@ -206,6 +208,7 @@ export class BCDiemCtkhComponent  {
               diemBNNDCDKhoa = 0;
               diemBNNDTHKhoa = 0;
               diemBNNDCDNhapVienKhoa = 0;
+              soBnNhapVienNgoaiGioKhoa = 0;
 
               tongDiemBNNDTheoBSKhoa = 0;
               tongDiemPTTTHTheoDDKhoa = 0;
@@ -219,6 +222,7 @@ export class BCDiemCtkhComponent  {
                 officerType: item.officerType,
                 diemKeHoach: 0,
                 diemCdKham: 0,
+                soBnNhapVienNgoaiGio: 0,
                 diemCDDieuTri: 0,
                 diemPTTCD: 0,
                 diemPTTTH: 0,
@@ -268,6 +272,7 @@ export class BCDiemCtkhComponent  {
             diemBNNDTHKhoa += (pushedItem ? (pushedItem.diemBNNDTH || 0) : 0);
             diemBNNDCDNhapVienKhoa += (pushedItem ? (pushedItem.diemBNNDCDNhapVien || 0) : 0);
             soNgayTangCuongKhoa += (pushedItem ? (pushedItem.soNgayTangCuong || 0) : 0);
+            soBnNhapVienNgoaiGioKhoa += (pushedItem ? (pushedItem.soBnNhapVienNgoaiGio || 0) : 0);
 
             tongDiemKeHoach += (pushedItem ? (pushedItem.diemKeHoach || 0) : 0);
             tongDiemCdKham += (pushedItem ? (pushedItem.diemCdKham || 0) : 0);
@@ -282,11 +287,12 @@ export class BCDiemCtkhComponent  {
             tongDiemBNNDCD += (pushedItem ? (pushedItem.diemBNNDCD || 0) : 0);
             tongDiemBNNDTH += (pushedItem ? (pushedItem.diemBNNDTH || 0) : 0);
             tongDiemBNNDCDNhapVien += (pushedItem ? (pushedItem.diemBNNDCDNhapVien || 0) : 0);
+            tongSoBnNhapVienNgoaiGio = (pushedItem ? (pushedItem.soBnNhapVienNgoaiGio || 0) : 0);
             //end
             if(pushedItem) {
               // tổng điểm TH  của từng bác sĩ / điều dưỡng sẽ k bao gồm (điểm PTTTHTheoDD)/(điểm BNNDTheoBS, điểm THBS) vì những điểm này sẽ được cập nhật khi logic code chuyển sang khoa khác)
-              let tongDiemTHItem = loaiBaoCao ==='BAC_SI' ? (pushedItem.diemCdKham || 0) + (pushedItem.diemCDDieuTri || 0) + (pushedItem.diemPTTCD || 0) + (pushedItem.diemPTTTH || 0) + (pushedItem.diemTHCLS || 0) + (pushedItem.diemTangCuong || 0) + (pushedItem.diemTruc || 0) + (pushedItem.diemCongBANT || 0) + (pushedItem.diemBNNDCD || 0) + (pushedItem.diemBNNDTH || 0) + (pushedItem.diemBNNDCDNhapVien || 0) :
-               (pushedItem.diemTruc || 0) + (pushedItem.diemTangCuong || 0) + (pushedItem.diemPTTTH ? pushedItem.diemPTTTH/0.8 : 0) + (pushedItem.diemTHCLS || 0) ;
+              let tongDiemTHItem = loaiBaoCao ==='BAC_SI' ? (pushedItem.diemCdKham || 0) + (pushedItem.diemCDDieuTri || 0) + (pushedItem.diemPTTCD || 0) + (pushedItem.diemPTTTH || 0) + (pushedItem.diemTHCLS || 0) + (pushedItem.diemTangCuong || 0) + (pushedItem.diemTruc || 0) + (pushedItem.diemCongBANT || 0) + (pushedItem.diemBNNDCD || 0) + (pushedItem.diemBNNDTH || 0) + (pushedItem.diemBNNDCDNhapVien || 0) + (pushedItem.soBnNhapVienNgoaiGio || 0) :
+               (pushedItem.diemTruc || 0) + (pushedItem.diemTangCuong || 0) + (pushedItem.diemPTTTH ? pushedItem.diemPTTTH/0.8 : 0) + (pushedItem.diemTHCLS || 0) + (pushedItem.soBnNhapVienNgoaiGio || 0) ;
               let tempItem: ReportRow = {
                 type: 'item',
                 stt: String(countItem),
@@ -300,6 +306,7 @@ export class BCDiemCtkhComponent  {
                 diemPTTTH: (pushedItem.diemPTTTH || 0),
                 diemTHCLS: pushedItem.diemTHCLS || 0,
                 diemTangCuong: pushedItem.diemTangCuong || 0,
+                soBnNhapVienNgoaiGio: pushedItem.soBnNhapVienNgoaiGio || 0,
                 soNgayTangCuong: pushedItem.soNgayTangCuong || 0,
                 diemTruc: pushedItem.diemTruc || 0,
                 diemCongBANT: pushedItem.diemCongBANT || 0,
@@ -318,8 +325,8 @@ export class BCDiemCtkhComponent  {
           }
         
           if(curKhoa != '') {
-            let tongDiemTHKhoa = loaiBaoCao==='BAC_SI' ? diemCdKhamKhoa + diemCdDieuTriKhoa + diemPTTCDKhoa + diemPTTTHKhoa + diemTHCLSKhoa + diemTangCuongKhoa + diemTrucKhoa + diemCongBANTKhoa  + diemBNNDCDKhoa + diemBNNDTHKhoa + diemBNNDCDNhapVienKhoa :
-            diemTrucKhoa+diemTangCuongKhoa+ tongDiemPTTTHTheoDDKhoa + diemTHCLSKhoa;
+            let tongDiemTHKhoa = loaiBaoCao==='BAC_SI' ? diemCdKhamKhoa + diemCdDieuTriKhoa + diemPTTCDKhoa + diemPTTTHKhoa + diemTHCLSKhoa + diemTangCuongKhoa + diemTrucKhoa + diemCongBANTKhoa  + diemBNNDCDKhoa + diemBNNDTHKhoa + diemBNNDCDNhapVienKhoa + soBnNhapVienNgoaiGioKhoa :
+            diemTrucKhoa+diemTangCuongKhoa+ tongDiemPTTTHTheoDDKhoa + diemTHCLSKhoa + soBnNhapVienNgoaiGioKhoa;
             dsDiemCtkh[currentGroupIndex] = {
               ...dsDiemCtkh[currentGroupIndex],
               diemKeHoach: diemKeHoachKhoa,
@@ -328,6 +335,7 @@ export class BCDiemCtkhComponent  {
               diemPTTCD: diemPTTCDKhoa,
               diemPTTTH: diemPTTTHKhoa,
               diemTHCLS: diemTHCLSKhoa,
+              soBnNhapVienNgoaiGio: soBnNhapVienNgoaiGioKhoa,
               diemTangCuong: diemTangCuongKhoa,
               soNgayTangCuong: soNgayTangCuongKhoa,
               diemTruc: diemTrucKhoa,
@@ -366,7 +374,7 @@ export class BCDiemCtkhComponent  {
             }
           }
         
-          let tongDiemTH = loaiBaoCao==='BAC_SI' ? tongDiemCdKham + tongDiemCdDieuTri + tongDiemPTTCD + tongDiemPTTTH + tongDiemTHCLS + tongDiemTangCuong + tongDiemTruc + tongDiemCongBANT + tongDiemPTTTHTheoDD + tongDiemBNNDCD + tongDiemBNNDTH + tongDiemBNNDCDNhapVien :tongDiemTHBS+ tongDiemTruc + tongDiemTangCuong + tongDiemPTTTHTheoDD + tongDiemBNNDTheoBS + tongDiemTHCLS;
+          let tongDiemTH = loaiBaoCao==='BAC_SI' ? tongDiemCdKham + tongDiemCdDieuTri + tongDiemPTTCD + tongDiemPTTTH + tongDiemTHCLS + tongDiemTangCuong + tongDiemTruc + tongDiemCongBANT + tongDiemPTTTHTheoDD + tongDiemBNNDCD + tongDiemBNNDTH + tongDiemBNNDCDNhapVien + tongSoBnNhapVienNgoaiGio :tongDiemTHBS+ tongDiemTruc + tongDiemTangCuong + tongDiemPTTTHTheoDD + tongDiemBNNDTheoBS + tongDiemTHCLS + tongSoBnNhapVienNgoaiGio;
           let diemCtkhGrandTotal: ReportRow = {
             type: 'grandTotal',
             stt: '',
@@ -376,6 +384,7 @@ export class BCDiemCtkhComponent  {
             diemKeHoach: tongDiemKeHoach,
             diemCdKham: tongDiemCdKham,
             diemCDDieuTri: tongDiemCdDieuTri,
+            soBnNhapVienNgoaiGio: tongSoBnNhapVienNgoaiGio,
             diemPTTCD: tongDiemPTTCD,
             diemPTTTH: tongDiemPTTTH,
             diemTHCLS: tongDiemTHCLS,

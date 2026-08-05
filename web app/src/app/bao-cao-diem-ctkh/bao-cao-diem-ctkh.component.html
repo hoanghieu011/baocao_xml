@@ -17,7 +17,7 @@
         <label for="">Từ</label>
         <select2 class="form-control" [overlay]="false" placeholder=""
           [data]="dsThang" [styleMode]="'borderless'" [value]="tuThang" (update)="onTuThangChange($event)"
-          id="tuThang" style="height: 38px; padding: 4px 0 0 0;">
+          id="tuThang" style="height: 38px; padding: 4px 0 0 0; width: 120px;">
         </select2>
       </div>
 
@@ -31,14 +31,14 @@
         <label for="">Đến</label>
         <select2 class="form-control" [overlay]="false" placeholder=""
           [data]="dsThang" [styleMode]="'borderless'" [value]="denThang" (update)="onDenThangChange($event)"
-          id="denThang" style="height: 38px; padding: 4px 0 0 0;">
+          id="denThang" style="height: 38px; padding: 4px 0 0 0; width: 120px;">
         </select2>
       </div>
 
       <div class="col-auto">
         <select2 class="form-control" [overlay]="false" placeholder=""
           [data]="dsNam" [styleMode]="'borderless'" [value]="denNam" (update)="onDenNamChange($event)"
-          id="denNam" style="height: 38px; padding: 4px 0 0 0;">
+          id="denNam" style="height: 38px; padding: 4px 0 0 0; ">
         </select2>
       </div>
       <div class="col-auto">
@@ -73,30 +73,30 @@
                 <div class="table-responsive" style="max-height: calc(100vh - 150px);">
                     <table class="table" *ngIf="loaiBaoCao=='BAC_SI'" style="width: 2100px;">
                         <thead>
-                            <tr>
-                                <th class="text-center first-row" rowspan="2" style="width: 80px;"><span>{{'STT'|translate}}</span></th>
-                                <th class="text-center first-row" rowspan="2" style="width: 200px;"><span>{{'BC_DIEM_CTKH.KHOA_BAC_SY'|translate}}</span></th>
-                                <th class="text-center first-row" rowspan="2" style="width: 100px;"><span>{{'BC_DIEM_CTKH.DIEM_KE_HOACH'|translate}}</span></th>
-                                <th class="text-center first-row" rowspan="2" style="width: 120px;"><span>{{'BC_DIEM_CTKH.DIEM_CD_KHAM'|translate}}</span></th>
-                                <th class="text-center first-row" rowspan="2" style="width: 120px;"><span>{{'BC_DIEM_CTKH.DIEM_CD_NHAPVIEN'|translate}}</span></th>
-                                <th class="text-center first-row" colspan="2" style="width: 200px;"><span>{{'BC_DIEM_CTKH.PTT'|translate}}</span></th>
-                                <th class="text-center first-row" rowspan="2" style="width: 100px;"><span>{{'BC_DIEM_CTKH.DIEM_TANGCUONG'|translate}}</span></th>
-                                <th class="text-center first-row" rowspan="2" style="width: 80px;"><span>{{'BC_DIEM_CTKH.DIEM_TRUC'|translate}}</span></th>
-                                <th class="text-center first-row" rowspan="2" style="width: 120px;"><span>{{'BC_DIEM_CTKH.DIEM_CONG_BANT'|translate}}</span></th>
-                                <th class="text-center first-row" rowspan="2" style="width: 100px;"><span>{{'BC_DIEM_CTKH.DIEM_TH_CLS'|translate}}</span></th>
-                                <th class="text-center first-row" rowspan="2" style="width: 120px;"><span>{{'BC_DIEM_CTKH.DIEM_PTT_THEO_DIEU_DUONG'|translate}}</span></th>
-                                <th class="text-center first-row" colspan="3" style="width: 210px;"><span>{{'BC_DIEM_CTKH.DIEM_BNND'|translate}}</span></th>
-                                <th class="text-center first-row" rowspan="2" style="width: 120px;"><span>{{'BC_DIEM_CTKH.DIEM_TONG'|translate}}</span></th>
-                                <th class="text-center first-row" rowspan="2" style="width: 100px;"><span>{{'BC_DIEM_CTKH.KHOA_CHIA_LAI_DIEM'|translate}}</span></th>
-                                <th class="text-center first-row" rowspan="2" style="width: 100px;"><span>{{'BC_DIEM_CTKH.DAT_CTKH_BS'|translate}}</span></th>
-                                <th class="text-center first-row" colspan="3" style="width: 300px;"><span>{{'BC_DIEM_CTKH.TONG_CONG_CHUNG_CA_KHOA'|translate}}</span></th>
-                            </tr>
+                          <tr>
+                            <th class="text-center first-row" rowspan="2" style="width: 80px;"><span>{{'STT'|translate}}</span></th>
+                            <th class="text-center first-row" rowspan="2" style="width: 200px;"><span>{{'BC_DIEM_CTKH.KHOA_BAC_SY'|translate}}</span></th>
+                            <th class="text-center first-row" rowspan="2" style="width: 100px;"><span>{{'BC_DIEM_CTKH.DIEM_KE_HOACH'|translate}}</span></th>
+                            <th class="text-center first-row" rowspan="2" style="width: 120px;"><span>{{'BC_DIEM_CTKH.DIEM_CD_KHAM'|translate}}</span></th>
+                            <th class="text-center first-row" rowspan="2" style="width: 120px;"><span>{{'BC_DIEM_CTKH.DIEM_CD_NHAPVIEN'|translate}}</span></th>
+                            <th class="text-center first-row" colspan="2" style="width: 200px;"><span>{{'BC_DIEM_CTKH.PTT'|translate}}</span></th>
+                            <th class="text-center first-row" rowspan="2" style="width: 100px;"><span>{{'BC_DIEM_CTKH.DIEM_TANGCUONG'|translate}}</span></th>
+                            <th class="text-center first-row" rowspan="2" style="width: 80px;"><span>{{'BC_DIEM_CTKH.DIEM_TRUC'|translate}}</span></th>
+                            <th class="text-center first-row" rowspan="2" style="width: 120px;"><span>{{'BC_DIEM_CTKH.DIEM_CONG_BANT'|translate}}</span></th>
+                            <th class="text-center first-row" rowspan="2" style="width: 100px;"><span>{{'BC_DIEM_CTKH.DIEM_TH_CLS'|translate}}</span></th>
+                            <th class="text-center first-row" rowspan="2" style="width: 120px;"><span>{{'BC_DIEM_CTKH.DIEM_PTT_THEO_DIEU_DUONG'|translate}}</span></th>
+                            <th class="text-center first-row" colspan="2" style="width: 210px;"><span>{{'BC_DIEM_CTKH.DIEM_BNND'|translate}}</span></th>
+                            <th class="text-center first-row" rowspan="2" style="width: 100px;"><span>{{'BC_DIEM_CTKH.NHAP_VIEN_NGOAI_GIO' | translate}}</span></th>
+                            <th class="text-center first-row" rowspan="2" style="width: 120px;"><span>{{'BC_DIEM_CTKH.DIEM_TONG'|translate}}</span></th>
+                            <th class="text-center first-row" rowspan="2" style="width: 100px;"><span>{{'BC_DIEM_CTKH.KHOA_CHIA_LAI_DIEM'|translate}}</span></th>
+                            <th class="text-center first-row" rowspan="2" style="width: 100px;"><span>{{'BC_DIEM_CTKH.DAT_CTKH_BS'|translate}}</span></th>
+                            <th class="text-center first-row" colspan="3" style="width: 300px;"><span>{{'BC_DIEM_CTKH.TONG_CONG_CHUNG_CA_KHOA'|translate}}</span></th>
+                          </tr>
                             <tr>
                               <th class="text-center second-row"><span>{{'BC_DIEM_CTKH.CHI_DINH' | translate}}x0.2</span></th>
                               <th class="text-center second-row"><span>{{'BC_DIEM_CTKH.THUC_HIEN' | translate}}x0.8</span></th>
                               <th class="text-center second-row"><span>{{'BC_DIEM_CTKH.CHI_DINH' | translate}}</span></th>
                               <th class="text-center second-row"><span>{{'BC_DIEM_CTKH.THUC_HIEN' | translate}}</span></th>
-                              <th class="text-center second-row"><span>{{'BC_DIEM_CTKH.DIEM_CD_NHAPVIEN' | translate}}</span></th>
                               <th class="text-center second-row"><span>{{'BC_DIEM_CTKH.DIEM_KH' | translate}}</span></th>
                               <th class="text-center second-row"><span>{{'BC_DIEM_CTKH.TONG_DIEM_TH' | translate}}</span></th>
                               <th class="text-center second-row"><span>{{'BC_DIEM_CTKH.DAT_CTKH' | translate}}</span></th>
@@ -132,7 +132,7 @@
                                   <td class="bold">{{ item.khoa }}</td>
                                   <td class="text-end bold">{{ Math.trunc(item.diemKeHoach) == item.diemKeHoach ? Math.trunc(item.diemKeHoach) : Math.round(item.diemKeHoach * 10) / 10 }}</td>
                                   <td class="text-end bold">{{ Math.trunc(item.diemCdKham) == item.diemCdKham ? Math.trunc(item.diemCdKham) : Math.round(item.diemCdKham * 10) / 10 }}</td>
-                                  <td class="text-end bold">{{ Math.trunc(item.diemCDDieuTri) == item.diemCDDieuTri ? Math.trunc(item.diemCDDieuTri) : Math.round(item.diemCDDieuTri * 10) / 10 }}</td>
+                                  <td class="text-end bold">{{ (Math.trunc(item.diemCDDieuTri + item.diemBNNDCDNhapVien) == (item.diemCDDieuTri + item.diemBNNDCDNhapVien) ? Math.trunc(item.diemCDDieuTri + item.diemBNNDCDNhapVien) : Math.round((item.diemCDDieuTri + item.diemBNNDCDNhapVien) * 10) / 10)  }}</td>
                                   <td class="text-end bold">{{ Math.trunc(item.diemPTTCD) == item.diemPTTCD ? Math.trunc(item.diemPTTCD) : Math.round(item.diemPTTCD * 10) / 10 }}</td>
                                   <td class="text-end bold">{{ Math.trunc(item.diemPTTTH) == item.diemPTTTH ? Math.trunc(item.diemPTTTH) : Math.round(item.diemPTTTH * 10) / 10 }}</td>
                                   <td class="text-end bold">{{ Math.trunc(item.diemTangCuong) == item.diemTangCuong ? Math.trunc(item.diemTangCuong) : Math.round(item.diemTangCuong * 10) / 10 }}</td>
@@ -142,7 +142,7 @@
                                   <td class="text-end bold">{{ Math.trunc(item.diemTHPTTTheoDD) == item.diemTHPTTTheoDD ? Math.trunc(item.diemTHPTTTheoDD) : Math.round(item.diemTHPTTTheoDD * 10) / 10 }}</td>
                                   <td class="text-end bold">{{Math.trunc(item.diemBNNDCD) == item.diemBNNDCD ? Math.trunc(item.diemBNNDCD) : Math.round(item.diemBNNDCD * 10) / 10}}</td>
                                   <td class="text-end bold">{{Math.trunc(item.diemBNNDTH) == item.diemBNNDTH ? Math.trunc(item.diemBNNDTH) : Math.round(item.diemBNNDTH * 10) / 10}} </td>
-                                  <td class="text-end bold">{{ Math.trunc(item.diemBNNDCDNhapVien) == item.diemBNNDCDNhapVien ? Math.trunc(item.diemBNNDCDNhapVien) : Math.round(item.diemBNNDCDNhapVien * 10) / 10 }}</td>
+                                  <td class="text-end bold">{{ Math.trunc(item.soBnNhapVienNgoaiGio) == item.soBnNhapVienNgoaiGio ? Math.trunc(item.soBnNhapVienNgoaiGio) : Math.round(item.soBnNhapVienNgoaiGio * 10) / 10 }}</td>
                                   <td class="text-end bold">{{ Math.trunc(item.tongCong) == item.tongCong ? Math.trunc(item.tongCong) : Math.round(item.tongCong * 10) / 10 }}</td>
                                   <td class="text-end bold"></td>
                                   <td class="text-end bold">{{ Math.trunc(item.datCtkh) == item.datCtkh ? Math.trunc(item.datCtkh) : Math.round(item.datCtkh * 10) / 10 }}%</td>
@@ -155,7 +155,7 @@
                                   <td class="bold">Tổng cộng</td>
                                   <td class="text-end bold">{{ Math.trunc(item.diemKeHoach) == item.diemKeHoach ? Math.trunc(item.diemKeHoach) : Math.round(item.diemKeHoach * 10) / 10 }}</td>
                                   <td class="text-end bold">{{ Math.trunc(item.diemCdKham) == item.diemCdKham ? Math.trunc(item.diemCdKham) : Math.round(item.diemCdKham * 10) / 10 }}</td>
-                                  <td class="text-end bold">{{ Math.trunc(item.diemCDDieuTri) == item.diemCDDieuTri ? Math.trunc(item.diemCDDieuTri) : Math.round(item.diemCDDieuTri * 10) / 10 }}</td>
+                                  <td class="text-end bold">{{ Math.trunc(item.diemCDDieuTri + item.diemBNNDCDNhapVien) == (item.diemCDDieuTri + item.diemBNNDCDNhapVien) ? Math.trunc(item.diemCDDieuTri + item.diemBNNDCDNhapVien) : Math.round((item.diemCDDieuTri + item.diemBNNDCDNhapVien) * 10) / 10 }}</td>
                                   <td class="text-end bold">{{ Math.trunc(item.diemPTTCD) == item.diemPTTCD ? Math.trunc(item.diemPTTCD) : Math.round(item.diemPTTCD * 10) / 10 }}</td>
                                   <td class="text-end bold">{{ Math.trunc(item.diemPTTTH) == item.diemPTTTH ? Math.trunc(item.diemPTTTH) : Math.round(item.diemPTTTH * 10) / 10 }}</td>
                                   <td class="text-end bold">{{ Math.trunc(item.diemTangCuong) == item.diemTangCuong ? Math.trunc(item.diemTangCuong) : Math.round(item.diemTangCuong * 10) / 10 }}</td>
@@ -165,7 +165,7 @@
                                   <td class="text-end bold">{{ Math.trunc(item.diemTHPTTTheoDD) == item.diemTHPTTTheoDD ? Math.trunc(item.diemTHPTTTheoDD) : Math.round(item.diemTHPTTTheoDD * 10) / 10 }}</td>
                                   <td class="text-end bold">{{Math.trunc(item.diemBNNDCD) == item.diemBNNDCD ? Math.trunc(item.diemBNNDCD) : Math.round(item.diemBNNDCD * 10) / 10}}</td>
                                   <td class="text-end bold">{{Math.trunc(item.diemBNNDTH) == item.diemBNNDTH ? Math.trunc(item.diemBNNDTH) : Math.round(item.diemBNNDTH * 10) / 10}} </td>
-                                  <td class="text-end bold">{{ Math.trunc(item.diemBNNDCDNhapVien) == item.diemBNNDCDNhapVien ? Math.trunc(item.diemBNNDCDNhapVien) : Math.round(item.diemBNNDCDNhapVien * 10) / 10 }}</td>
+                                  <td class="text-end bold">{{ Math.trunc(item.soBnNhapVienNgoaiGio) == item.soBnNhapVienNgoaiGio ? Math.trunc(item.soBnNhapVienNgoaiGio) : Math.round(item.soBnNhapVienNgoaiGio * 10) / 10 }}</td>
                                   <td class="text-end bold">{{ Math.trunc(item.tongCong) == item.tongCong ? Math.trunc(item.tongCong) : Math.round(item.tongCong * 10) / 10 }}
                                   <td class="text-end bold"></td>
                                   <td class="text-end bold">{{ Math.trunc(item.datCtkh) == item.datCtkh ? Math.trunc(item.datCtkh) : Math.round(item.datCtkh*10)/10 }}%</td>
@@ -178,7 +178,7 @@
                                   <td>{{ item.officerType == 4 ? 'BS:' : 'ĐD:' }}{{ item.officerName }}</td>
                                   <td class="text-end">{{ Math.trunc(item.diemKeHoach) == item.diemKeHoach ? Math.trunc(item.diemKeHoach) : Math.round(item.diemKeHoach * 10) / 10 }}</td>
                                   <td class="text-end">{{ Math.trunc(item.diemCdKham) == item.diemCdKham ? Math.trunc(item.diemCdKham) : Math.round(item.diemCdKham * 10) / 10 }}</td>
-                                  <td class="text-end">{{ Math.trunc(item.diemCDDieuTri) == item.diemCDDieuTri ? Math.trunc(item.diemCDDieuTri) : Math.round(item.diemCDDieuTri * 10) / 10 }}</td>
+                                  <td class="text-end">{{ Math.trunc(item.diemCDDieuTri + item.diemBNNDCDNhapVien) == (item.diemCDDieuTri + item.diemBNNDCDNhapVien) ? Math.trunc(item.diemCDDieuTri + item.diemBNNDCDNhapVien) : Math.round((item.diemCDDieuTri + item.diemBNNDCDNhapVien) * 10) / 10 }}</td>
                                   <td class="text-end">{{ Math.trunc(item.diemPTTCD) == item.diemPTTCD ? Math.trunc(item.diemPTTCD) : Math.round(item.diemPTTCD * 10) / 10 }}</td>
                                   <td class="text-end">{{ Math.trunc(item.diemPTTTH) == item.diemPTTTH ? Math.trunc(item.diemPTTTH) : Math.round(item.diemPTTTH * 10) / 10 }}</td>
                                   <td class="text-end">{{ Math.trunc(item.diemTangCuong) == item.diemTangCuong ? Math.trunc(item.diemTangCuong) : Math.round(item.diemTangCuong * 10) / 10 }}</td>
@@ -188,7 +188,7 @@
                                   <td class="text-end">{{ Math.trunc(item.diemTHPTTTheoDD) == item.diemTHPTTTheoDD ? Math.trunc(item.diemTHPTTTheoDD) : Math.round(item.diemTHPTTTheoDD * 10) / 10 }}</td>
                                   <td class="text-end">{{Math.trunc(item.diemBNNDCD) == item.diemBNNDCD ? Math.trunc(item.diemBNNDCD) : Math.round(item.diemBNNDCD * 10) / 10}}</td>
                                   <td class="text-end">{{Math.trunc(item.diemBNNDTH) == item.diemBNNDTH ? Math.trunc(item.diemBNNDTH) : Math.round(item.diemBNNDTH * 10) / 10}} </td>
-                                  <td class="text-end">{{ Math.trunc(item.diemBNNDCDNhapVien) == item.diemBNNDCDNhapVien ? Math.trunc(item.diemBNNDCDNhapVien) : Math.round(item.diemBNNDCDNhapVien * 10) / 10 }}</td>
+                                  <td class="text-end">{{ Math.trunc(item.soBnNhapVienNgoaiGio) == item.soBnNhapVienNgoaiGio ? Math.trunc(item.soBnNhapVienNgoaiGio) : Math.round(item.soBnNhapVienNgoaiGio * 10) / 10 }}</td>
                                   <td class="text-end">{{ Math.trunc(item.tongCong) == item.tongCong ? Math.trunc(item.tongCong) : Math.round(item.tongCong * 10) / 10 }}</td>
                                   <td class="text-end"></td>
                                   <td class="text-end">{{ Math.trunc(item.datCtkh) == item.datCtkh ? Math.trunc(item.datCtkh) : Math.round(item.datCtkh * 10) / 10 }}%</td>
@@ -212,7 +212,8 @@
                                 <th class="text-center first-row" rowspan="2" style="width: 100px;">{{'BC_DIEM_CTKH.DIEM_CONG_THEO_BS_DIENTIM_CLS'|translate}}</th>
                                 <th class="text-center first-row" rowspan="2" style="width: 80px;">{{'BC_DIEM_CTKH.DIEM_TRUC'|translate}}</th>
                                 <th class="text-center first-row" rowspan="2" style="width: 120px;">{{'BC_DIEM_CTKH.DIEM_TH_TT1_DD'|translate}}</th>
-                                <th class="text-center first-row" colspan="2" style="width: 160px;">{{'BC_DIEM_CTKH.DIEM_BNND'|translate}}</th>
+                                <th class="text-center first-row" rowspan="2" style="width: 160px;">{{'BC_DIEM_CTKH.DIEM_BNND'|translate}} <br> {{'BC_DIEM_CTKH.THEO_BS' | translate}}</th>
+                                <th class="text-center first-row" rowspan="2" style="width: 100px;">{{'BC_DIEM_CTKH.NHAP_VIEN_NGOAI_GIO'|translate}}</th>
                                 <th class="text-center first-row" rowspan="2" style="width: 120px;">{{'BC_DIEM_CTKH.DIEM_TONG'|translate}}</th>
                                 <th class="text-center first-row" rowspan="2" style="width: 100px;">{{'BC_DIEM_CTKH.KHOA_CHIA_LAI_DIEM'|translate}}</th>
                                 <th class="text-center first-row" rowspan="2" style="width: 100px;">{{'BC_DIEM_CTKH.DAT_CTKH_DD'|translate}}</th>
@@ -222,8 +223,8 @@
                               <th class="text-center second-row-dd">{{'BC_DIEM_CTKH.TONG_DIEM' | translate}}</th>
                               <th class="text-center second-row-dd">{{'BC_DIEM_CTKH.SO_NGAY_DUOC_TC' | translate}}</th>
                               <th class="text-center second-row-dd">{{'BC_DIEM_CTKH.DIEM_TRU' | translate}}</th>
-                              <th class="text-center second-row-dd">{{'BC_DIEM_CTKH.THEO_BS' | translate}}</th>
-                              <th class="text-center second-row-dd">{{'BC_DIEM_CTKH.THEO_BN_NHAPVIEN' | translate}}</th>
+                              <!-- <th class="text-center second-row-dd">{{'BC_DIEM_CTKH.THEO_BS' | translate}}</th> -->
+                              <!-- <th class="text-center second-row-dd">{{'BC_DIEM_CTKH.THEO_BN_NHAPVIEN' | translate}}</th> -->
                             </tr>
                             <tr>
                               <th class="italic text-center third-row-dd" >C</th>
@@ -261,7 +262,7 @@
                                   <td class="text-end bold">{{Math.trunc(item.diemTruc) == item.diemTruc ? Math.trunc(item.diemTruc) : Math.round(item.diemTruc * 10) / 10}}</td>
                                   <td class="text-end bold">{{Math.trunc(item.diemPTTTH/0.8) == item.diemPTTTH/0.8 ? Math.trunc(item.diemPTTTH/0.8) : Math.round((item.diemPTTTH/0.8) * 10) / 10}}</td>
                                   <td class="text-end bold">{{Math.trunc(item.diemBNNDTheoBs || 0) == item.diemBNNDTheoBs ? Math.trunc(item.diemBNNDTheoBs) : Math.round((item.diemBNNDTheoBs || 0) * 10) / 10}}</td>
-                                  <td class="text-end bold"></td>
+                                  <td class="text-end bold">{{ Math.trunc(item.soBnNhapVienNgoaiGio) == item.soBnNhapVienNgoaiGio ? Math.trunc(item.soBnNhapVienNgoaiGio) : Math.round(item.soBnNhapVienNgoaiGio * 10) / 10 }}</td>
                                   <td class="text-end bold">{{ Math.trunc(item.tongCong) == item.tongCong ? Math.trunc(item.tongCong) : Math.round(item.tongCong * 10) / 10 }}</td>
                                   <td class="text-end bold"></td>
                                   <td class="text-end bold">{{ Math.trunc(item.datCtkh) == item.datCtkh ? Math.trunc(item.datCtkh) : Math.round(item.datCtkh * 10) / 10 }}%</td>
@@ -280,7 +281,7 @@
                                   <td class="text-end bold">{{Math.trunc(item.diemTruc) == item.diemTruc ? Math.trunc(item.diemTruc) : Math.round(item.diemTruc * 10) / 10}}</td>
                                   <td class="text-end bold">{{Math.trunc(item.diemPTTTH/0.8) == item.diemPTTTH/0.8 ? Math.trunc(item.diemPTTTH/0.8) : Math.round((item.diemPTTTH/0.8) * 10) / 10}}</td>
                                   <td class="text-end bold">{{Math.trunc(item.diemBNNDTheoBs || 0) == item.diemBNNDTheoBs ? Math.trunc(item.diemBNNDTheoBs) : Math.round((item.diemBNNDTheoBs || 0) * 10) / 10}}</td>
-                                  <td class="text-end bold"></td>
+                                  <td class="text-end bold">{{ Math.trunc(item.soBnNhapVienNgoaiGio) == item.soBnNhapVienNgoaiGio ? Math.trunc(item.soBnNhapVienNgoaiGio) : Math.round(item.soBnNhapVienNgoaiGio * 10) / 10 }}</td>
                                   <td class="text-end bold">{{ Math.trunc(item.tongCong) == item.tongCong ? Math.trunc(item.tongCong) : Math.round(item.tongCong * 10) / 10 }}</td>
                                   <td class="text-end bold"></td>
                                   <td class="text-end bold">{{ item.datCtkh.toFixed(1) }}%</td>
@@ -299,7 +300,7 @@
                                   <td class="text-end">{{ Math.trunc(item.diemTruc) == item.diemTruc ? Math.trunc(item.diemTruc) : Math.round(item.diemTruc * 10) / 10 }}</td>
                                   <td class="text-end">{{ Math.trunc((item.diemPTTTH/0.8)) == (item.diemPTTTH/0.8) ? Math.trunc((item.diemPTTTH/0.8)) : Math.round((item.diemPTTTH/0.8) * 10) / 10 }}</td>
                                   <td class="text-end">{{ Math.trunc(item.diemBNNDTheoBs || 0) == item.diemBNNDTheoBs ? Math.trunc(item.diemBNNDTheoBs) : Math.round((item.diemBNNDTheoBs || 0) * 10) / 10 }}</td>
-                                  <td class="text-end"></td>
+                                  <td class="text-end">{{ Math.trunc(item.soBnNhapVienNgoaiGio) == item.soBnNhapVienNgoaiGio ? Math.trunc(item.soBnNhapVienNgoaiGio) : Math.round(item.soBnNhapVienNgoaiGio * 10) / 10 }}</td>
                                   <td class="text-end">{{ Math.trunc(item.tongCong) == item.tongCong ? Math.trunc(item.tongCong) : Math.round(item.tongCong * 10) / 10 }}</td>
                                   <td class="text-end"></td>
                                   <td class="text-end">{{ Math.trunc(item.datCtkh) == item.datCtkh ? Math.trunc(item.datCtkh) : Math.round(item.datCtkh * 10) / 10 }}%</td>
