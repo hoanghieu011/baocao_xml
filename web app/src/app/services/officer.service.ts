@@ -39,4 +39,16 @@ export class OfficerService {
       headers: this.httpConfig.getHeaders(),
       });
   }
+
+  getTtOfficerByBacsiId(bacSiId: number): Observable<any> {
+    const params = new HttpParams().set('bacSiId', bacSiId.toString());
+
+    return this.http.get<any>(
+      `${this.apiUrl}/tt_officer_by_bacsiid`,
+      {
+        headers: this.httpConfig.getHeaders(),
+        params,
+      }
+    );
+  }
 }

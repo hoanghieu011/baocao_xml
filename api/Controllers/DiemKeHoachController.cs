@@ -8,6 +8,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Data.Common;
 using System.Security.Claims;
 using System.Text.RegularExpressions;
+using MySqlConnector;
 
 namespace API.Controllers
 {
@@ -434,7 +435,64 @@ namespace API.Controllers
                 return StatusCode(500, new { message = "Lỗi server", detail = ex.Message });
             }
         }
-    }
+
+		/// <summary>
+		/// Kiểm tra bác sĩ đã có điểm kế hoạch trong tháng/năm chưa.
+		/// </summary>
+		[Authorize(Roles ="DS_DIEMKEHOACH, ADMIN")]
+		[HttpGet("tt_diemkehoach_by_bacsiid")]
+		public async Task<ActionResult<object>> GetDiemKeHoachByBacSiIdAsync(
+			[FromQuery] int bacSiId,
+			[FromQuery] string thangNam)
+		{
+			var userName = User.FindFirst(ClaimTypes.Name)?.Value
+				?? User.FindFirst("USER_NAME")?.Value;
+			var dbData = await _dbResolver.GetDatabaseByUserAsync(userName);
+			if (string.IsNullOrEmpty(dbData))
+				return BadRequest("Không xác định được database dữ liệu cho user.");
+
+			try
+			{
+				var sql = $@"
+                    SELECT dkh.DIEMKEHOACHID,
+                            dkh.BACSIID,
+                            dkh.BACSI AS OFFICER_NAME,
+                            dkh.DIEM_KEHOACH,
+                            dkh.SO_BUOITRUC,
+                            dkh.SO_BENHNHAN,
+                            dkh.DIEM_TRUC,
+                            dkh.DIEM_TRUC_CC,
+                            dkh.DIEM_LAYMAU,
+                            dkh.THANGNAM,
+                            org.ORG_NAME AS KHOA,
+                            0 AS OFFICER_TYPE,
+                            IFNULL(tc.DIEMTANGCUONG, 0) AS DIEMTANGCUONG
+                    FROM `{dbData}`.bc_diemkehoach dkh
+                    LEFT JOIN (
+                        SELECT DIEMKEHOACHID,
+                               SUM(DIEM) AS DIEMTANGCUONG
+                        FROM `{dbData}`.bc_tangcuong
+                        GROUP BY DIEMKEHOACHID
+                    ) tc ON dkh.DIEMKEHOACHID = tc.DIEMKEHOACHID
+                    LEFT JOIN his_common.org_organization org ON org.ORG_ID = dkh.KHOAID
+                    WHERE dkh.BACSIID = @bacSiId
+                      AND dkh.THANGNAM = @thangNam";
+				var data = await _context.diemkehoach
+					.FromSqlRaw(
+						sql,
+						new MySqlParameter("@bacSiId", bacSiId),
+						new MySqlParameter("@thangNam", thangNam))
+					.AsNoTracking()
+					.FirstOrDefaultAsync();
+
+				return Ok(new { data });
+			}
+			catch (Exception ex)
+			{
+				return StatusCode(500, new { message = "Lỗi server", detail = ex.Message });
+			}
+		}
+	}
     public class DsDiemKeHoachRequest
     {
         public int PageNumber { get; set; } = 1;
