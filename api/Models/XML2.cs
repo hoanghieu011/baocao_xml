@@ -24,8 +24,8 @@ namespace api.Models
         public string? TT_THAU { get; set; }
         public string? PHAM_VI { get; set; }
         public int? TYLE_TT_BH { get; set; }
-        public int? SO_LUONG { get; set; }
-        public int? DON_GIA { get; set; }
+        public decimal? SO_LUONG { get; set; }
+        public decimal? DON_GIA { get; set; }
         public int? THANH_TIEN_BV { get; set; }
         public int? THANH_TIEN_BH { get; set; }
         public int? T_NGUONKHAC_NSNN { get; set; }
