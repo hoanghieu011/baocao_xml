@@ -74,7 +74,7 @@ namespace API.Controllers
                     whereBuilder.Append(" AND (MA_DICH_VU LIKE @search OR TEN_DICH_VU LIKE @search)");
                 }
 
-                var sql = $"SELECT * FROM `{dbData}`.xml3" + whereBuilder.ToString() + $" LIMIT {pageSize} OFFSET {offset}";
+                var sql = $"SELECT * FROM `{dbData}`.xml3" + whereBuilder.ToString() + " ORDER BY STT" + $" LIMIT {pageSize} OFFSET {offset}";
 
                 var dsDvkt = await _context.xml3
                     .FromSqlRaw(sql, paramList.ToArray())
