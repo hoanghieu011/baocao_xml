@@ -4,7 +4,7 @@ import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } 
 import { ToastModule } from '@coreui/angular';
 import { Select2Module, Select2UpdateEvent } from 'ng-select2-component';
 import { OrganizationService } from '../services/org-organization.service';
-import { DiemKeHoachService, ThemDiemKeHoach, UpdateDiemKeHoach } from '../services/diem-ke-hoach.service';
+import { DiemKeHoachService, ThemDiemKeHoach, ThemDiemKeHoachTheoKhoa, UpdateDiemKeHoach } from '../services/diem-ke-hoach.service';
 import { TranslateModule } from '@ngx-translate/core';
 import { TangCuongService } from '../services/tang-cuong.service';
 import { forkJoin } from 'rxjs';
@@ -64,6 +64,18 @@ export class DiemKeHoachComponent  {
     1, 1, 1, 1, 12, 1, 8, 1, 1, 1, 1, 1
   ]
   isThemMoi = false;
+  // modal thêm điểm kế hoạch theo khoa (init 1 loạt cho toàn bộ bác sĩ/điều dưỡng trong khoa)
+  isShowModalTheoKhoa = false;
+  selected_khoa_theokhoa_id: number = 0;
+  formDataTheoKhoa = new FormGroup({
+    khoa: new FormControl(0, [Validators.required]),
+    diemKeHoach: new FormControl(0, [Validators.required]),
+    soBuoiTruc: new FormControl(0, [Validators.required]),
+    diemTruc: new FormControl(0, [Validators.required]),
+    soBnNhapVienNgoaiGio: new FormControl(0, [Validators.required]),
+    diemLayMauXN: new FormControl(0, [Validators.required]),
+    thangNam: new FormControl(''),
+  });
   // thông tin điểm kế hoạch đang thêm
   selected_khoa: any = null;
   selected_khoa_id: number = 0;
@@ -407,6 +419,65 @@ export class DiemKeHoachComponent  {
       soBnNhapVienNgoaiGio: new FormControl(0, [Validators.required]),
       diemLayMauXN: new FormControl(0, [Validators.required]),
       thangNam: new FormControl(`${this.cur_thang}${this.cur_nam}`, [Validators.required]),
+    });
+  }
+  themDiemKeHoachTheoKhoaClick() {
+    this.isShowModalTheoKhoa = true;
+    // Mặc định chọn sẵn khoa đang lọc (nếu có)
+    this.selected_khoa_theokhoa_id = this.cur_khoa || 0;
+    this.formDataTheoKhoa = new FormGroup({
+      khoa: new FormControl(this.selected_khoa_theokhoa_id, [Validators.required]),
+      diemKeHoach: new FormControl(0, [Validators.required]),
+      soBuoiTruc: new FormControl(0, [Validators.required]),
+      diemTruc: new FormControl(0, [Validators.required]),
+      soBnNhapVienNgoaiGio: new FormControl(0, [Validators.required]),
+      diemLayMauXN: new FormControl(0, [Validators.required]),
+      thangNam: new FormControl(`${this.cur_thang}${this.cur_nam}`, [Validators.required]),
+    });
+  }
+  onKhoaTheoKhoaChange(event: Select2UpdateEvent<any>) {
+    this.selected_khoa_theokhoa_id = event.value;
+    this.formDataTheoKhoa.get('khoa')?.setValue(this.selected_khoa_theokhoa_id);
+  }
+  onCloseModalTheoKhoa() {
+    this.isShowModalTheoKhoa = false;
+    this.formDataTheoKhoa.reset();
+    this.selected_khoa_theokhoa_id = 0;
+  }
+  onSaveDiemKeHoachTheoKhoa() {
+    if (this.formDataTheoKhoa.invalid || !this.selected_khoa_theokhoa_id) {
+      this.addToast('Vui lòng chọn khoa và điền đầy đủ thông tin', 'warning');
+      return;
+    }
+    const res = window.confirm('Thao tác này sẽ khởi tạo điểm kế hoạch cho toàn bộ bác sĩ/điều dưỡng trong khoa (bỏ qua người đã có điểm trong tháng). Bạn có chắc chắn?');
+    if (!res) {
+      return;
+    }
+    this.loading = true;
+    const diemKeHoach = {
+      khoaId: this.selected_khoa_theokhoa_id,
+      diemKeHoach: this.formDataTheoKhoa.get('diemKeHoach')?.value || 0,
+      soBuoiTruc: this.formDataTheoKhoa.get('soBuoiTruc')?.value || 0,
+      diemTruc: this.formDataTheoKhoa.get('diemTruc')?.value || 0,
+      soBnNhapVienNgoaiGio: this.formDataTheoKhoa.get('soBnNhapVienNgoaiGio')?.value || 0,
+      diemLayMau: this.formDataTheoKhoa.get('diemLayMauXN')?.value || 0,
+      thangNam: `${this.cur_thang}${this.cur_nam}`,
+    } as ThemDiemKeHoachTheoKhoa;
+    this.diemKeHoachService.themDiemKeHoachTheoKhoa(diemKeHoach).subscribe({
+      next: (res) => {
+        this.loading = false;
+        this.addToast(res?.message || 'Thêm điểm kế hoạch theo khoa thành công', 'success');
+        this.onCloseModalTheoKhoa();
+        // Nếu đang lọc đúng khoa vừa init thì tải lại danh sách
+        if (this.cur_khoa == diemKeHoach.khoaId) {
+          this.loadDiemKeHoach();
+        }
+      },
+      error: (err) => {
+        console.error(err);
+        this.loading = false;
+        this.addToast('Đã xảy ra lỗi khi thêm điểm kế hoạch theo khoa', 'danger');
+      }
     });
   }
   onSuaDiemKeHoachBtnClick(diemKeHoach: any) {
