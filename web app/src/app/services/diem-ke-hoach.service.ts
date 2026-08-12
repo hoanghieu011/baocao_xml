@@ -25,6 +25,17 @@ export type ThemDiemKeHoach = {
   bacSiId?: number,
   bacSi: string
 };
+
+export type ThemDiemKeHoachTheoKhoa = {
+  khoaId: number,
+  diemKeHoach: number,
+  soBuoiTruc: number,
+  diemTruc?: number,
+  soBnNhapVienNgoaiGio?: number,
+  soBenhNhan?: number,
+  diemLayMau?: number,
+  thangNam: string,
+};
 @Injectable({
   providedIn: 'root'
 })
@@ -76,6 +87,17 @@ export class DiemKeHoachService {
     };
     return this.http.post<any>(
       `${this.apiUrl}/them-moi-diemkehoach`,
+      body,
+      { headers: this.httpConfig.getHeaders() }
+    );
+  }
+
+  themDiemKeHoachTheoKhoa(diemKeHoach: ThemDiemKeHoachTheoKhoa): Observable<any> {
+    const body: any = {
+      ...diemKeHoach,
+    };
+    return this.http.post<any>(
+      `${this.apiUrl}/them-moi-diemkehoach-theo-khoa`,
       body,
       { headers: this.httpConfig.getHeaders() }
     );
