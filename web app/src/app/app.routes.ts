@@ -210,7 +210,16 @@ export const routes: Routes = [
               title: 'Báo cáo điểm ctkh',
               roles: ['BC_DIEM_CTKH', 'ADMIN']
             }
-          },    
+          },
+          {
+            path: 'import-du-lieu',
+            canActivate: [AuthGuard],
+            loadChildren: () => import('../app/import-data/import-data.routes').then(m => m.IMPORT_DATA_ROUTES),
+            data: {
+              title: 'Import dữ liệu',
+              roles: ['IMPORT_DATA', 'ADMIN']
+            }
+          },      
         ]
       },
       {

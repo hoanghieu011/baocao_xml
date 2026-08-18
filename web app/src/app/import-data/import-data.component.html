@@ -1,0 +1,37 @@
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">Import dữ liệu từ file</h5>
+        <form (ngSubmit)="onSubmit()" [formGroup]="formUpload">
+        <div class="mb-3 row">
+            <label for="fileInput" class="form-label col-sm-3 required">Loại dữ liệu import</label>
+            <select class="form-select col-sm-3" formControlName="importType" required (change)="onImportTypeChange($event)">
+                <option value="" disabled selected>Chọn loại dữ liệu</option>
+                <option value="XML">Dịch vụ kỹ thuật, vật tư</option>
+                <option value="BNND">Bệnh nhân nhân dân</option>
+                <option value="BN15T">Bệnh nhân 15T</option>
+                <option value="BN_NHAPVIEN">Bệnh nhân nhập viện</option>
+            </select>
+            <label for="fileInput" class="form-label col-sm-2 mt-2 required">Chọn {{ multiple ? 'nhiều' : 'một' }} File</label>
+            <input [multiple]="multiple" (change)="onFileSelected($event)"  type="file" class="form-control col-sm-4" id="fileInput" [accept]="fileAccept" required /> 
+            <ul class="file-list">
+                @for (file of selectedFiles; track file.name) {
+                    <li class="file-item">
+                    <span class="file-name"><strong>{{ file.name }}</strong> </span>
+                    <span class="file-size"><strong>({{ formatBytes(file.size) }})</strong> </span>
+                    </li>
+                }
+            </ul>
+                
+        </div>
+        <button type="submit" class="btn btn-primary" [disabled]="selectedFiles.length === 0 || isSubmitting">
+            <span *ngIf="!isSubmitting">Import</span>
+            <span *ngIf="isSubmitting" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+        </button>
+        <button type="button" class="btn btn-secondary ml-2" (click)="resetForm()" [disabled]="isSubmitting" style="margin-left: 10px;">
+            Reset
+        </button>
+        </form>
+    </div>
+    
+
+</div>

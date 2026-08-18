@@ -55,6 +55,12 @@ export const navItems: INavDataExtended[] = [
         roles: ['BC_DIEM_CTKH', 'ADMIN'],
         url: '/baocao-tracuu/diem_ctkh',
         iconComponent: { name: 'cil-chart' }
+      },
+      {
+        name: 'Import dữ liệu',
+        roles: ['IMPORT_DATA', 'ADMIN'],
+        url: '/baocao-tracuu/import-du-lieu',
+        iconComponent: { name: 'cilCloudUpload' }
       }
     ]
   },

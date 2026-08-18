@@ -1,0 +1,16 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\api",
+    "\\api\\Models",
+    "\\web app",
+    "\\web app\\src",
+    "\\web app\\src\\app",
+    "\\web app\\src\\app\\diem-ke-hoach",
+    "\\web app\\src\\app\\ds-benhnhan",
+    "\\web app\\src\\app\\icons",
+    "\\web app\\src\\app\\import-data"
+  ],
+  "SelectedNode": "\\web app\\src\\app\\import-data\\import-data.component.ts",
+  "PreviewInSolutionExplorer": false
+}

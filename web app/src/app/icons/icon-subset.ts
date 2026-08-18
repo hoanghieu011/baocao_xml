@@ -100,7 +100,8 @@ import {
   cilUserUnfollow,
   cilFlagAlt,
   cilAddressBook,
-  cilSearch
+  cilSearch,
+  cilCloudUpload,
 } from '@coreui/icons';
 
 import { signet } from './signet';
@@ -151,6 +152,7 @@ export const iconSubset = {
   cilChevronLeft,
   cilChevronRight,
   cilCloudDownload,
+  cilCloudUpload,
   cilCode,
   cilCommentSquare,
   cilContrast,
@@ -256,6 +258,7 @@ export enum IconSubset {
   cilChevronLeft = 'cilChevronLeft',
   cilChevronRight = 'cilChevronRight',
   cilCloudDownload = 'cilCloudDownload',
+  cilCloudUpload = 'cilCloudUpload',
   cilCode = 'cilCode',
   cilCommentSquare = 'cilCommentSquare',
   cilContrast = 'cilContrastś',

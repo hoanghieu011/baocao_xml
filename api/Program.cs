@@ -1,10 +1,11 @@
-using API.Data;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.OpenApi.Models;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
 using API.Common;
+using API.Data;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using System.Text;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,7 +30,11 @@ builder.Services.AddCors(options =>
         });
 });
 var connectionStrings = new ConnectionStrings();
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    } 
+);
 builder.Services.AddScoped<API.Common.DatabaseResolver>();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseMySql(connectionStrings.DefaultConnection,

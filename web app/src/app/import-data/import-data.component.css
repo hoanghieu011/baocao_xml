@@ -1,0 +1,15 @@
+.required:after {
+  content: " *";
+  color: red;
+}
+ul {
+  margin-top: 10px;
+  list-style-type: none;
+  padding-left: 0;
+}
+.file-item {
+  padding: 5px;
+  margin-bottom: 5px;
+  border-radius: 4px;
+  background-color: #b9dcff;
+}
