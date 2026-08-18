@@ -121,7 +121,7 @@ export class DsBenhnhanComponent implements OnDestroy, OnInit {
   showDvktModal = false;
   dvktLoading = false;
   dvktPageNumber = 1;
-  dvktPageSize = 10;
+  dvktPageSize = 50;
   dvktTotalRecords = 0;
   private dvktRequest?: Subscription;
 
@@ -130,7 +130,7 @@ export class DsBenhnhanComponent implements OnDestroy, OnInit {
   showThuocModal = false;
   thuocLoading = false;
   thuocPageNumber = 1;
-  thuocPageSize = 10;
+  thuocPageSize = 50;
   thuocTotalRecords = 0;
   private thuocRequest?: Subscription;
   

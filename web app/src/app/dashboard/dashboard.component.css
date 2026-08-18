@@ -1,0 +1,121 @@
+.dashboard-page {
+  padding: 0.25rem;
+}
+
+.dashboard-shell {
+  border: 1px solid #e9edf3;
+  border-radius: 0.75rem;
+  box-shadow: 0 8px 24px rgba(15, 30, 52, 0.06);
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.dashboard-title {
+  color: #063b8b;
+  font-weight: 700;
+}
+
+.year-filter {
+  width: 170px;
+}
+
+.kpi-row {
+  align-items: stretch;
+}
+
+.kpi-card {
+  height: 100%;
+  border-radius: 0.75rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid rgba(6, 59, 139, 0.12);
+  background: #ffffff;
+}
+
+.kpi-label {
+  font-size: 0.85rem;
+  color: #5c6b7a;
+  margin-bottom: 0.3rem;
+}
+
+.kpi-value {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #1f2d3d;
+  margin-bottom: 0.25rem;
+  line-height: 1.35;
+}
+
+.kpi-note {
+  color: #74808c;
+  font-size: 0.82rem;
+}
+
+.kpi-visit {
+  border-left: 5px solid #0d6efd;
+}
+
+.kpi-patient {
+  border-left: 5px solid #20c997;
+}
+
+.kpi-revenue {
+  border-left: 5px solid #6f42c1;
+}
+
+.chart-card {
+  border: 1px solid #e9edf3;
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+
+.chart-card-header {
+  background: linear-gradient(180deg, #f7f9fc 0%, #f2f6fb 100%);
+  color: #2d3b4e;
+  font-weight: 600;
+  border-bottom: 1px solid #e9edf3;
+}
+
+.chart-body {
+  position: relative;
+  height: 320px;
+}
+
+.donut-chart-body {
+  height: 290px;
+}
+
+.bar-chart-body {
+  height: 360px;
+}
+
+.chart-summary {
+  padding: 0 1rem 1rem;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.88rem;
+  color: #3e4b59;
+}
+
+@media (max-width: 991.98px) {
+  .year-filter {
+    width: 100%;
+    max-width: 240px;
+  }
+
+  .chart-body,
+  .bar-chart-body {
+    height: 300px;
+  }
+}

@@ -1,0 +1,90 @@
+<div class="dashboard-page">
+  <div class="card dashboard-shell">
+    <div class="card-body">
+      <div class="dashboard-header">
+        <div>
+          <h5 class="dashboard-title mb-1">Tổng quan hoạt động</h5>
+          <p class="text-body-secondary mb-0">Số liệu tổng hợp năm {{ selectedYear }}</p>
+        </div>
+
+        <div class="year-filter">
+          <label for="dashboard-year" class="form-label mb-1">Năm</label>
+          <select
+            id="dashboard-year"
+            class="form-select"
+            [(ngModel)]="selectedYear"
+            (change)="onYearChange()"
+          >
+            <option *ngFor="let year of years" [ngValue]="year">{{ year }}</option>
+          </select>
+          <small *ngIf="loading" class="text-body-secondary">Đang tải dữ liệu...</small>
+        </div>
+      </div>
+
+      <div class="row g-3 kpi-row mt-1">
+        <div class="col-12 col-md-6 col-xl-4">
+          <div class="kpi-card kpi-visit">
+            <div class="kpi-label">Số lượt khám</div>
+            <div class="kpi-value">{{ totalVisits | number:'1.0-0' }}</div>
+            <div class="kpi-note">Trung bình {{ avgVisitsPerMonth | number:'1.0-0' }} lượt/tháng</div>
+          </div>
+        </div>
+        <div class="col-12 col-md-6 col-xl-4">
+          <div class="kpi-card kpi-patient">
+            <div class="kpi-label">Số bệnh nhân bảo hiểm</div>
+            <div class="kpi-value">{{ totalInsuredPatients | number:'1.0-0' }}</div>
+            <div class="kpi-note">Theo dữ liệu tổng hợp năm</div>
+          </div>
+        </div>
+        <div class="col-12 col-md-6 col-xl-4">
+          <div class="kpi-card kpi-revenue">
+            <div class="kpi-label">Tổng doanh thu</div>
+            <div class="kpi-value">{{ totalRevenue | currency:'VND':'symbol':'1.0-0':'vi-VN' }}</div>
+            <div class="kpi-note">BHYT + Viện phí</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-3 mt-2">
+        <div class="col-12 col-xl-8">
+          <div class="card chart-card">
+            <div class="card-header chart-card-header">Lượt khám theo tháng</div>
+            <div class="card-body chart-body">
+              <canvas id="visitsLineChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-xl-4">
+          <div class="card chart-card">
+            <div class="card-header chart-card-header">Cơ cấu doanh thu</div>
+            <div class="card-body chart-body donut-chart-body">
+              <canvas id="revenueDonutChart"></canvas>
+            </div>
+            <div class="chart-summary">
+              <div class="summary-item">
+                <span>Tỷ trọng BHYT chi trả</span>
+                <strong>{{ bhytPaidRevenueRate | number:'1.0-1' }}%</strong>
+              </div>
+              <div class="summary-item">
+                <span>Tỷ trọng BN cùng chi trả</span>
+                <strong>{{ copayRevenueRate | number:'1.0-1' }}%</strong>
+              </div>
+              <div class="summary-item">
+                <span>Tỷ trọng Viện phí</span>
+                <strong>{{ hospitalFeeRevenueRate | number:'1.0-1' }}%</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card chart-card mt-3">
+        <div class="card-header chart-card-header">Doanh thu theo tháng (Bảo hiểm và Viện phí)</div>
+        <div class="card-body chart-body bar-chart-body">
+          <canvas id="revenueBarChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

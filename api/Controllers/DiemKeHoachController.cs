@@ -8,6 +8,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Data.Common;
 using System.Security.Claims;
 using System.Text.RegularExpressions;
+using MySqlConnector;
 
 namespace API.Controllers
 {
@@ -401,6 +402,192 @@ namespace API.Controllers
             }
         }
 
+        [Authorize(Policy = "ThemMoiDkh")]
+        [HttpPost("them-moi-diemkehoach-theo-khoa")]
+        public async Task<ActionResult<object>> ThemDiemKeHoachTheoKhoa([FromBody] ThemDiemKeHoachTheoKhoaRequest req)
+        {
+            try
+            {
+                if (req == null)
+                    return BadRequest("Yêu cầu không hợp lệ.");
+
+                var userName = User.FindFirst(ClaimTypes.Name)?.Value
+                    ?? User.FindFirst("USER_NAME")?.Value;
+
+                var csytid = User.FindFirst(ClaimTypes.Name)?.Value
+                ?? User.FindFirst("CSYTID")?.Value;
+                // Lấy tên database động thông qua service dùng chung
+                var dbData = await _dbResolver.GetDatabaseByUserAsync(userName);
+
+				if (string.IsNullOrEmpty(dbData))
+                    return BadRequest("Không xác định được database dữ liệu cho user.");
+                if (string.IsNullOrEmpty(userName))
+                    return Unauthorized();
+
+                var conn = _context.Database.GetDbConnection();
+
+                if (conn.State != System.Data.ConnectionState.Open)
+                    await conn.OpenAsync();
+
+                // 1. Lấy danh sách bác sĩ/điều dưỡng đang hoạt động trong khoa
+                var dsOfficer = new List<(int BacSiId, string BacSi, int OfficerType)>();
+                using (var cmdOfficer = conn.CreateCommand())
+                {
+                    cmdOfficer.CommandText = "SELECT BACSIID, OFFICER_NAME, OFFICER_TYPE FROM his_common.org_officer " +
+                        "WHERE KHOAID = @khoaId AND STATUS = 1 AND MA_BAC_SI IS NOT NULL AND MA_BAC_SI <> ''";
+                    var pk = cmdOfficer.CreateParameter();
+                    pk.ParameterName = "@khoaId";
+                    pk.Value = req.KhoaId;
+                    cmdOfficer.Parameters.Add(pk);
+
+                    using var reader = await cmdOfficer.ExecuteReaderAsync();
+                    while (await reader.ReadAsync())
+                    {
+                        dsOfficer.Add((
+                            reader.GetInt32(0),
+                            reader.IsDBNull(1) ? "" : reader.GetString(1),
+                            reader.IsDBNull(2) ? 0 : reader.GetInt32(2)
+                        ));
+                    }
+                }
+
+                if (dsOfficer.Count == 0)
+                    return Ok(new
+                    {
+                        message = "Khoa không có bác sĩ/điều dưỡng nào để thêm điểm kế hoạch.",
+                        soLuongThem = 0,
+                        soLuongBoQua = 0
+                    });
+
+                // 2. Lấy danh sách bacsiid đã có điểm kế hoạch trong tháng/năm để bỏ qua (tránh trùng)
+                var existingBacSiIds = new HashSet<int>();
+                using (var cmdExist = conn.CreateCommand())
+                {
+                    cmdExist.CommandText = $"SELECT BACSIID FROM `{dbData}`.bc_diemkehoach " +
+                        "WHERE THANGNAM = @thangNam AND KHOAID = @khoaId";
+                    var pt = cmdExist.CreateParameter();
+                    pt.ParameterName = "@thangNam";
+                    pt.Value = req.ThangNam;
+                    cmdExist.Parameters.Add(pt);
+                    var pk2 = cmdExist.CreateParameter();
+                    pk2.ParameterName = "@khoaId";
+                    pk2.Value = req.KhoaId;
+                    cmdExist.Parameters.Add(pk2);
+
+                    using var reader = await cmdExist.ExecuteReaderAsync();
+                    while (await reader.ReadAsync())
+                    {
+                        if (!reader.IsDBNull(0))
+                            existingBacSiIds.Add(reader.GetInt32(0));
+                    }
+                }
+
+                var ngayTao = DateOnly.FromDateTime(DateTime.Now);
+                int soLuongThem = 0;
+                int soLuongBoQua = 0;
+
+                // 3. Thêm điểm cho từng người chưa có điểm trong tháng (transaction để đảm bảo toàn vẹn)
+                using var transaction = await conn.BeginTransactionAsync();
+                try
+                {
+                    foreach (var officer in dsOfficer)
+                    {
+                        if (existingBacSiIds.Contains(officer.BacSiId))
+                        {
+                            soLuongBoQua++;
+                            continue;
+                        }
+
+                        using var cmd = conn.CreateCommand();
+                        cmd.Transaction = transaction;
+                        cmd.CommandText = $"INSERT INTO `{dbData}`.bc_diemkehoach (KHOAID, BACSIID, BACSI, DIEM_KEHOACH, SO_BN_NHAPVIEN_NGOAIGIO ,SO_BUOITRUC, SO_BENHNHAN, DIEM_TRUC, DIEM_TRUC_CC, DIEM_LAYMAU, THANGNAM, NGAYTAO)" +
+                            "VALUES(@khoaId, @bacSiId, @bacSi, @diemKeHoach, @soBnNhapVienNgoaiGio, @soBuoiTruc, @soBenhNhan, @diemTruc, @diemTrucCc, @diemLaymau, @thangNam, @ngayTao);";
+
+                        var q1 = cmd.CreateParameter();
+                        q1.ParameterName = "@khoaId";
+                        q1.Value = req.KhoaId;
+                        cmd.Parameters.Add(q1);
+
+                        var q2 = cmd.CreateParameter();
+                        q2.ParameterName = "@bacSiId";
+                        q2.Value = officer.BacSiId;
+                        cmd.Parameters.Add(q2);
+
+                        var q3 = cmd.CreateParameter();
+                        q3.ParameterName = "@bacSi";
+                        q3.Value = officer.BacSi;
+                        cmd.Parameters.Add(q3);
+
+                        var q4 = cmd.CreateParameter();
+                        q4.ParameterName = "@diemKeHoach";
+                        q4.Value = (object?)req.DiemKeHoach ?? 0;
+                        cmd.Parameters.Add(q4);
+
+                        var q5 = cmd.CreateParameter();
+                        q5.ParameterName = "@soBuoiTruc";
+                        q5.Value = (object?)req.SoBuoiTruc ?? 0;
+                        cmd.Parameters.Add(q5);
+
+                        var q6 = cmd.CreateParameter();
+                        q6.ParameterName = "@soBenhNhan";
+                        q6.Value = (object?)req.SoBenhNhan ?? 0;
+                        cmd.Parameters.Add(q6);
+
+                        var q7 = cmd.CreateParameter();
+                        q7.ParameterName = "@diemTruc";
+                        q7.Value = (object?)req.DiemTruc ?? 0;
+                        cmd.Parameters.Add(q7);
+
+                        var q8 = cmd.CreateParameter();
+                        q8.ParameterName = "@diemTrucCc";
+                        q8.Value = 0;
+                        cmd.Parameters.Add(q8);
+
+                        var q9 = cmd.CreateParameter();
+                        q9.ParameterName = "@diemLaymau";
+                        q9.Value = (object?)req.DiemLayMau ?? 0;
+                        cmd.Parameters.Add(q9);
+
+                        var q10 = cmd.CreateParameter();
+                        q10.ParameterName = "@thangNam";
+                        q10.Value = req.ThangNam;
+                        cmd.Parameters.Add(q10);
+
+                        var q11 = cmd.CreateParameter();
+                        q11.ParameterName = "@ngayTao";
+                        q11.Value = ngayTao;
+                        cmd.Parameters.Add(q11);
+
+                        var q12 = cmd.CreateParameter();
+                        q12.ParameterName = "@soBnNhapVienNgoaiGio";
+                        q12.Value = (object?)req.SoBnNhapVienNgoaiGio ?? 0;
+                        cmd.Parameters.Add(q12);
+
+                        await cmd.ExecuteNonQueryAsync();
+                        soLuongThem++;
+                    }
+
+                    await transaction.CommitAsync();
+                }
+                catch
+                {
+                    await transaction.RollbackAsync();
+                    throw;
+                }
+
+                return Ok(new
+                {
+                    message = $"Thêm điểm kế hoạch theo khoa thành công. Đã thêm {soLuongThem} người, bỏ qua {soLuongBoQua} người đã có điểm trong tháng.",
+                    soLuongThem,
+                    soLuongBoQua
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Lỗi server", detail = ex.Message });
+            }
+        }
+
         [Authorize(Policy = "XoaDkh")]
         [HttpDelete("xoa-diemkehoach/{id}")]
         public async Task<ActionResult<object>> XoaDiemKeHoach(int id)
@@ -444,7 +631,64 @@ namespace API.Controllers
                 return StatusCode(500, new { message = "Lỗi server", detail = ex.Message });
             }
         }
-    }
+
+		/// <summary>
+		/// Kiểm tra bác sĩ đã có điểm kế hoạch trong tháng/năm chưa.
+		/// </summary>
+		[Authorize(Roles ="DS_DIEMKEHOACH, ADMIN")]
+		[HttpGet("tt_diemkehoach_by_bacsiid")]
+		public async Task<ActionResult<object>> GetDiemKeHoachByBacSiIdAsync(
+			[FromQuery] int bacSiId,
+			[FromQuery] string thangNam)
+		{
+			var userName = User.FindFirst(ClaimTypes.Name)?.Value
+				?? User.FindFirst("USER_NAME")?.Value;
+			var dbData = await _dbResolver.GetDatabaseByUserAsync(userName);
+			if (string.IsNullOrEmpty(dbData))
+				return BadRequest("Không xác định được database dữ liệu cho user.");
+
+			try
+			{
+				var sql = $@"
+                    SELECT dkh.DIEMKEHOACHID,
+                            dkh.BACSIID,
+                            dkh.BACSI AS OFFICER_NAME,
+                            dkh.DIEM_KEHOACH,
+                            dkh.SO_BUOITRUC,
+                            dkh.SO_BENHNHAN,
+                            dkh.DIEM_TRUC,
+                            dkh.DIEM_TRUC_CC,
+                            dkh.DIEM_LAYMAU,
+                            dkh.THANGNAM,
+                            org.ORG_NAME AS KHOA,
+                            0 AS OFFICER_TYPE,
+                            IFNULL(tc.DIEMTANGCUONG, 0) AS DIEMTANGCUONG
+                    FROM `{dbData}`.bc_diemkehoach dkh
+                    LEFT JOIN (
+                        SELECT DIEMKEHOACHID,
+                               SUM(DIEM) AS DIEMTANGCUONG
+                        FROM `{dbData}`.bc_tangcuong
+                        GROUP BY DIEMKEHOACHID
+                    ) tc ON dkh.DIEMKEHOACHID = tc.DIEMKEHOACHID
+                    LEFT JOIN his_common.org_organization org ON org.ORG_ID = dkh.KHOAID
+                    WHERE dkh.BACSIID = @bacSiId
+                      AND dkh.THANGNAM = @thangNam";
+				var data = await _context.diemkehoach
+					.FromSqlRaw(
+						sql,
+						new MySqlParameter("@bacSiId", bacSiId),
+						new MySqlParameter("@thangNam", thangNam))
+					.AsNoTracking()
+					.FirstOrDefaultAsync();
+
+				return Ok(new { data });
+			}
+			catch (Exception ex)
+			{
+				return StatusCode(500, new { message = "Lỗi server", detail = ex.Message });
+			}
+		}
+	}
     public class DsDiemKeHoachRequest
     {
         public int PageNumber { get; set; } = 1;
@@ -481,6 +725,20 @@ namespace API.Controllers
         public int? SoBnNhapVienNgoaiGio { get; set; }
         public decimal? DiemTruc { get; set; }
         public decimal? DiemTrucCc { get; set; }
+        public decimal? DiemLayMau { get; set; }
+        [Required]
+        public string ThangNam { get; set; }
+    }
+
+    public class ThemDiemKeHoachTheoKhoaRequest
+    {
+        [Required]
+        public int KhoaId { get; set; }
+        public decimal? DiemKeHoach { get; set; }
+        public decimal? SoBuoiTruc { get; set; }
+        public decimal? DiemTruc { get; set; }
+        public int? SoBenhNhan { get; set; }
+        public int? SoBnNhapVienNgoaiGio { get; set; }
         public decimal? DiemLayMau { get; set; }
         [Required]
         public string ThangNam { get; set; }

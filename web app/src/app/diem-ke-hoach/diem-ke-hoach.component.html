@@ -39,6 +39,10 @@
         <span *ngIf="!loading">Thêm điểm kế hoạch</span>
         <span *ngIf="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
       </button>
+      <button class="btn btn-primary fit-content mr-2" (click)="themDiemKeHoachTheoKhoaClick()">
+        <span *ngIf="!loading">Thêm điểm kế hoạch theo khoa</span>
+        <span *ngIf="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+      </button>
       <!-- <button class="btn btn-primary fit-content"  >
         <span *ngIf="!loading">Nhập điểm</span>
         <span *ngIf="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
@@ -160,6 +164,7 @@
             <tr>
               <th *ngIf="!isThemMoi" colspan="2" style="background: #d0d0d0;">
                 <br> {{selectedDiemKeHoach?.officerType ==4 ? 'Bác sĩ' : 'Điều dưỡng'}}: {{selectedDiemKeHoach?.officerName}}
+                <br> Khoa: {{selectedDiemKeHoach?.khoa}} 
               </th>
 
             </tr>
@@ -243,6 +248,75 @@
     <div class="modal-footer gap-2" style="justify-content: flex-end;">
       <button class="btn btn-secondary" (click)="onCloseModal()">Đóng</button>
       <button class="btn btn-primary" (click)="onSaveDiemKeHoach()" [disabled]="formDataDiemKeHoach.invalid || loading">
+        <span>Lưu</span>
+        <span *ngIf="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop ng-star-inserted" *ngIf="isShowModalTheoKhoa">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h6 class="modal-title">Thêm điểm kế hoạch theo khoa tháng {{cur_thang}}/{{cur_nam}}</h6>
+      <button type="button" class="btn-close" aria-label="Close" (click)="onCloseModalTheoKhoa()"></button>
+    </div>
+
+    <div class="modal-body">
+      <div class="alert alert-info py-2 mb-3" style="font-size: 0.9rem;">
+        Khởi tạo nhanh cùng một bộ điểm kế hoạch cho <b>toàn bộ bác sĩ/điều dưỡng</b> trong khoa được chọn.
+        Những người đã có điểm trong tháng sẽ được bỏ qua.
+      </div>
+      <form [formGroup]="formDataTheoKhoa">
+        <div class="row">
+          <div>
+            <label for="">Chọn khoa:</label>
+            <select2 class="form-control" [overlay]="false" placeholder=""
+              [data]="ds_khoa" (update)="onKhoaTheoKhoaChange($event)" [styleMode]="'borderless'" [value]="selected_khoa_theokhoa_id"
+              id="khoa_theokhoa" style="height: 38px; padding: 4px 0 0 0;">
+            </select2>
+          </div>
+        </div>
+        <table class="table table-sm mb-0 patient-modal-table">
+          <tbody>
+            <tr>
+              <th class="w-40">Điểm kế hoạch <span class="required-field"></span></th>
+              <td class="w-60 month-year-input">
+                <input type="number" class="form-control form-control-sm" formControlName="diemKeHoach" placeholder="Điểm kế hoạch" />
+              </td>
+            </tr>
+            <tr>
+              <th class="w-40">Số buổi trực <span class="required-field"></span></th>
+              <td class="w-60">
+                <input type="number" class="form-control form-control-sm" formControlName="soBuoiTruc" placeholder="Số buổi trực" />
+              </td>
+            </tr>
+            <tr>
+              <th class="w-40">Điểm trực <span class="required-field"></span></th>
+              <td class="w-60">
+                <input type="number" class="form-control form-control-sm" formControlName="diemTruc" placeholder="Điểm trực" />
+              </td>
+            </tr>
+            <tr>
+              <th class="w-40">Số BN Nhập viện ngoài giờ <span class="required-field"></span></th>
+              <td class="w-60">
+                <input type="number" class="form-control form-control-sm" formControlName="soBnNhapVienNgoaiGio" placeholder="Số Bn Nhập viện ngoài giờ" />
+              </td>
+            </tr>
+            <tr>
+              <th class="w-40">Điểm lấy mẫu XN <span class="required-field"></span></th>
+              <td class="w-60">
+                <input type="number" class="form-control form-control-sm" formControlName="diemLayMauXN" placeholder="Điểm lấy mẫu XN" />
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </form>
+    </div>
+
+    <div class="modal-footer gap-2" style="justify-content: flex-end;">
+      <button class="btn btn-secondary" (click)="onCloseModalTheoKhoa()">Đóng</button>
+      <button class="btn btn-primary" (click)="onSaveDiemKeHoachTheoKhoa()" [disabled]="formDataTheoKhoa.invalid || loading">
         <span>Lưu</span>
         <span *ngIf="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
       </button>

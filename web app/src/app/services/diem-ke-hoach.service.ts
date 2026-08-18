@@ -25,6 +25,17 @@ export type ThemDiemKeHoach = {
   bacSiId?: number,
   bacSi: string
 };
+
+export type ThemDiemKeHoachTheoKhoa = {
+  khoaId: number,
+  diemKeHoach: number,
+  soBuoiTruc: number,
+  diemTruc?: number,
+  soBnNhapVienNgoaiGio?: number,
+  soBenhNhan?: number,
+  diemLayMau?: number,
+  thangNam: string,
+};
 @Injectable({
   providedIn: 'root'
 })
@@ -81,10 +92,31 @@ export class DiemKeHoachService {
     );
   }
 
+  themDiemKeHoachTheoKhoa(diemKeHoach: ThemDiemKeHoachTheoKhoa): Observable<any> {
+    const body: any = {
+      ...diemKeHoach,
+    };
+    return this.http.post<any>(
+      `${this.apiUrl}/them-moi-diemkehoach-theo-khoa`,
+      body,
+      { headers: this.httpConfig.getHeaders() }
+    );
+  }
+
   deleteDiemKeHoach(diemKeHoachId: number): Observable<any> {
     return this.http.delete<any>(
       `${this.apiUrl}/xoa-diemkehoach/${diemKeHoachId}`,
       { headers: this.httpConfig.getHeaders() }
+    );
+  }
+
+  getTtDiemKeHoachByBacSiId(bacSiId: number, thangNam: string) {
+    return this.http.get<any>(
+      `${this.apiUrl}/tt_diemkehoach_by_bacsiid`, 
+      {
+        params: { bacSiId, thangNam },
+        headers: this.httpConfig.getHeaders()
+      }
     );
   }
 }

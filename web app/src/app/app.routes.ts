@@ -137,12 +137,12 @@ export const routes: Routes = [
         }
       },
       {
-        path: 'phan-quyen',
+        path: 'dashboard',
         canActivate: [AuthGuard],
-        loadChildren: () => import('../app/phan-quyen/phan-quyen.routes').then(m => m.PHAN_QUYEN),
+        loadChildren: () => import('../app/dashboard/dashboard.routes').then(m => m.DASHBOARD),
         data: {
-          title: 'MENU.PHAN_QUYEN',
-          roles: ['admin']
+          title: 'Dashboard',
+          roles: ['']
         }
       },
       {

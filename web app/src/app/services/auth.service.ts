@@ -74,17 +74,18 @@ export class AuthService {
     console.log('userInfo:', userInfo);
     // const roles = userInfo?.roles?.split(',').map((r: string) => r.trim()) || [];
     const roles = userInfo?.roles || [];
-    if (roles.includes('tao_phieu')) {
-      this.router.navigate(['/tao-phieu-nghi-phep']);
-    } else if (roles.includes('xu_ly')) {
-      this.router.navigate(['/xu-ly-phieu-nghi']);
-    } else if (roles.includes('bao_cao')) {
-      this.router.navigate(['/bao-cao']);
-    } else if (roles.includes('admin')) {
-      this.router.navigate(['/quan-ly-nhan-vien']);
-    } else {
-      this.router.navigate(['baocao-tracuu/ds_benhnhan']);
-    }
+    // if (roles.includes('tao_phieu')) {
+    //   this.router.navigate(['/tao-phieu-nghi-phep']);
+    // } else if (roles.includes('xu_ly')) {
+    //   this.router.navigate(['/xu-ly-phieu-nghi']);
+    // } else if (roles.includes('bao_cao')) {
+    //   this.router.navigate(['/bao-cao']);
+    // } else if (roles.includes('admin')) {
+    //   this.router.navigate(['/quan-ly-nhan-vien']);
+    // } else {
+    //   this.router.navigate(['/dashboard']);
+    // }
+    this.router.navigate(['/dashboard']);
   }
 
   changePassword(user_name: string, oldPassword: string, newPassword: string): Observable<boolean> {

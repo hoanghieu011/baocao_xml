@@ -74,7 +74,7 @@ namespace API.Controllers
                     whereBuilder.Append(" AND (MA_THUOC LIKE @search OR TEN_THUOC LIKE @search)");
                 }
 
-                var sql = $"SELECT * FROM `{dbData}`.xml2" + whereBuilder.ToString() + $" LIMIT {pageSize} OFFSET {offset}";
+                var sql = $"SELECT * FROM `{dbData}`.xml2" + whereBuilder.ToString() + " ORDER BY STT" + $" LIMIT {pageSize} OFFSET {offset}";
 
                 var dsThuoc = await _context.xml2
                     .FromSqlRaw(sql, paramList.ToArray())
