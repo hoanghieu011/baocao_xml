@@ -8,6 +8,12 @@ export interface INavDataExtended extends INavData {
 }
 
 export const navItems: INavDataExtended[] = [
+   {
+    name: 'Dashboard',
+    iconComponent: { name: 'cil-chart-pie' },
+    url: '/dashboard',
+    roles: ['all']
+  }, 
   {
     name: 'Báo cáo và tra cứu',
     iconComponent: { name: 'cilSearch' },
