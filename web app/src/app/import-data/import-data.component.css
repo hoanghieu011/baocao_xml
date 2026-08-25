@@ -11,5 +11,16 @@ ul {
   padding: 5px;
   margin-bottom: 5px;
   border-radius: 4px;
-  background-color: #b9dcff;
+  .file-item-header {
+    display: flex;
+    background-color: #b9dcff;
+  }
+}
+
+.hint, .errors {
+  color: red;
+}
+
+.row {
+  display: flex;
 }

@@ -2,15 +2,15 @@
   "ExpandedNodes": [
     "",
     "\\api",
-    "\\api\\Models",
+    "\\api\\Common",
     "\\web app",
     "\\web app\\src",
     "\\web app\\src\\app",
-    "\\web app\\src\\app\\diem-ke-hoach",
-    "\\web app\\src\\app\\ds-benhnhan",
+    "\\web app\\src\\app\\custom",
+    "\\web app\\src\\app\\custom\\validators",
     "\\web app\\src\\app\\icons",
     "\\web app\\src\\app\\import-data"
   ],
-  "SelectedNode": "\\web app\\src\\app\\import-data\\import-data.component.ts",
+  "SelectedNode": "\\web app\\src\\app\\custom\\validators\\multiple-file-validator.ts",
   "PreviewInSolutionExplorer": false
 }

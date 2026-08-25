@@ -1,93 +1,168 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { BorderDirective, TableDirective } from '@coreui/angular';
+import { BorderDirective, SpinnerModule, TableDirective } from '@coreui/angular';
 import { ToastModule } from '@coreui/angular';
-import { Subscription } from 'rxjs';
-import { ImportDataService } from '../services/import-data.service';
-import { FileValidators } from '../custom/validators/multiple-file-validator';
+import { Subject, Subscription, takeUntil } from 'rxjs';
+import { ExcelTypeData, ImportDataService } from '../services/import-data.service';
+import { FILE_VALIDATE_ERRORS, fileTypeValidator, maxFileSizeValidator, maxFilesValidator } from '../custom/validators/multiple-file-validator';
 type ImportDataResult = {
   success: boolean;
   message: string;
 }
+
+type FileUploadStatus = 'START' | 'BACKUP' | 'INSERT' | 'ROLLBACK' | 'INIT' | 'COMPLETE'
+
+type FileStatus = {
+  preName: string;
+  extension: string;
+  formattedFileSize: string;
+  validateErrors: FILE_VALIDATE_ERRORS[]; 
+  uploadStatus: FileUploadStatus;
+  uploadResult: string;
+  uploadError: string;
+}
+
+type UploadType = 'XML' | 'BNND' | 'BN15T' | 'BN_NHAPVIEN' | '';
+
+const EXTENSIONS_BY_TYPE: Record<string, string[]> = {
+  XML: ['.xml'],
+  BNND: ['.xls', '.xlsx'],
+  BN15T: ['.xls', '.xlsx'],
+  BN_NHAPVIEN: ['.xls', '.xlsx'],
+};
+
 @Component({
   selector: 'app-import-data',
   standalone: true,
-  imports: [CommonModule, FormsModule, TableDirective, BorderDirective, ToastModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule, TableDirective, BorderDirective, ToastModule, ReactiveFormsModule, SpinnerModule],
   templateUrl: './import-data.component.html',
   styleUrls: ['./import-data.component.css']
 })
 export class ImportDataComponent implements OnDestroy, OnInit {
-  maxFileSizeInBytes: number = 10 * 1024 * 1024; // 10MB
-  fileAccept:string = '';
+  private destroy$ = new Subject<void>();
+  @ViewChild('file') fileInput!: ElementRef;
   strListFile:string = '';
-  multiple: boolean = false;
+  listFileStatus: FileStatus[] = []
+  fileAccept:string = '';
   isSubmitting: boolean = false;
   isBackuping: boolean = false;
-  backUpStepResult: ImportDataResult | null = null;
-  isImporting: boolean = false;
-  importStepResult: ImportDataResult | null = null;
-  //rollback/ commit step result
-  isFinalizing: boolean = false;
-  finalizingStepResult: ImportDataResult | null = null;
-  selectedFiles: File[] = [];
+  isInserting: boolean = false;
   formUpload = new FormGroup({
-    importType: new FormControl('', Validators.required),
-    file: new FormControl<File[] | null>(null)
+    importType: new FormControl<UploadType>('', Validators.required),
+    file: new FormControl<File[]>([], [
+      Validators.required,
+      maxFileSizeValidator(this.maxSingleFileSizeInBytes),
+      maxFilesValidator(this.maxFileCount),
+      fileTypeValidator(()=> this.allowedExtensions)
+    ])
   });
-  constructor(private importDataService: ImportDataService) { }
+  constructor(private importDataService: ImportDataService, private cd: ChangeDetectorRef) {
+    this.formUpload.controls.importType.valueChanges.subscribe(()=>{
+      this.fileInput.nativeElement.value = '';
+      this.listFileStatus = [];
+      this.formUpload.controls.file.setValue([]);
+      this.formUpload.controls.file.markAsPristine();
+      this.formUpload.controls.file.markAsUntouched();
+      this.formUpload.controls.file.setValidators([
+      Validators.required,
+      maxFileSizeValidator(this.maxSingleFileSizeInBytes),
+      maxFilesValidator(this.maxFileCount),
+      fileTypeValidator(()=> this.allowedExtensions)
+    ]);
+      this.formUpload.controls.file.updateValueAndValidity();
+    })
+
+    this.formUpload.statusChanges.subscribe((status)=>{
+      console.log('Validation finished. New status:', status);
+      if(!this.formUpload.controls.file.value) this.listFileStatus = [];
+      else {
+        
+        this.listFileStatus = this.formUpload.controls.file.value.map( f=> {
+          let nameTokens = f.name.split(".");
+          let preName = nameTokens.length >= 2 ? nameTokens[0] : '';
+          let extension = nameTokens.length >= 2 ? nameTokens[1] : '';
+          let validateErrors: FILE_VALIDATE_ERRORS[] = [];
+          if(this.formUpload.controls.file.errors?.['fileType'] &&
+             this.formUpload.controls.file.errors?.['fileType'].files.filter((vF:string) => vF.includes(f.name)).length > 0) {
+              validateErrors.push('fileType');
+          }else if(this.formUpload.controls.file.errors?.['maxSize'] && 
+             this.formUpload.controls.file.errors?.['maxSize'].files.filter((vF:string) => vF.includes(f.name)).length > 0){
+              validateErrors.push('maxSize');
+          }
+          return {
+            extension,
+            preName,
+            formattedFileSize: this.formatBytes(f.size),
+            validateErrors,
+            uploadStatus: 'INIT',
+            uploadResult: '',
+            uploadError: ''
+          }
+        })
+      }
+    })
+   }
   ngOnInit(): void {
     
   }
-
-  isFile(obj: any): obj is File {
-    return obj instanceof File;
+  get maxFileCount(): number {
+    if(!this.formUpload?.controls) return 0;
+    if(this.formUpload.controls.importType.value === 'XML') return 5;
+    else if(this.formUpload.controls.importType.value !== '') return 1;
+    return 0; 
   }
 
-  isFileArray(obj: any): obj is File[] {
-    return Array.isArray(obj) && obj.every(item => item instanceof File);
+  get maxTotalFileSizeInBytes(): number {
+    if(!this.formUpload?.controls) return 0;
+    if(this.formUpload.controls.importType.value === 'XML') return 10 * 1024 * 1024;
+    else if(this.formUpload.controls.importType.value !== '') return 1 * 1024 * 1024;
+    return 0; 
   }
 
-  onImportTypeChange(event: any) {
-    this.fileAccept = this.getFileAccept();
-    this.selectedFiles = [];
-    if (this.formUpload.value.importType === 'XML') {
-      this.multiple = true;
-      this.formUpload.addControl('file', new FormControl(null, [Validators.required, FileValidators.validateMultipleFiles({
-        maxCount: -1, // No limit on the number of files
-        maxTotalSizeBytes: -1, // No limit on total size
-        maxSingleSizeBytes: 10 * 1024 * 1024, // 10MB
-        allowedExtensions: ['xml']
-      })]));
-    } else {
-      this.multiple = false;
-      this.formUpload.addControl('file', new FormControl(null, [Validators.required, FileValidators.validateMultipleFiles({
-        maxCount: 1, // Only one file allowed
-        maxTotalSizeBytes: -1, // No limit on total size
-        maxSingleSizeBytes: 1 * 1024 * 1024, // 1MB
-        allowedExtensions: ['xlsx', 'xls']
-      })]));
-    }
-    this.formUpload.get('file')?.reset();
-    
+  get maxSingleFileSizeInBytes(): number {
+    if(!this.formUpload?.controls) return 0;
+    if(this.formUpload.controls.importType.value === 'XML') return 50 * 1024 * 1024;
+    else if(this.formUpload.controls.importType.value !== '') return 1 * 1024 * 1024;
+    return 0; 
   }
+
+  get multiple(): boolean {
+    if(!this.formUpload?.controls) return false;
+    if(this.formUpload.controls.importType.value === 'XML') return true;
+    else if(this.formUpload.controls.importType.value !== '') return false;
+    return false; 
+  }
+
+  get allowedExtensions(): string[] {
+    return EXTENSIONS_BY_TYPE[this.formUpload?.controls?.importType.value ?? ''] ?? [];
+  }
+
+  get acceptAttr(): string {
+    return this.allowedExtensions.join(',');
+  }
+
+  getFileExtensionCssClass(file: FileStatus) {
+    return `file-extension ${file.validateErrors.includes('fileType')? 'errors' : ''}`
+  }
+
+  getFileSizeCssClass(file: FileStatus) {
+    return `file-size ${file.validateErrors.includes('maxSize')? 'errors' : ''}`
+  }
+
   onFileSelected(event: Event): void {
+    console.log('on file change');
     // Cast the event target safely to access file data
     const input = event.target as HTMLInputElement;
 
     if (input.files && input.files.length > 0) {
       const files: File[] = Array.from(input.files);
-      this.selectedFiles = files;
-      this.formUpload.patchValue({ file: files });
+      this.formUpload.controls.file.setValue(files);
     } else {
-      this.formUpload.patchValue({ file: null });
-      this.selectedFiles = [];
+      this.fileInput.nativeElement.value = '';
+      this.formUpload.controls.file.setValue([]);
     }
-    let control = this.formUpload.get('file');
-    control?.markAsDirty();
-    control?.markAsTouched();
-    control?.updateValueAndValidity({emitEvent: true});
-    
+    this.formUpload.controls.file.markAsTouched();
   }
 
   formatBytes(bytes: number, decimals: number = 2): string {
@@ -100,66 +175,79 @@ export class ImportDataComponent implements OnDestroy, OnInit {
 
     return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
   }
-  getFileAccept(): string {
-    switch (this.formUpload.value.importType) {
-      case 'XML':
-        return '.xml';
-      case 'BNND':
-        return '.xlsx,.xls';
-      case 'BN15T':
-        return '.xlsx,.xls';
-      case 'BN_NHAPVIEN':
-        return '.xlsx,.xls';
-      default:
-        return '';
-    }
+
+  random(min: number, max: number) {
+    return Math.random() * (max - min) + min;
   }
 
   onSubmit() {
-    // simulate the import process with a delay
-    console.log('Form submitted with values:', this.formUpload.value);
-    if(this.formUpload.get('file')?.errors) {
-      const errors = this.formUpload.get('file')?.errors;
-      console.log('Validation errors:', errors);
+    console.log(this.formUpload.valid)
+    if(this.formUpload.valid) {
+      if(this.formUpload.controls.importType.value=='XML') {
+        let index = 0;
+        while(index< this.listFileStatus.length) {
+          let timeBackup = this.random(2,3); // fake thời gian phía FE
+          this.listFileStatus[index].uploadStatus = 'BACKUP';
+          setTimeout(()=>{
+            this.listFileStatus[index].uploadStatus = 'INSERT';
+            if(this.formUpload.controls.file.value) {
+                this.importDataService.importXMLData(this.formUpload.controls.file.value[index]).pipe(takeUntil(this.destroy$))
+                .subscribe(res=>{
+                  this.listFileStatus[index].uploadStatus = 'COMPLETE';
+                  this.listFileStatus[index].uploadResult = res.message || 'Thành công!';
+                },
+                error =>{
+                  this.listFileStatus[index].uploadStatus = 'ROLLBACK';
+                  this.listFileStatus[index].uploadError = error.message || 'Đã xảy ra lỗi!';
+                  let timeRollback = this.random(2,3); // fake thời gian phía FE
+                  setTimeout(()=>{
+                    this.listFileStatus[index].uploadStatus = 'COMPLETE';
+                    index++;
+                  }, timeRollback)
+                })
+              }
+          }, timeBackup)
+        }
+      }
+      else {
+        let timeBackup = this.random(1,2); // fake thời gian phía FE
+          this.listFileStatus[0].uploadStatus = 'BACKUP';
+          setTimeout(()=>{
+            this.listFileStatus[0].uploadStatus = 'INSERT';
+            if(this.formUpload.controls.file.value) {
+                this.importDataService.importExcelData(this.formUpload.controls.file.value[0], this.formUpload.controls.importType.value as ExcelTypeData ).pipe(takeUntil(this.destroy$))
+                .subscribe(res=>{
+                  this.listFileStatus[0].uploadStatus = 'COMPLETE';
+                  this.listFileStatus[0].uploadResult = res.message || 'Thành công!';
+                },
+                error =>{
+                  this.listFileStatus[0].uploadStatus = 'ROLLBACK';
+                  this.listFileStatus[0].uploadError = error.message || 'Đã xảy ra lỗi!';
+                  let timeRollback = this.random(1,2); // fake thời gian phía FE
+                  setTimeout(()=>{
+                    this.listFileStatus[0].uploadStatus = 'COMPLETE';
+                  }, timeRollback)
+                })
+              }
+          }, timeBackup)
+      }
+    }else {
+      this.addToast('Thiếu/sai thông tin! Vui lòng kiểm tra lại', 'danger')
     }
-    if (!this.formUpload.value.file || !this.formUpload.value.importType) {
-      this.addToast('Vui lòng chọn loại dữ liệu và file để import.', 'danger');
-      return;
-    }
-    this.isSubmitting = true;
-    this.isBackuping = true;
-    setTimeout(() => {
-      
-      this.backUpStepResult = { success: true, message: 'Backup dữ liệu thành công!' };
-      this.isImporting = true;
-    }, 2000);
-    setTimeout(() => {
-      this.isBackuping = false;
-      this.importStepResult = { success: true, message: 'Import dữ liệu thành công!' };
-      this.isFinalizing = true;
-    }, 2000);
-    setTimeout(() => {
-      this.isImporting = false;
-      this.finalizingStepResult = { success: true, message: 'Commit dữ liệu thành công!' };
-      this.isFinalizing = false;
-      this.isSubmitting = false;
-    }, 2000);
   }
   resetForm() {
     this.formUpload.reset();
-    this.selectedFiles = [];
-    this.multiple = false;
     this.fileAccept = '';
-    this.backUpStepResult = null;
-    this.importStepResult = null;
-    this.finalizingStepResult = null;
   }
-  ngOnDestroy(): void {
 
+  
+
+  ngOnDestroy(): void {
+    this.destroy$.next(); 
+    this.destroy$.complete(); 
   }
 
   toasts: any[] = [];
-
   addToast(message: string, color: string = 'danger') {
     this.toasts.push({
       message,

@@ -4,7 +4,7 @@
         <form (ngSubmit)="onSubmit()" [formGroup]="formUpload">
         <div class="mb-3 row">
             <label for="fileInput" class="form-label col-sm-3 required">Loại dữ liệu import</label>
-            <select class="form-select col-sm-3" formControlName="importType" required (change)="onImportTypeChange($event)">
+            <select class="form-select col-sm-3" formControlName="importType" required>
                 <option value="" disabled selected>Chọn loại dữ liệu</option>
                 <option value="XML">Dịch vụ kỹ thuật, vật tư</option>
                 <option value="BNND">Bệnh nhân nhân dân</option>
@@ -12,18 +12,77 @@
                 <option value="BN_NHAPVIEN">Bệnh nhân nhập viện</option>
             </select>
             <label for="fileInput" class="form-label col-sm-2 mt-2 required">Chọn {{ multiple ? 'nhiều' : 'một' }} File</label>
-            <input [multiple]="multiple" (change)="onFileSelected($event)"  type="file" class="form-control col-sm-4" id="fileInput" [accept]="fileAccept" required /> 
-            <ul class="file-list">
-                @for (file of selectedFiles; track file.name) {
+            <input #file [multiple]="multiple" (change)="onFileSelected($event)"  type="file" class="form-control col-sm-4" id="fileInput" [accept]="acceptAttr" required /> 
+            <p class="hint">
+        Định dạng hợp lệ: {{ acceptAttr || '(Chọn loại dữ liệu import trước)' }} ·
+        số file tối đa: {{ maxFileCount }} · dung lượng tối đa 1 file:  {{formatBytes(maxSingleFileSizeInBytes) }}
+      </p>
+
+      <div class="errors" *ngIf="formUpload.controls.file.touched && formUpload.controls.file.invalid">
+        <span *ngIf="formUpload.controls.file.errors?.['required']">
+          Vui lòng chọn file.
+        </span>
+        <span *ngIf="formUpload.controls.file.errors?.['maxFiles'] as e">
+          Chọn quá nhiều file (tối đa: {{ e.max }}, đã chọn: {{ e.actual }}).
+        </span>
+        <span *ngIf="formUpload.controls.file.errors?.['maxSize'] as e">
+          File đã chọn có dung lượng quá lớn (tối đa 1 file: {{ formatBytes(maxSingleFileSizeInBytes) }} ): {{ e.files.join(', ') }}
+        </span>
+        <span *ngIf="formUpload.controls.file.errors?.['fileType'] as e">
+          Định dạng file không hợp lệ: {{ e.files.join(', ') }}
+        </span>
+      </div>
+
+            <ul class="file-list" *ngIf="listFileStatus.length > 0">
+                @for (file of listFileStatus; track file.preName) {
                     <li class="file-item">
-                    <span class="file-name"><strong>{{ file.name }}</strong> </span>
-                    <span class="file-size"><strong>({{ formatBytes(file.size) }})</strong> </span>
+                        <div class="file-item-header">
+                            <span class="file-name"><strong>{{ file.preName }}</strong> </span>
+                            <span [class]="getFileExtensionCssClass(file)"><strong>.{{ file.extension }}</strong> </span>
+                            <span [class]="getFileSizeCssClass(file)"><strong>({{ file.formattedFileSize }})</strong> </span>
+                        </div>
+                        <div class="uploading-status">
+                            <div class="backup">
+                                <div class="row">
+                                    <c-spinner size="sm" color="primary"></c-spinner>
+                                    [Đang tạo bản sao dữ liệu ...]
+                                </div>
+                            </div>
+                            <div class="insert">
+                                <div class="row">
+                                    <c-spinner size="sm" color="primary"></c-spinner>
+                                    [ Đã tạo bản sao thành công !]
+                                </div>
+                                <div class="row">
+                                    <c-spinner size="sm" color="primary"></c-spinner>
+                                    [ Đang đẩy dữ liệu ...]
+                                </div>
+                            </div>
+                            <div class="rollback">
+                                <div class="row">
+                                    <c-spinner size="sm" color="primary"></c-spinner>
+                                    [ Đã tạo bản sao thành công !]
+                                </div>
+                                <div class="row">
+                                    Đẩy dữ liệu xảy ra lỗi: {{ file.uploadError}}
+                                </div>
+                                <div class="row">
+                                    <c-spinner size="sm" color="primary"></c-spinner>
+                                    [ Đang thực hiện khôi phục dữ liệu ...]
+                                </div>
+                            </div>
+                            <div class="complete">
+                                <div class="row">
+                                    {{file.uploadResult || file.uploadError}}
+                                </div>
+                            </div>
+                        </div>
                     </li>
                 }
             </ul>
                 
         </div>
-        <button type="submit" class="btn btn-primary" [disabled]="selectedFiles.length === 0 || isSubmitting">
+        <button type="submit" class="btn btn-primary" [disabled]="!formUpload.controls.file.value || (formUpload.controls.file.value && formUpload.controls.file.value.length == 0) || isSubmitting || formUpload.controls.file.errors || formUpload.controls.importType.errors ">
             <span *ngIf="!isSubmitting">Import</span>
             <span *ngIf="isSubmitting" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
         </button>

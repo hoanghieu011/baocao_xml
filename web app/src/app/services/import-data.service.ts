@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { HttpConfigService } from './http-config.service';
-type ExcelTypeData = 'BNND' | 'BN15T' | 'BN_NHAPVIEN';
+export type ExcelTypeData = 'BNND' | 'BN15T' | 'BN_NHAPVIEN';
 @Injectable({
   providedIn: 'root'
 })
