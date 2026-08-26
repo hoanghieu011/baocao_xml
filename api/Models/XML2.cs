@@ -23,20 +23,20 @@ namespace api.Models
         public string? SO_DANG_KY { get; set; }
         public string? TT_THAU { get; set; }
         public string? PHAM_VI { get; set; }
-        public int? TYLE_TT_BH { get; set; }
+        public decimal? TYLE_TT_BH { get; set; }
         public decimal? SO_LUONG { get; set; }
         public decimal? DON_GIA { get; set; }
-        public int? THANH_TIEN_BV { get; set; }
-        public int? THANH_TIEN_BH { get; set; }
-        public int? T_NGUONKHAC_NSNN { get; set; }
-        public int? T_NGUONKHAC_VTNN { get; set; }
-        public int? T_NGUONKHAC_VTTN { get; set; }
-        public int? T_NGUONKHAC_CL { get; set; }
-        public int? T_NGUONKHAC { get; set; }
-        public int? MUC_HUONG { get; set; }
-        public int? T_BNTT { get; set; }
-        public int? T_BNCCT { get; set; }
-        public int? T_BHTT { get; set; }
+        public decimal? THANH_TIEN_BV { get; set; }
+        public decimal? THANH_TIEN_BH { get; set; }
+        public decimal? T_NGUONKHAC_NSNN { get; set; }
+        public decimal? T_NGUONKHAC_VTNN { get; set; }
+        public decimal? T_NGUONKHAC_VTTN { get; set; }
+        public decimal? T_NGUONKHAC_CL { get; set; }
+        public decimal? T_NGUONKHAC { get; set; }
+        public decimal? MUC_HUONG { get; set; }
+        public decimal? T_BNTT { get; set; }
+        public decimal? T_BNCCT { get; set; }
+        public decimal? T_BHTT { get; set; }
         public string? MA_KHOA { get; set; }
         public string? MA_BAC_SI { get; set; }
         public string? MA_DICH_VU { get; set; }

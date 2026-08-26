@@ -76,7 +76,7 @@ namespace api.Controllers
 
             // Lấy tên database động thông qua service dùng chung
             var dbData = await _dbResolver.GetDatabaseByUserAsync(userName);
-            if (string.IsNullOrEmpty(dbData))
+			if (string.IsNullOrEmpty(dbData))
                 return BadRequest("Không xác định được database dữ liệu cho user.");
             // Lấy csyt Id động thông qua service dùng chung
             var tempCsytId = await _dbResolver.GetCsytIdByUserAsync(userName);
@@ -193,6 +193,67 @@ namespace api.Controllers
                 return StatusCode(500, "Lỗi server: " + ex.Message);
             }
             
+        }
+
+        /// <summary>
+        /// Xóa các bản ghi xml1, xml2, xml3 theo tháng.
+        /// Mốc thời gian lấy từ cột NGAY_RA của xml1; xml2, xml3 xóa theo MA_LK của các xml1 tương ứng.
+        /// </summary>
+        /// <param name="thang">Tháng cần xóa (1-12).</param>
+        /// <param name="nam">Năm cần xóa.</param>
+        [Authorize(Roles = "ADMIN")]
+        [HttpDelete("DeleteHospitalDataByMonth")]
+        public async Task<IActionResult> DeleteHospitalDataByMonth([FromQuery] int thang, [FromQuery] int nam)
+        {
+            if (thang < 1 || thang > 12)
+                return BadRequest("Tháng không hợp lệ (1-12).");
+            if (nam < 1900 || nam > 9999)
+                return BadRequest("Năm không hợp lệ.");
+
+            var userName = User.FindFirst(ClaimTypes.Name)?.Value
+                    ?? User.FindFirst("USER_NAME")?.Value;
+
+            if (string.IsNullOrEmpty(userName))
+                return Unauthorized();
+
+            // Lấy tên database động thông qua service dùng chung
+            //var dbData = await _dbResolver.GetDatabaseByUserAsync(userName);
+            var dbData = "his_data_thanhliem";
+
+            if (string.IsNullOrEmpty(dbData))
+                return BadRequest("Không xác định được database dữ liệu cho user.");
+
+            // Validate identifier (chỉ cho phép chữ, số, underscore)
+            if (!Regex.IsMatch(dbData, @"^[A-Za-z0-9_]+$"))
+                return BadRequest("Tên database không hợp lệ.");
+
+            // Điều kiện lọc xml1 theo tháng dựa vào NGAY_RA
+            var whereXml1 = "YEAR(NGAY_RA) = @nam AND MONTH(NGAY_RA) = @thang";
+
+            // Xóa con (xml2, xml3) theo MA_LK của các xml1 nằm trong tháng, sau đó mới xóa cha (xml1)
+            var sqlDelXml2 = $"DELETE FROM `{dbData}`.xml2 WHERE MA_LK IN (SELECT MA_LK FROM `{dbData}`.xml1 WHERE {whereXml1})";
+            var sqlDelXml3 = $"DELETE FROM `{dbData}`.xml3 WHERE MA_LK IN (SELECT MA_LK FROM `{dbData}`.xml1 WHERE {whereXml1})";
+            var sqlDelXml1 = $"DELETE FROM `{dbData}`.xml1 WHERE {whereXml1}";
+
+            using var transaction = await _dbContext.Database.BeginTransactionAsync();
+            try
+            {
+                var soXml2 = await _dbContext.Database.ExecuteSqlRawAsync(sqlDelXml2,
+                    new MySqlParameter("@nam", nam), new MySqlParameter("@thang", thang));
+                var soXml3 = await _dbContext.Database.ExecuteSqlRawAsync(sqlDelXml3,
+                    new MySqlParameter("@nam", nam), new MySqlParameter("@thang", thang));
+                var soXml1 = await _dbContext.Database.ExecuteSqlRawAsync(sqlDelXml1,
+                    new MySqlParameter("@nam", nam), new MySqlParameter("@thang", thang));
+
+                await transaction.CommitAsync();
+                return Ok($"Đã xóa dữ liệu tháng {thang}/{nam}: {soXml1} bản ghi xml1, {soXml2} bản ghi xml2, {soXml3} bản ghi xml3.");
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                Console.WriteLine(ex);
+                return StatusCode(500, "Lỗi server: " + ex.Message);
+            }
         }
 
         static string ConvertCompactTimestampToStr(long compactTimestamp, string formatStr= "HH:mm:ss dd-MM-yyyy")
