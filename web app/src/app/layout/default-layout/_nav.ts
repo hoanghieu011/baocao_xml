@@ -93,6 +93,12 @@ export const navItems: INavDataExtended[] = [
         roles: ['ADMIN','DS_DIEMKEHOACH'],
         url: '/danhmuc/diem_ke_hoach',
         iconComponent: { name: 'cilMedicalCross' }
+      },
+      {
+        name: 'Danh mục ICD-10',
+        roles: ['ADMIN'],
+        url: '/danhmuc/icd10',
+        iconComponent: { name: 'cilMedicalCross' }
       }
     ]
   },

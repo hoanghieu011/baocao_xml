@@ -1,0 +1,100 @@
+<c-toaster placement="top-end" class="p-3">
+  <c-toast
+    *ngFor="let t of toasts"
+    [visible]="t.visible"
+    [color]="t.color"
+    class="text-white"
+  >
+    <c-toast-body>
+      {{ t.message }}
+    </c-toast-body>
+  </c-toast>
+</c-toaster>
+
+<div class="card">
+  <div class="card-body">
+
+    <div class="row g-2 align-items-end mb-3">
+      <div class="col">
+        <label class="form-label small">Tìm (Mã ICD hoặc tên bệnh)</label>
+        <input class="form-control" type="text" placeholder="Nhập mã ICD hoặc tên bệnh"
+               [(ngModel)]="searchTerm" (keyup.enter)="onSearch()"/>
+      </div>
+
+      <div class="col-auto">
+        <button class="btn btn-primary" (click)="onSearch()" [disabled]="loading">
+          <span *ngIf="!loading">Tìm kiếm</span>
+          <span *ngIf="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+        </button>
+      </div>
+
+      <div class="col-auto" *ngIf="searchMode">
+        <button class="btn btn-outline-secondary" (click)="exitSearch()">
+          Xem toàn bộ cây
+        </button>
+      </div>
+
+      <div class="col-auto">
+        <button class="btn btn-outline-success" (click)="dongBo()" [disabled]="syncing" title="Nạp dữ liệu ICD-10 từ nguồn Bộ Y tế" hidden>
+          <span *ngIf="!syncing">Đồng bộ từ nguồn</span>
+          <span *ngIf="syncing"><span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Đang đồng bộ...</span>
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="searchMode" class="alert alert-info py-2 small mb-2">
+      Kết quả cho <strong>“{{ searchTerm }}”</strong>: {{ searchMatchCount | number }} mục khớp (đã mở theo cây phân cấp).
+      <span *ngIf="searchTruncated"> — chỉ hiển thị 500 mục đầu, hãy nhập từ khóa cụ thể hơn.</span>
+    </div>
+
+    <div class="table-responsive">
+      <div class="table-wrapper">
+        <table [cBorder]="1" borderColor="primary" bordered cTable>
+          <colgroup>
+            <col style="width:220px" />
+            <col />
+          </colgroup>
+
+          <thead class="table-primary text-center align-middle">
+            <tr>
+              <th>Mã ICD</th>
+              <th>Tên bệnh / nhóm</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr *ngFor="let node of visibleNodes"
+                [class.tree-branch]="node.is_leaf !== 1"
+                [class.tree-hit]="node.isMatch">
+              <td>
+                <span class="tree-cell"
+                      [style.paddingLeft.px]="node.level * 20"
+                      [class.tree-toggle]="node.is_leaf !== 1"
+                      (click)="toggleNode(node)">
+                  <span class="tree-icon" *ngIf="node.is_leaf !== 1">
+                    <span *ngIf="node.loading" class="spinner-border spinner-border-sm"></span>
+                    <span *ngIf="!node.loading">{{ node.expanded ? '▾' : '▸' }}</span>
+                  </span>
+                  <span class="tree-icon tree-leaf" *ngIf="node.is_leaf === 1"></span>
+                  <span class="tree-code" [class.fw-semibold]="node.is_leaf !== 1">{{ node.ma_icd || '-' }}</span>
+                </span>
+              </td>
+              <td [class.fw-semibold]="node.is_leaf !== 1"
+                  (click)="toggleNode(node)"
+                  [class.tree-toggle]="node.is_leaf !== 1">
+                {{ node.ten_icd || '-' }}
+              </td>
+            </tr>
+
+            <tr *ngIf="!loading && visibleNodes.length === 0">
+              <td colspan="3" class="text-center">
+                {{ searchMode ? 'Không tìm thấy kết quả phù hợp.' : 'Không có dữ liệu danh mục ICD-10.' }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>

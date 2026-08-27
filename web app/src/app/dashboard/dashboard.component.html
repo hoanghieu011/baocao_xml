@@ -85,6 +85,101 @@
           <canvas id="revenueBarChart"></canvas>
         </div>
       </div>
+
+      <div class="row g-3 mt-2">
+        <div class="col-12 col-xl-6">
+          <div class="card chart-card">
+            <div class="card-header chart-card-header d-flex align-items-center justify-content-between">
+              <span>Thống kê số lượng dịch vụ kỹ thuật</span>
+              <span *ngIf="tsLoading" class="spinner-border spinner-border-sm text-primary" role="status" aria-hidden="true"></span>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive stat-table-scroll">
+                <table class="table table-bordered table-hover align-middle stat-table mb-0">
+                  <colgroup>
+                    <col style="width:48px" />
+                    <col style="width:150px" />
+                    <col />
+                    <col style="width:110px" />
+                  </colgroup>
+                  <thead class="table-primary text-center align-middle">
+                    <tr>
+                      <th>#</th>
+                      <th>Mã</th>
+                      <th>Tên dịch vụ</th>
+                      <th>Số lượng</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let item of technicalServices; let i = index">
+                      <td class="text-center text-body-secondary">{{ tsRowIndex(i) }}</td>
+                      <td>{{ item.ma }}</td>
+                      <td>{{ item.ten }}</td>
+                      <td class="text-end fw-semibold">{{ item.soLuong | number:'1.0-0' }}</td>
+                    </tr>
+                    <tr *ngIf="!tsLoading && !technicalServices.length">
+                      <td colspan="4" class="text-center text-body-secondary py-3">Không có dữ liệu</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="d-flex justify-content-between align-items-center mt-2 flex-wrap gap-2">
+                <div class="d-flex align-items-center gap-2">
+                  <button class="btn btn-outline-secondary btn-sm" (click)="onTsPrev()" [disabled]="tsPageNumber <= 1 || tsLoading">Trước</button>
+                  <button class="btn btn-outline-secondary btn-sm" (click)="onTsNext()" [disabled]="tsPageNumber >= Math.ceil(tsTotalRecords / tsPageSize) || tsTotalRecords === 0 || tsLoading">Sau</button>
+                  <div class="ms-2 small text-muted">
+                    Trang {{ tsPageNumber }} / {{ Math.max(1, Math.ceil(tsTotalRecords / tsPageSize)) }} — Tổng: {{ tsTotalRecords | number }}
+                  </div>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                  <label class="small mb-0">Bản ghi / trang</label>
+                  <select class="form-select form-select-sm w-auto" [(ngModel)]="tsPageSize" (ngModelChange)="onTsPageSizeChange($event)">
+                    <option *ngFor="let s of tsPageSizeOptions" [value]="s">{{ s }}</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-xl-6">
+          <div class="card chart-card">
+            <div class="card-header chart-card-header">Thống kê số lượng bệnh tật theo ICD-10 (22 chương)</div>
+            <div class="card-body">
+              <div class="table-responsive stat-table-scroll">
+                <table class="table table-bordered table-hover align-middle stat-table mb-0">
+                  <colgroup>
+                    <col style="width:48px" />
+                    <col style="width:110px" />
+                    <col />
+                    <col style="width:110px" />
+                  </colgroup>
+                  <thead class="table-primary text-center align-middle">
+                    <tr>
+                      <th>#</th>
+                      <th>Mã</th>
+                      <th>Tên chương</th>
+                      <th>Số lượng</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let item of diseaseChapters; let i = index">
+                      <td class="text-center text-body-secondary">{{ i + 1 }}</td>
+                      <td>{{ item.ma }}</td>
+                      <td>{{ item.ten }}</td>
+                      <td class="text-end fw-semibold">{{ item.soLuong | number:'1.0-0' }}</td>
+                    </tr>
+                    <tr *ngIf="!diseaseChapters.length">
+                      <td colspan="4" class="text-center text-body-secondary py-3">Không có dữ liệu</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
