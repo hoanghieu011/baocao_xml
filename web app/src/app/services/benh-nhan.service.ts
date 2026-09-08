@@ -69,8 +69,8 @@ export class BenhNhanService {
     pageNumber: number = 1,
     pageSize: number = 50,
     searchTerm: string = '',
-    tuNgay?: Date,
-    denNgay?: Date
+    tuNgay?: string,
+    denNgay?: string
   ): Observable<any> {
 
     const body: any = {
