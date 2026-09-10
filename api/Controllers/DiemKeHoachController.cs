@@ -659,6 +659,7 @@ namespace API.Controllers
                             dkh.DIEM_TRUC,
                             dkh.DIEM_TRUC_CC,
                             dkh.DIEM_LAYMAU,
+                            dkh.SO_BN_NHAPVIEN_NGOAIGIO,
                             dkh.THANGNAM,
                             org.ORG_NAME AS KHOA,
                             0 AS OFFICER_TYPE,
