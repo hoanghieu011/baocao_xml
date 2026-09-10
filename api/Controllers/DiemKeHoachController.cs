@@ -69,7 +69,7 @@ namespace API.Controllers
                 var sql = $"SELECT ifnull(t2.DIEMKEHOACHID, 0) DIEMKEHOACHID, ifnull(t2.DIEM_KEHOACH, 0) DIEM_KEHOACH, ifnull(t2.SO_BUOITRUC, 0) SO_BUOITRUC, ifnull(t2.SO_BN_NHAPVIEN_NGOAIGIO, 0) SO_BN_NHAPVIEN_NGOAIGIO, ifnull(t2.SO_BENHNHAN, 0) SO_BENHNHAN, ifnull(t2.DIEM_TRUC, 0) DIEM_TRUC, ifnull(t2.DIEM_TRUC_CC, 0) DIEM_TRUC_CC, ifnull(t2.DIEM_LAYMAU, 0) DIEM_LAYMAU, ifnull(t2.THANGNAM, 0) THANGNAM, ifnull(t2.DIEMTANGCUONG, 0) DIEMTANGCUONG ,b.OFFICER_TYPE, org.ORG_NAME KHOA, b.OFFICER_NAME, `b`.`BACSIID`, t2.KHOAID FROM " +
                     " (" + sql2 + ") t2 " +
                     $"LEFT JOIN his_common.org_officer b ON b.BACSIID = t2.BACSIID " +
-                    $"LEFT JOIN his_common.org_organization org ON org.ORG_ID = t2.KHOAID WHERE 1=1 ";
+                    $"LEFT JOIN his_common.org_organization org ON org.ORG_ID = t2.KHOAID WHERE 1=1 and b.STATUS = 1 ";
                    
                     if (req.KhoaId != null)
                     {
