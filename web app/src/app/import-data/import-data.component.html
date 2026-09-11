@@ -42,38 +42,49 @@
                             <span [class]="getFileSizeCssClass(file)"><strong>({{ file.formattedFileSize }})</strong> </span>
                         </div>
                         <div class="uploading-status">
-                            <div class="backup">
-                                <div class="row">
+                            <div class="backup" *ngIf="file.uploadStatus=='BACKUP'">
+                                <div class="">
                                     <c-spinner size="sm" color="primary"></c-spinner>
-                                    [Đang tạo bản sao dữ liệu ...]
+                                    [ Đang tạo bản sao dữ liệu ...]
                                 </div>
                             </div>
-                            <div class="insert">
-                                <div class="row">
-                                    <c-spinner size="sm" color="primary"></c-spinner>
+                            <div class="insert" *ngIf="file.uploadStatus=='INSERT'">
+                                <div class="">
+                                    &#9989;
                                     [ Đã tạo bản sao thành công !]
                                 </div>
-                                <div class="row">
+                                <div class="">
                                     <c-spinner size="sm" color="primary"></c-spinner>
                                     [ Đang đẩy dữ liệu ...]
                                 </div>
                             </div>
-                            <div class="rollback">
-                                <div class="row">
-                                    <c-spinner size="sm" color="primary"></c-spinner>
+                            <div class="rollback" *ngIf="file.uploadStatus=='ROLLBACK'">
+                                <div class="">
+                                    &#9989;
                                     [ Đã tạo bản sao thành công !]
                                 </div>
-                                <div class="row">
-                                    Đẩy dữ liệu xảy ra lỗi: {{ file.uploadError}}
+                                <div class="errors">
+                                    &#x274C; Đẩy dữ liệu xảy ra lỗi: {{ file.uploadError}}
                                 </div>
-                                <div class="row">
+                                <div class="">
                                     <c-spinner size="sm" color="primary"></c-spinner>
                                     [ Đang thực hiện khôi phục dữ liệu ...]
                                 </div>
                             </div>
-                            <div class="complete">
-                                <div class="row">
+                            <div class="complete" *ngIf="file.uploadStatus=='COMPLETE'">
+                                <div class="">
+                                    &#9989;
+                                    [ Đã tạo bản sao thành công !]
+                                </div>
+                                <div *ngIf="file.uploadError" class="errors">
+                                    &#x274C; Đẩy dữ liệu xảy ra lỗi: 
+                                </div>
+                                <div [class]="file.uploadError? 'errors':''">
                                     {{file.uploadResult || file.uploadError}}
+                                </div>
+                                <div *ngIf="file.uploadError">
+                                    &#9989;
+                                    [ Đã khôi phục dữ liệu ]
                                 </div>
                             </div>
                         </div>

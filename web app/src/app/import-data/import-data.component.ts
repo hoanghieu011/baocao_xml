@@ -1,11 +1,13 @@
 import { ChangeDetectorRef, Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { IconDirective} from '@coreui/icons-angular';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { BorderDirective, SpinnerModule, TableDirective } from '@coreui/angular';
 import { ToastModule } from '@coreui/angular';
 import { Subject, Subscription, takeUntil } from 'rxjs';
 import { ExcelTypeData, ImportDataService } from '../services/import-data.service';
 import { FILE_VALIDATE_ERRORS, fileTypeValidator, maxFileSizeValidator, maxFilesValidator } from '../custom/validators/multiple-file-validator';
+
 type ImportDataResult = {
   success: boolean;
   message: string;
@@ -35,7 +37,7 @@ const EXTENSIONS_BY_TYPE: Record<string, string[]> = {
 @Component({
   selector: 'app-import-data',
   standalone: true,
-  imports: [CommonModule, FormsModule, TableDirective, BorderDirective, ToastModule, ReactiveFormsModule, SpinnerModule],
+  imports: [IconDirective,CommonModule, FormsModule, TableDirective, BorderDirective, ToastModule, ReactiveFormsModule, SpinnerModule],
   templateUrl: './import-data.component.html',
   styleUrls: ['./import-data.component.css']
 })
@@ -180,56 +182,18 @@ export class ImportDataComponent implements OnDestroy, OnInit {
     return Math.random() * (max - min) + min;
   }
 
-  onSubmit() {
+  delay(ms: number) {
+    return new Promise(resolve => setTimeout(resolve, ms))
+  }
+
+  async onSubmit() {
     console.log(this.formUpload.valid)
     if(this.formUpload.valid) {
       if(this.formUpload.controls.importType.value=='XML') {
-        let index = 0;
-        while(index< this.listFileStatus.length) {
-          let timeBackup = this.random(2,3); // fake thời gian phía FE
-          this.listFileStatus[index].uploadStatus = 'BACKUP';
-          setTimeout(()=>{
-            this.listFileStatus[index].uploadStatus = 'INSERT';
-            if(this.formUpload.controls.file.value) {
-                this.importDataService.importXMLData(this.formUpload.controls.file.value[index]).pipe(takeUntil(this.destroy$))
-                .subscribe(res=>{
-                  this.listFileStatus[index].uploadStatus = 'COMPLETE';
-                  this.listFileStatus[index].uploadResult = res.message || 'Thành công!';
-                },
-                error =>{
-                  this.listFileStatus[index].uploadStatus = 'ROLLBACK';
-                  this.listFileStatus[index].uploadError = error.message || 'Đã xảy ra lỗi!';
-                  let timeRollback = this.random(2,3); // fake thời gian phía FE
-                  setTimeout(()=>{
-                    this.listFileStatus[index].uploadStatus = 'COMPLETE';
-                    index++;
-                  }, timeRollback)
-                })
-              }
-          }, timeBackup)
+        
         }
-      }
       else {
-        let timeBackup = this.random(1,2); // fake thời gian phía FE
-          this.listFileStatus[0].uploadStatus = 'BACKUP';
-          setTimeout(()=>{
-            this.listFileStatus[0].uploadStatus = 'INSERT';
-            if(this.formUpload.controls.file.value) {
-                this.importDataService.importExcelData(this.formUpload.controls.file.value[0], this.formUpload.controls.importType.value as ExcelTypeData ).pipe(takeUntil(this.destroy$))
-                .subscribe(res=>{
-                  this.listFileStatus[0].uploadStatus = 'COMPLETE';
-                  this.listFileStatus[0].uploadResult = res.message || 'Thành công!';
-                },
-                error =>{
-                  this.listFileStatus[0].uploadStatus = 'ROLLBACK';
-                  this.listFileStatus[0].uploadError = error.message || 'Đã xảy ra lỗi!';
-                  let timeRollback = this.random(1,2); // fake thời gian phía FE
-                  setTimeout(()=>{
-                    this.listFileStatus[0].uploadStatus = 'COMPLETE';
-                  }, timeRollback)
-                })
-              }
-          }, timeBackup)
+        
       }
     }else {
       this.addToast('Thiếu/sai thông tin! Vui lòng kiểm tra lại', 'danger')
