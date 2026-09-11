@@ -36,6 +36,7 @@ builder.Services.AddControllers().AddJsonOptions(options =>
     } 
 );
 builder.Services.AddScoped<API.Common.DatabaseResolver>();
+builder.Services.AddHttpClient();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseMySql(connectionStrings.DefaultConnection,
         connectionStrings.MySqlVersion));

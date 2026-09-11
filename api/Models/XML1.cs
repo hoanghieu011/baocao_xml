@@ -49,15 +49,15 @@ namespace API.Models
         public string? ma_loai_rv { get; set; }
         public string? ghi_chu { get; set; }
         public DateTime? ngay_ttoan { get; set; }
-        public int? t_thuoc { get; set; }
-        public int? t_vtyt { get; set; }
-        public int? t_tongchi_bv { get; set; }
-        public int? t_tongchi_bh { get; set; }
-        public int? t_bntt { get; set; }
-        public int? t_bncct { get; set; }
-        public int? t_bhtt { get; set; }
-        public int? t_nguonkhac { get; set; }
-        public int? t_bhtt_gdv { get; set; }
+        public decimal? t_thuoc { get; set; }
+        public decimal? t_vtyt { get; set; }
+        public decimal? t_tongchi_bv { get; set; }
+        public decimal? t_tongchi_bh { get; set; }
+        public decimal? t_bntt { get; set; }
+        public decimal? t_bncct { get; set; }
+        public decimal? t_bhtt { get; set; }
+        public decimal? t_nguonkhac { get; set; }
+        public decimal? t_bhtt_gdv { get; set; }
         public string? nam_qt { get; set; }
         public string? thang_qt { get; set; }
         public string? ma_loai_kcb { get; set; }

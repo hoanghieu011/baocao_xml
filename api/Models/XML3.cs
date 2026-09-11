@@ -23,20 +23,20 @@ namespace api.Models
         public decimal? DON_GIA_BV { get; set; }
         public decimal? DON_GIA_BH { get; set; }
         public string? TT_THAU { get; set; }
-        public int? TYLE_TT_DV { get; set; }
-        public int? TYLE_TT_BH { get; set; }
-        public int? THANH_TIEN_BV { get; set; }
-        public int? THANH_TIEN_BH { get; set; }
-        public int? T_TRANTT { get; set; }
-        public string? MUC_HUONG { get; set; }
-        public int? T_NGUONKHAC_NSNN { get; set; }
-        public int? T_NGUONKHAC_VTNN { get; set; }
-        public int? T_NGUONKHAC_VTTN { get; set; }
-        public int? T_NGUONKHAC_CL { get; set; }
-        public int? T_NGUONKHAC { get; set; }
-        public int? T_BNTT { get; set; }
-        public int? T_BNCCT { get; set; }
-        public int? T_BHTT { get; set; }
+        public decimal? TYLE_TT_DV { get; set; }
+        public decimal? TYLE_TT_BH { get; set; }
+        public decimal? THANH_TIEN_BV { get; set; }
+        public decimal? THANH_TIEN_BH { get; set; }
+        public decimal? T_TRANTT { get; set; }
+        public decimal? MUC_HUONG { get; set; }
+        public decimal? T_NGUONKHAC_NSNN { get; set; }
+        public decimal? T_NGUONKHAC_VTNN { get; set; }
+        public decimal? T_NGUONKHAC_VTTN { get; set; }
+        public decimal? T_NGUONKHAC_CL { get; set; }
+        public decimal? T_NGUONKHAC { get; set; }
+        public decimal? T_BNTT { get; set; }
+        public decimal? T_BNCCT { get; set; }
+        public decimal? T_BHTT { get; set; }
         public string? MA_KHOA { get; set; }
         public string? MA_GIUONG { get; set; }
         public string? MA_BAC_SI { get; set; }

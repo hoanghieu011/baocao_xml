@@ -188,9 +188,9 @@ export class DsBenhnhanComponent implements OnDestroy, OnInit {
     }
 
     this.loading = true;
-    
-    const tu = this.tuNgay ? new Date(this.tuNgay + 'T00:00:00') : undefined;
-    const den = this.denNgay ? new Date(this.denNgay + 'T23:59:59') : undefined;
+
+    const tu = this.tuNgay ? `${this.tuNgay}T00:00:00` : undefined;
+    const den = this.denNgay ? `${this.denNgay}T23:59:59` : undefined;
 
     this.benhNhanService.getDsBenhNhan(
       this.pageNumber,

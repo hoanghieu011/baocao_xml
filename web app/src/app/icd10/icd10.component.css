@@ -1,0 +1,63 @@
+.table-wrapper {
+  max-height: 850px;
+  overflow-y: auto;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.table-wrapper thead th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: #063b8b;
+  color: #fff;
+}
+
+/* ----- Cây danh mục ICD-10 ----- */
+.tree-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+}
+
+.tree-toggle {
+  cursor: pointer;
+  user-select: none;
+}
+
+.tree-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  color: #063b8b;
+  font-size: 0.8rem;
+}
+
+.tree-leaf {
+  color: transparent;
+}
+
+.tree-code {
+  font-family: monospace;
+}
+
+/* Tô nhẹ các dòng nhóm/chương để phân biệt với mã bệnh lá */
+.tree-branch > td {
+  background-color: #f2f6fc;
+}
+
+.tree-branch:hover > td,
+tbody tr:hover > td {
+  background-color: #e6eefb;
+}
+
+/* Node khớp từ khóa tìm kiếm */
+.tree-hit > td {
+  background-color: #fff3cd !important;
+}
+
+.tree-hit:hover > td {
+  background-color: #ffe8a1 !important;
+}

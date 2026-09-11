@@ -251,6 +251,15 @@ export const routes: Routes = [
               title: 'Danh mục điểm kế hoạch',
               roles: ['ADMIN', 'DS_DIEMKEHOACH']
             }
+          },
+          {
+            path: 'icd10',
+            canActivate: [AuthGuard],
+            loadChildren: () => import('../app/icd10/icd10.routes').then(m => m.DS_ICD10),
+            data: {
+              title: 'Danh mục ICD-10',
+              roles: ['ADMIN']
+            }
           }
         ]
       },

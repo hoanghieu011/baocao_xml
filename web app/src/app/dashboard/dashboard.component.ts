@@ -2,7 +2,9 @@ import { AfterViewInit, Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Chart, registerables } from 'chart.js';
-import { DashboardService, DashboardSummaryResponse } from '../services/dashboard.service';
+import { DashboardService, DashboardStatItem, DashboardSummaryResponse } from '../services/dashboard.service';
+
+const TS_PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
 
 Chart.register(...registerables);
 
@@ -14,6 +16,8 @@ Chart.register(...registerables);
   styleUrl: './dashboard.component.css'
 })
 export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
+  Math = Math;
+
   readonly monthLabels: string[] = [
     'Th1', 'Th2', 'Th3', 'Th4', 'Th5', 'Th6',
     'Th7', 'Th8', 'Th9', 'Th10', 'Th11', 'Th12'
@@ -38,6 +42,16 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   insuredPatientRevenueByMonth: number[] = [];
   hospitalFeeRevenueByMonth: number[] = [];
 
+  diseaseChapters: DashboardStatItem[] = [];
+
+  // Bảng thống kê dịch vụ kỹ thuật (phân trang phía server)
+  technicalServices: DashboardStatItem[] = [];
+  tsPageNumber = 1;
+  tsPageSize = 50;
+  tsPageSizeOptions = TS_PAGE_SIZE_OPTIONS;
+  tsTotalRecords = 0;
+  tsLoading = false;
+
   private visitsLineChart?: Chart<'line', number[], string>;
   private revenueDonutChart?: Chart<'doughnut', number[], string>;
   private revenueBarChart?: Chart<'bar', number[], string>;
@@ -48,6 +62,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   ngOnInit(): void {
     this.buildYearOptions();
     this.loadDashboardData();
+    this.loadTechnicalServices(true);
   }
 
   ngAfterViewInit(): void {
@@ -61,6 +76,54 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
 
   onYearChange(): void {
     this.loadDashboardData();
+    this.loadTechnicalServices(true);
+  }
+
+  loadTechnicalServices(resetPage: boolean = false): void {
+    if (resetPage) this.tsPageNumber = 1;
+
+    this.tsLoading = true;
+    this.dashboardService
+      .getTechnicalServices(this.selectedYear, this.tsPageNumber, this.tsPageSize)
+      .subscribe({
+        next: (res) => {
+          this.tsTotalRecords = res?.totalRecords ?? 0;
+          this.tsPageNumber = res?.pageIndex ?? this.tsPageNumber;
+          this.tsPageSize = res?.pageSize ?? this.tsPageSize;
+          this.technicalServices = res?.items ?? [];
+          this.tsLoading = false;
+        },
+        error: () => {
+          this.technicalServices = [];
+          this.tsTotalRecords = 0;
+          this.tsLoading = false;
+        }
+      });
+  }
+
+  onTsPrev(): void {
+    if (this.tsPageNumber > 1) {
+      this.tsPageNumber--;
+      this.loadTechnicalServices();
+    }
+  }
+
+  onTsNext(): void {
+    const maxPage = Math.max(1, Math.ceil(this.tsTotalRecords / this.tsPageSize));
+    if (this.tsPageNumber < maxPage) {
+      this.tsPageNumber++;
+      this.loadTechnicalServices();
+    }
+  }
+
+  onTsPageSizeChange(newSize: number): void {
+    this.tsPageSize = Number(newSize);
+    this.tsPageNumber = 1;
+    this.loadTechnicalServices(true);
+  }
+
+  tsRowIndex(i: number): number {
+    return (this.tsPageNumber - 1) * this.tsPageSize + i + 1;
   }
 
   get bhytPaidRevenueRate(): number {
@@ -127,6 +190,8 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     this.hospitalFeeRevenueTotal = response.revenueStructure.hospitalFee ?? this.sum(this.hospitalFeeRevenueByMonth);
     this.insuredPatientRevenueTotal = this.bhytPaidRevenueTotal + this.copayRevenueTotal;
     this.avgVisitsPerMonth = Math.round(this.totalVisits / 12);
+
+    this.diseaseChapters = response.diseaseChapters ?? [];
   }
 
   private resetData(): void {
@@ -143,6 +208,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     this.copayRevenueByMonth = this.monthLabels.map(() => 0);
     this.insuredPatientRevenueByMonth = this.monthLabels.map(() => 0);
     this.hospitalFeeRevenueByMonth = this.monthLabels.map(() => 0);
+    this.diseaseChapters = [];
   }
 
   private normalizeMonthlySeries(series: number[] | undefined): number[] {

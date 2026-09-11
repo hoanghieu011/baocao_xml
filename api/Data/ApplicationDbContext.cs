@@ -15,6 +15,7 @@ namespace API.Data
         public DbSet<XML2> xml2 { get; set; }
         public DbSet<XML3> xml3 { get; set; }
         public DbSet<DichVu> dmc_dichvu { get; set; }
+        public DbSet<Icd10> dmc_icd10 { get; set; }
         public DbSet<LoaiDichVu> dmc_nhom_mabhyt { get; set; }
         public DbSet<DichVuDto> dto_dichvu { get; set; }
         public DbSet<BcDoanhThuBscdDto> dto_bc_doanhthu_bscd { get; set; }

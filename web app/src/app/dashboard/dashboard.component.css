@@ -94,6 +94,27 @@
   height: 360px;
 }
 
+.stat-table-scroll {
+  max-height: 460px;
+  overflow-y: auto;
+}
+
+.stat-table {
+  font-size: 0.86rem;
+}
+
+/* Header dính khi cuộn; colgroup đảm bảo cột header trùng khớp cột thân bảng */
+.stat-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+/* Căn phải cột số, dùng chữ số cố định bề rộng cho dễ đọc */
+.stat-table tbody td:last-child {
+  font-variant-numeric: tabular-nums;
+}
+
 .chart-summary {
   padding: 0 1rem 1rem;
   display: grid;

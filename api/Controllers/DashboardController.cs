@@ -109,7 +109,59 @@ namespace API.Controllers
                     }
                 };
 
+                response.DiseaseChapters = await GetDiseaseChaptersAsync(conn, dbData, year);
+
                 return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Lỗi server", detail = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Thống kê số lượng dịch vụ kỹ thuật theo năm, có phân trang (toàn bộ danh sách).
+        /// </summary>
+        [Authorize]
+        [HttpGet("technical-services")]
+        public async Task<ActionResult<object>> GetTechnicalServices(
+            [FromQuery] int year, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 50)
+        {
+            try
+            {
+                if (year < 2000 || year > DateTime.Now.Year + 1)
+                    return BadRequest("Năm không hợp lệ.");
+
+                pageNumber = Math.Max(1, pageNumber);
+                pageSize = Math.Clamp(pageSize, 1, 1000);
+
+                var userName = User.FindFirst(ClaimTypes.Name)?.Value
+                    ?? User.FindFirst("USER_NAME")?.Value;
+
+                if (string.IsNullOrEmpty(userName))
+                    return Unauthorized();
+
+                var dbData = await _dbResolver.GetDatabaseByUserAsync(userName);
+                if (string.IsNullOrEmpty(dbData))
+                    return BadRequest("Không xác định được database dữ liệu cho user.");
+
+                var conn = _context.Database.GetDbConnection();
+                if (conn.State != ConnectionState.Open)
+                    await conn.OpenAsync();
+
+                var columnMapping = await GetColumnMappingAsync(conn, dbData);
+                if (!columnMapping.IsValid)
+                    return BadRequest("Thiếu cột dữ liệu bắt buộc của bảng xml_bnnd để tổng hợp dịch vụ kỹ thuật.");
+
+                var (total, items) = await GetTechnicalServicesAsync(conn, dbData, year, columnMapping, pageNumber, pageSize);
+
+                return Ok(new
+                {
+                    TotalRecords = total,
+                    PageIndex = pageNumber,
+                    PageSize = pageSize,
+                    Items = items
+                });
             }
             catch (Exception ex)
             {
@@ -275,6 +327,207 @@ ORDER BY m.thang;
             return result;
         }
 
+        /// <summary>
+        /// Thống kê số lượng dịch vụ kỹ thuật (gộp bệnh nhân bảo hiểm xml3 + bệnh nhân viện phí xml_bnnd),
+        /// loại các nhóm 10/13/15. Trả về toàn bộ danh sách có phân trang (Mã - Tên - Số lượng), sắp giảm dần.
+        /// </summary>
+        private async Task<(int Total, List<DashboardStatItem> Items)> GetTechnicalServicesAsync(
+            DbConnection conn, string dbName, int year, DashboardColumnMapping mapping, int pageNumber, int pageSize)
+        {
+            var items = new List<DashboardStatItem>();
+            var total = 0;
+
+            // Truy vấn gộp (chưa phân trang) - dùng lại cho cả đếm tổng và lấy trang.
+            var baseQuery = $@"
+                SELECT madichvu, tendichvu, SUM(soluong) AS soluong
+                FROM (
+                    SELECT b.MA_DICH_VU AS madichvu, b.TEN_DICH_VU AS tendichvu, IFNULL(b.SO_LUONG, 0) AS soluong
+                    FROM `{dbName}`.xml1 a
+                    INNER JOIN `{dbName}`.xml3 b ON a.ma_lk = b.ma_lk
+                    INNER JOIN his_common.dmc_nhom_mabhyt c ON b.ma_nhom = c.manhom_bhyt
+                    WHERE YEAR(a.ngay_ra) = @year AND b.ma_nhom NOT IN (10, 13, 15)
+                    UNION ALL
+                    SELECT b.MADICHVU AS madichvu, b.TENDICHVU AS tendichvu, IFNULL(b.SOLUONG, 0) AS soluong
+                    FROM `{dbName}`.xml_bnnd b
+                    INNER JOIN his_common.dmc_nhom_mabhyt c ON b.NHOM_MABHYT_ID = c.manhom_bhyt
+                    WHERE YEAR(b.`{mapping.DischargeDateColumn}`) = @year AND b.NHOM_MABHYT_ID NOT IN (10, 13, 15)
+                ) t
+                GROUP BY madichvu, tendichvu";
+
+            try
+            {
+                using (var countCmd = conn.CreateCommand())
+                {
+                    countCmd.CommandText = $"SELECT COUNT(1) FROM ({baseQuery}) g;";
+                    AddYearParameter(countCmd, year);
+                    total = Convert.ToInt32(await countCmd.ExecuteScalarAsync() ?? 0);
+                }
+
+                var offset = (pageNumber - 1) * pageSize;
+                using var cmd = conn.CreateCommand();
+                cmd.CommandText = $"{baseQuery} ORDER BY soluong DESC LIMIT {pageSize} OFFSET {offset};";
+                AddYearParameter(cmd, year);
+
+                using var reader = await cmd.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                {
+                    items.Add(new DashboardStatItem
+                    {
+                        Ma = reader["madichvu"]?.ToString() ?? string.Empty,
+                        Ten = reader["tendichvu"]?.ToString() ?? string.Empty,
+                        SoLuong = ToDecimal(reader["soluong"])
+                    });
+                }
+            }
+            catch
+            {
+                // Bảng xml_bnnd có thể thiếu cột ở một số bệnh viện -> trả rỗng, không làm hỏng dashboard.
+                return (0, new List<DashboardStatItem>());
+            }
+
+            return (total, items);
+        }
+
+        /// <summary>
+        /// Thống kê số lượng bệnh tật theo chẩn đoán chính (xml1.ma_benh_chinh),
+        /// gộp về 22 chương lớn của ICD-10. Trả về Mã (dải mã chương) - Tên chương - Số lượng.
+        /// Danh mục chương lấy từ his_common.dmc_icd10 (đồng bộ qua Icd10Controller).
+        /// Trả về đủ 22 chương (kể cả chương 0 ca), sắp xếp giảm dần theo số lượng.
+        /// </summary>
+        private async Task<List<DashboardStatItem>> GetDiseaseChaptersAsync(DbConnection conn, string dbName, int year)
+        {
+            // Danh mục chương lấy từ danh mục ICD-10 dùng chung (không hard-code)
+            var chapters = await GetIcd10ChaptersAsync(conn);
+            if (chapters.Count == 0)
+            {
+                return new List<DashboardStatItem>();
+            }
+
+            var totals = new long[chapters.Count];
+            try
+            {
+                using var cmd = conn.CreateCommand();
+                cmd.CommandText = $@"
+                    SELECT UPPER(LEFT(ma_benh_chinh, 3)) AS ma3, COUNT(1) AS sl
+                    FROM `{dbName}`.xml1
+                    WHERE YEAR(ngay_ra) = @year AND ma_benh_chinh IS NOT NULL AND ma_benh_chinh <> ''
+                    GROUP BY UPPER(LEFT(ma_benh_chinh, 3));";
+                AddYearParameter(cmd, year);
+
+                using var reader = await cmd.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                {
+                    var code = reader["ma3"]?.ToString() ?? string.Empty;
+                    var index = FindChapterIndex(chapters, code);
+                    if (index >= 0)
+                    {
+                        totals[index] += ToInt64(reader["sl"]);
+                    }
+                }
+            }
+            catch
+            {
+                return new List<DashboardStatItem>();
+            }
+
+            // Hiển thị đủ 22 chương (kể cả chương không phát sinh), sắp xếp giảm dần theo số lượng.
+            var result = new List<DashboardStatItem>();
+            for (var i = 0; i < chapters.Count; i++)
+            {
+                result.Add(new DashboardStatItem
+                {
+                    Ma = chapters[i].Range,
+                    Ten = chapters[i].Name,
+                    SoLuong = totals[i]
+                });
+            }
+
+            return result
+                .OrderByDescending(x => x.SoLuong)
+                .ToList();
+        }
+
+        /// <summary>
+        /// Lấy danh mục 22 chương ICD-10 từ his_common.dmc_icd10 — các node chương (CAP = 1).
+        /// Lưu ý: với node chương, dải mã (vd "A00-B99") nằm ở cột MA_ID; MA_ICD là số La Mã;
+        /// TEN_ICD có sẵn tiền tố "(A00-B99) ...".
+        /// </summary>
+        private async Task<List<Icd10Chapter>> GetIcd10ChaptersAsync(DbConnection conn)
+        {
+            var chapters = new List<Icd10Chapter>();
+            try
+            {
+                using var cmd = conn.CreateCommand();
+                cmd.CommandText = @"
+                    SELECT MA_ID, TEN_ICD
+                    FROM dmc_icd10
+                    WHERE TRANGTHAI = 1 AND CAP = 1
+                    ORDER BY MA_ID;";
+
+                using var reader = await cmd.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                {
+                    var range = reader["MA_ID"]?.ToString()?.Trim() ?? string.Empty;
+                    var name = reader["TEN_ICD"]?.ToString()?.Trim() ?? string.Empty;
+                    if (string.IsNullOrEmpty(range)) continue;
+
+                    // Bỏ tiền tố "(A00-B99) " trùng với cột Mã cho gọn.
+                    if (name.StartsWith("("))
+                    {
+                        var idx = name.IndexOf(')');
+                        if (idx >= 0) name = name[(idx + 1)..].Trim();
+                    }
+
+                    var (start, end) = ParseChapterRange(range);
+                    chapters.Add(new Icd10Chapter(start, end, range, name));
+                }
+            }
+            catch
+            {
+                // Danh mục chưa được đồng bộ / lỗi truy vấn -> trả rỗng, dashboard bỏ qua mục này.
+                return new List<Icd10Chapter>();
+            }
+
+            return chapters;
+        }
+
+        // Tách dải mã chương "A00-B99" thành mã đầu/cuối (3 ký tự) để so sánh từ điển.
+        private static (string Start, string End) ParseChapterRange(string range)
+        {
+            var parts = range.Split('-', 2, StringSplitOptions.TrimEntries);
+            var start = NormalizeCode3(parts[0]);
+            var end = NormalizeCode3(parts.Length > 1 ? parts[1] : parts[0]);
+            return (start, end);
+        }
+
+        // Chuẩn hóa mã ICD về 3 ký tự đầu (vd "A00.0" -> "A00") để so khớp chương.
+        private static string NormalizeCode3(string code)
+        {
+            var key = (code ?? string.Empty).Trim().ToUpperInvariant();
+            return key.Length >= 3 ? key.Substring(0, 3) : key.PadRight(3, '0');
+        }
+
+        // Xác định chương ICD-10 của một mã bệnh theo 3 ký tự đầu (so sánh từ điển với dải mã chương).
+        private static int FindChapterIndex(IReadOnlyList<Icd10Chapter> chapters, string code)
+        {
+            if (string.IsNullOrWhiteSpace(code)) return -1;
+            var key = NormalizeCode3(code);
+
+            for (var i = 0; i < chapters.Count; i++)
+            {
+                var ch = chapters[i];
+                if (string.Compare(key, ch.Start, StringComparison.Ordinal) >= 0 &&
+                    string.Compare(key, ch.End, StringComparison.Ordinal) <= 0)
+                {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
+        private readonly record struct Icd10Chapter(string Start, string End, string Range, string Name);
+
         private async Task<DashboardColumnMapping> GetColumnMappingAsync(DbConnection conn, string dbName)
         {
             var visitDateColumn = await GetExistingColumnAsync(conn, dbName, "xml_bnnd", "NGAY_TIEPNHAN", "NGAY_RAVIEN");
@@ -353,6 +606,16 @@ LIMIT 1;";
         public DashboardRevenueStructure RevenueStructure { get; set; } = new();
         public List<long> MonthlyVisits { get; set; } = new();
         public DashboardMonthlyRevenue MonthlyRevenue { get; set; } = new();
+        // Thống kê số lượng bệnh tật gộp theo 22 chương ICD-10
+        public List<DashboardStatItem> DiseaseChapters { get; set; } = new();
+    }
+
+    // Mục thống kê dạng đơn giản: Mã - Tên - Số lượng
+    public class DashboardStatItem
+    {
+        public string Ma { get; set; } = string.Empty;
+        public string Ten { get; set; } = string.Empty;
+        public decimal SoLuong { get; set; }
     }
 
     public class DashboardKpis
