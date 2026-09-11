@@ -184,23 +184,50 @@ namespace api.Controllers
             return headers;
         }
         
+        public class ImportExcelHospitalDataRequest
+        {
+            public IFormFile file {get; set;}
+            public string excelTable {get; set;}
+        }
+
         [Authorize(Roles = "ADMIN")]
         [RequestSizeLimit(1_000_000)]
         [HttpPost("ImportExcelHospitalData")]
-        public async Task<IActionResult> ImportExcelHospitalData(IFormFile file, string excelTable)
+        public async Task<IActionResult> ImportExcelHospitalData([FromForm] ImportExcelHospitalDataRequest req)
         {
+            var file = req.file;
+            var excelTable = req.excelTable;
+            await Task.Delay(2000);
+            return BadRequest(new ImportExcelResponse
+                {
+                    message= "test fake error!",
+                    isError = true,
+                });
+           
             var tableStrs = Enum.GetNames<EXCEL_TABLE>();
             if (excelTable == null || (excelTable != null && !tableStrs.Contains(excelTable)))
             {
-                return BadRequest("Không xác định được bảng dữ liệu cần import!");
+                return BadRequest(new ImportExcelResponse
+                {
+                    message= "Không xác định được bảng dữ liệu cần import!",
+                    isError = true,
+                });
             }
             if (file == null || file.Length <= 0)
             {
-                return BadRequest("File rỗng hoặc không hợp lệ.");
+                return BadRequest(new ImportExcelResponse
+                {
+                    message= "File rỗng hoặc không hợp lệ.",
+                    isError = true,
+                });
             }
             if (!file.FileName.EndsWith(".xlsx") && !file.FileName.EndsWith(".xls"))
             {
-                return BadRequest("Vui lòng Upload file .xlsx hoặc file .xls!");
+                return BadRequest(new ImportExcelResponse
+                {
+                    message= "Vui lòng Upload file .xlsx hoặc file .xls!",
+                    isError = true,
+                });
             }
             var userName = User.FindFirst(ClaimTypes.Name)?.Value
                     ?? User.FindFirst("USER_NAME")?.Value;
@@ -211,11 +238,19 @@ namespace api.Controllers
             // Lấy tên database động thông qua service dùng chung
             var dbData = await _dbResolver.GetDatabaseByUserAsync(userName);
             if (string.IsNullOrEmpty(dbData))
-                return BadRequest("Không xác định được database dữ liệu cho user.");
+                return BadRequest(new ImportExcelResponse
+                    {
+                        message= "Không xác định được database dữ liệu cho user.",
+                        isError = true,
+                    });
             // Lấy csyt Id động thông qua service dùng chung
             var tempCsytId = await _dbResolver.GetCsytIdByUserAsync(userName);
             if (string.IsNullOrEmpty(tempCsytId))
-                return BadRequest("Không xác định được csyt cho user.");
+                return BadRequest(new ImportExcelResponse
+                        {
+                            message= "Không xác định được csyt cho user.",
+                            isError = true,
+                        });
             var csytId = 0;
             if (int.TryParse(tempCsytId, out int value))
             {
@@ -223,10 +258,24 @@ namespace api.Controllers
             }
             // Validate identifier (chỉ cho phép chữ, số, underscore)
             if (!Regex.IsMatch(dbData, @"^[A-Za-z0-9_]+$"))
-                return BadRequest("Tên database không hợp lệ.");
+            return BadRequest(new ImportExcelResponse
+                        {
+                            message= "Tên database không hợp lệ.",
+                            isError = true,
+                        });
 
             var table = GetTable(excelTable);
-            if(table == "") return BadRequest("Không xác định được bảng dữ liệu cần import!");
+             return Ok(new ImportExcelResponse
+                {
+                    message= "test ok",
+                    affectedRows = 10,
+                    table = table,
+                });
+            if(table == "") return BadRequest(new ImportExcelResponse
+                        {
+                            message= "Không xác định được bảng dữ liệu cần import!",
+                            isError = true,
+                        });
 
             var dropTblTemp = $"DROP TABLE IF EXISTS `{dbData}`.like_{table}";
             // drop temp table
@@ -410,38 +459,72 @@ namespace api.Controllers
         [Authorize(Roles ="ADMIN")]
         [RequestSizeLimit(50_000_000)]
         [HttpPost("ImportXMLHospitalData")]
-        public async Task<IActionResult> ImportXMLHospitalData(IFormFile file)
+        public async Task<IActionResult> ImportXMLHospitalData([FromForm] IFormFile file)
         {
+            await Task.Delay(5000);
+            return Ok(new
+                 ImportXMLResponse
+                {
+                    message = "test xml import ok!",
+                    countXML1 = 1,
+                    countXML2 = 1,
+                    countXML3 = 1,
+                    isError = false
+                });
             if (file == null || file.Length <= 0)
             {
-                return BadRequest("File rỗng hoặc không hợp lệ.");
+                return BadRequest(new ImportXMLResponse
+                {
+                    isError = true,
+                    message = "File rỗng hoặc không hợp lệ."
+                });
             }
             if (!file.FileName.EndsWith(".xml"))
             {
-                return BadRequest("Vui lòng Upload file .xml!");
+                return BadRequest(new ImportXMLResponse
+                {
+                    isError = true,
+                    message = "Vui lòng Upload file .xml!"
+                });
             }
             var userName = User.FindFirst(ClaimTypes.Name)?.Value
                     ?? User.FindFirst("USER_NAME")?.Value;
 
             if (string.IsNullOrEmpty(userName))
-                return Unauthorized();
+                return Unauthorized(new ImportXMLResponse
+                {
+                    isError = true,
+                    message="Không xác minh được người dùng!"
+                });
 
             // Lấy tên database động thông qua service dùng chung
             var dbData = await _dbResolver.GetDatabaseByUserAsync(userName);
-            if (string.IsNullOrEmpty(dbData))
-                return BadRequest("Không xác định được database dữ liệu cho user.");
+            if (string.IsNullOrEmpty(dbData)) 
+                return BadRequest(new ImportXMLResponse
+                {
+                    isError = true,
+                    message = "Không xác định được database dữ liệu cho user."
+                });
             // Lấy csyt Id động thông qua service dùng chung
             var tempCsytId = await _dbResolver.GetCsytIdByUserAsync(userName);
             if (string.IsNullOrEmpty(tempCsytId))
-                return BadRequest("Không xác định được csyt cho user.");
+                return BadRequest(new ImportXMLResponse
+                {
+                    isError = true,
+                    message = "Không xác định được csyt cho user."
+                });
             var csytId = 0;
             if (int.TryParse(tempCsytId, out int value))
             {
                 csytId = value;
             }
             // Validate identifier (chỉ cho phép chữ, số, underscore)
-            if (!Regex.IsMatch(dbData, @"^[A-Za-z0-9_]+$"))
-                return BadRequest("Tên database không hợp lệ.");
+            if (!Regex.IsMatch(dbData, @"^[A-Za-z0-9_]+$")) 
+                return BadRequest(new ImportXMLResponse
+                    {
+                        isError = true,
+                        message = "Tên database không hợp lệ."
+                    });
             var settings = new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, Async = true };
             try
             {
@@ -530,7 +613,11 @@ namespace api.Controllers
                             await _dbContext.Database.ExecuteSqlRawAsync(sqlDel2);
                             await _dbContext.Database.ExecuteSqlRawAsync(sqlDel3);
                         }
-                        return StatusCode(500, $"Lỗi SQL: ở {maLK} : {msg}");
+                        return StatusCode(500, new ImportXMLResponse
+                        {
+                            message = $"Lỗi SQL: ở {maLK} : {msg}",
+                            isError = true
+                        });
                     }
                 }
                 msg = "Thêm mới thành công!";
