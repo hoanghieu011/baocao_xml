@@ -28,7 +28,7 @@ namespace api.Models
         public decimal? THANH_TIEN_BV { get; set; }
         public decimal? THANH_TIEN_BH { get; set; }
         public decimal? T_TRANTT { get; set; }
-        public decimal? MUC_HUONG { get; set; }
+        public string? MUC_HUONG { get; set; }
         public decimal? T_NGUONKHAC_NSNN { get; set; }
         public decimal? T_NGUONKHAC_VTNN { get; set; }
         public decimal? T_NGUONKHAC_VTTN { get; set; }
