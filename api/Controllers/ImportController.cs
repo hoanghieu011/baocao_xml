@@ -191,18 +191,18 @@ namespace api.Controllers
         }
 
         [Authorize(Roles = "ADMIN")]
-        [RequestSizeLimit(1_000_000)]
+        [RequestSizeLimit(1024 * 1024)]
         [HttpPost("ImportExcelHospitalData")]
         public async Task<IActionResult> ImportExcelHospitalData([FromForm] ImportExcelHospitalDataRequest req)
         {
             var file = req.file;
             var excelTable = req.excelTable;
             await Task.Delay(2000);
-            return BadRequest(new ImportExcelResponse
-                {
-                    message= "test fake error!",
-                    isError = true,
-                });
+            //return BadRequest(new ImportExcelResponse
+            //    {
+            //        message= "test fake error!",
+            //        isError = true,
+            //    });
            
             var tableStrs = Enum.GetNames<EXCEL_TABLE>();
             if (excelTable == null || (excelTable != null && !tableStrs.Contains(excelTable)))
@@ -237,7 +237,7 @@ namespace api.Controllers
 
             // Lấy tên database động thông qua service dùng chung
             var dbData = await _dbResolver.GetDatabaseByUserAsync(userName);
-            if (string.IsNullOrEmpty(dbData))
+			if (string.IsNullOrEmpty(dbData))
                 return BadRequest(new ImportExcelResponse
                     {
                         message= "Không xác định được database dữ liệu cho user.",
@@ -265,12 +265,12 @@ namespace api.Controllers
                         });
 
             var table = GetTable(excelTable);
-             return Ok(new ImportExcelResponse
-                {
-                    message= "test ok",
-                    affectedRows = 10,
-                    table = table,
-                });
+             //return Ok(new ImportExcelResponse
+             //   {
+             //       message= "test ok",
+             //       affectedRows = 10,
+             //       table = table,
+             //   });
             if(table == "") return BadRequest(new ImportExcelResponse
                         {
                             message= "Không xác định được bảng dữ liệu cần import!",
@@ -347,73 +347,79 @@ namespace api.Controllers
                         message = "Không xác định được bảng"
                     };
                 }
-                var conn = _dbContext.Database.GetDbConnection();
-                using var cmd = conn.CreateCommand();
-                var insertSQL = $"INSERT INTO `{dbName}`.{table} (";
-                for(var i =0; i< headers.Count; i++)
-                {
-                    if (i > 0) insertSQL += ", ";
-                    insertSQL += headers[i].name;
-                }
-                    insertSQL+= " ) VALUES ";
-                
+
                 using (var stream = file.OpenReadStream())
                 {
                     using (var workbook = new XLWorkbook(stream))
                     {
                         var worksheet = workbook.Worksheet(1);
-                        var rows = worksheet.RangeUsed().RowsUsed();
-                        var index = 0;
-                        var valuesSQL = "";
-                        MySqlParameter[] paramsArr = new MySqlParameter[rows.Count()*headers.Count + 1];
-                        var arrCount = 0;
-                        foreach (var row in rows)
+                        var headerInfo = FindExcelHeader(worksheet, headers);
+                        if (headerInfo == null)
                         {
-                            if (index == 0)
+                            return new ImportExcelResponse
                             {
-                                index++;
+                                isError = true,
+                                message = $"Không tìm thấy dòng tiêu đề hợp lệ. Các cột bắt buộc: {string.Join(", ", headers.Select(h => h.name))}."
+                            };
+                        }
+
+                        var insertSQL = $"INSERT INTO `{dbName}`.`{table}` (" +
+                            string.Join(", ", headers.Select(header => $"`{header.name}`")) +
+                            ") VALUES ";
+                        var valueRows = new List<string>();
+                        var parameters = new List<MySqlParameter>();
+
+                        foreach (var row in worksheet.RowsUsed()
+                            .Where(row => row.RowNumber() > headerInfo.RowNumber))
+                        {
+                            var mappedCells = headers
+                                .Select((header, index) => new
+                                {
+                                    Header = header,
+                                    Cell = row.Cell(headerInfo.ColumnByHeaderIndex[index])
+                                })
+                                .ToList();
+
+                            if (mappedCells.All(item => item.Cell.IsEmpty()))
+                            {
                                 continue;
                             }
-                            if (index > 1)
+
+                            var rowParameters = new List<string>();
+                            foreach (var item in mappedCells)
                             {
-                                valuesSQL += ",";
-                            }
-                            valuesSQL += "( ";
-                            var col = 0;
-                            foreach (var cell in row.Cells())
-                            {
-                                // đọc dữ liệu
-                                var cellValue = cell.GetValue<string>();    
-                                Console.Write($"{cellValue}\t");
-                                if (col > 0)
+                                var paramName = $"@{item.Header.name}_{affectedRows}";
+                                rowParameters.Add(paramName);
+                                try
                                 {
-                                    valuesSQL += ",";
+                                    parameters.Add(CreateExcelParameter(paramName, item.Cell, item.Header.type));
                                 }
-                                var paramName = $"@{headers[col].name}{index}";
-                                valuesSQL += paramName;
-                                switch(headers[col].type)
+                                catch (Exception ex) when (ex is FormatException || ex is OverflowException)
                                 {
-                                    case TEMPLATE_EXCEL_HEADER_DATA_TYPE.INT32:
-                                        paramsArr[arrCount++] = new MySqlParameter(paramName, MySqlDbType.Int32 ) { Value = cellValue != "" ?  Convert.ToInt32(cellValue) : 0 };
-                                        break;
-                                    case TEMPLATE_EXCEL_HEADER_DATA_TYPE.DECIMAL:
-                                        paramsArr[arrCount++] = new MySqlParameter(paramName, MySqlDbType.Decimal) { Value = cellValue!="" ? Convert.ToDecimal(cellValue) : 0.0 };
-                                        break;
-                                    case TEMPLATE_EXCEL_HEADER_DATA_TYPE.STRING:
-                                        paramsArr[arrCount++] = new MySqlParameter(paramName, MySqlDbType.VarChar) { Value = cellValue };
-                                        break;
-                                    case TEMPLATE_EXCEL_HEADER_DATA_TYPE.DATETIME:
-                                        paramsArr[arrCount++] = new MySqlParameter(paramName, MySqlDbType.DateTime) { Value = (cellValue!="" ? DateTime.ParseExact(cellValue, "dd/MM/yyyy HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture) :  DBNull.Value) };
-                                        break;
-                                }   
-                                col++;
+                                    throw new FormatException(
+                                        $"Dữ liệu không hợp lệ tại dòng {row.RowNumber()}, cột {item.Header.name}: '{item.Cell.GetString()}'.",
+                                        ex
+                                    );
+                                }
                             }
-                            valuesSQL += " )";
-                            index++;
+
+                            valueRows.Add($"({string.Join(", ", rowParameters)})");
+                            affectedRows++;
                         }
-                        affectedRows = index - 1;
-                        valuesSQL += ";";
-                        await _dbContext.Database.ExecuteSqlRawAsync(insertSQL + valuesSQL, paramsArr);
+
+                        if (affectedRows == 0)
+                        {
+                            return new ImportExcelResponse
+                            {
+                                isError = true,
+                                message = "Không có dữ liệu bên dưới dòng tiêu đề để import."
+                            };
+                        }
+
+                        await _dbContext.Database.ExecuteSqlRawAsync(
+                            insertSQL + string.Join(",", valueRows) + ";",
+                            parameters.ToArray()
+                        );
                     }
                 }
                 return new ImportExcelResponse
@@ -432,6 +438,162 @@ namespace api.Controllers
                     message = ex.Message
                 };
             }
+        }
+
+        private sealed class ExcelHeaderInfo
+        {
+            public int RowNumber { get; init; }
+            public Dictionary<int, int> ColumnByHeaderIndex { get; init; } = [];
+        }
+
+        private ExcelHeaderInfo? FindExcelHeader(
+            IXLWorksheet worksheet,
+            IReadOnlyList<TEMPLATE_EXCEL_HEADER_PROPS> headers)
+        {
+            foreach (var row in worksheet.RowsUsed().Take(50))
+            {
+                var columnByNormalizedName = row.CellsUsed()
+                    .Select(cell => new
+                    {
+                        Name = NormalizeExcelHeader(cell.GetString()),
+                        ColumnNumber = cell.Address.ColumnNumber
+                    })
+                    .Where(item => item.Name != "")
+                    .GroupBy(item => item.Name)
+                    .ToDictionary(group => group.Key, group => group.First().ColumnNumber);
+
+                var columnByHeaderIndex = new Dictionary<int, int>();
+                for (var headerIndex = 0; headerIndex < headers.Count; headerIndex++)
+                {
+                    var matchedColumn = GetExcelHeaderAliases(headers[headerIndex].name)
+                        .Select(alias => NormalizeExcelHeader(alias))
+                        .Where(columnByNormalizedName.ContainsKey)
+                        .Select(alias => columnByNormalizedName[alias])
+                        .FirstOrDefault();
+
+                    if (matchedColumn == 0)
+                    {
+                        columnByHeaderIndex.Clear();
+                        break;
+                    }
+
+                    columnByHeaderIndex[headerIndex] = matchedColumn;
+                }
+
+                if (columnByHeaderIndex.Count == headers.Count)
+                {
+                    return new ExcelHeaderInfo
+                    {
+                        RowNumber = row.RowNumber(),
+                        ColumnByHeaderIndex = columnByHeaderIndex
+                    };
+                }
+            }
+
+            return null;
+        }
+
+        private static IEnumerable<string> GetExcelHeaderAliases(string headerName)
+        {
+            return headerName switch
+            {
+                "MA_LK" => ["MA_LK", "Tiếp nhận Id", "Mã liên kết"],
+                "MAHOSOBENHAN" => ["MAHOSOBENHAN", "Mã hồ sơ bệnh án"],
+                "LOAIPHIEUMAUBENHPHAM" => ["LOAIPHIEUMAUBENHPHAM", "Loại phiếu mẫu bệnh phẩm"],
+                "MADICHVU" => ["MADICHVU", "Mã dịch vụ"],
+                "TENDICHVU" => ["TENDICHVU", "Tên dịch vụ"],
+                "KHOAID" => ["KHOAID", "Khoa Id"],
+                "PHONGID" => ["PHONGID", "Phòng Id"],
+                "NGUOIDUNGID" => ["NGUOIDUNGID", "Người dùng Id"],
+                "NGUOITRAKETQUA" => ["NGUOITRAKETQUA", "Người trả KQ", "Người trả kết quả"],
+                "MA_BAC_SI" => ["MA_BAC_SI", "Mã Bác sĩ"],
+                "NGUOI_THUC_HIEN" => ["NGUOI_THUC_HIEN", "Người thực hiện"],
+                "DICHVUID" => ["DICHVUID", "Dịch vụ Id"],
+                "NHOM_MABHYT_ID" => ["NHOM_MABHYT_ID", "Nhóm mã BHYT Id"],
+                "TEN_DVT" => ["TEN_DVT", "Tên Đvt", "Tên đơn vị tính"],
+                "BACSIID" => ["BACSIID", "Bác sĩ", "Mã bác sĩ"],
+                "THANGNAM" => ["THANGNAM", "Tháng năm"],
+                "BHYT" => ["BHYT", "Bảo hiểm y tế"],
+                "SOLUONG" => ["SOLUONG", "Số lượng"],
+                "TIEN_NHANDAN" => ["TIEN_NHANDAN", "Tiền nhân dân"],
+                "NGAY_RAVIEN" => ["NGAY_RAVIEN", "Ngày ra viện"],
+                "NGAY_TIEPNHAN" => ["NGAY_TIEPNHAN", "Ngày tiếp nhận"],
+                _ => [headerName]
+            };
+        }
+
+        private static string NormalizeExcelHeader(string value)
+        {
+            var normalized = value.Trim().ToUpperInvariant()
+                .Replace('Đ', 'D')
+                .Normalize(NormalizationForm.FormD);
+
+            var builder = new StringBuilder();
+            foreach (var character in normalized)
+            {
+                if (CharUnicodeInfo.GetUnicodeCategory(character) != UnicodeCategory.NonSpacingMark &&
+                    char.IsLetterOrDigit(character))
+                {
+                    builder.Append(character);
+                }
+            }
+
+            return builder.ToString();
+        }
+
+        private static MySqlParameter CreateExcelParameter(
+            string paramName,
+            IXLCell cell,
+            TEMPLATE_EXCEL_HEADER_DATA_TYPE dataType)
+        {
+            var cellValue = cell.GetString().Trim();
+
+            return dataType switch
+            {
+                TEMPLATE_EXCEL_HEADER_DATA_TYPE.INT32 => new MySqlParameter(paramName, MySqlDbType.Int32)
+                {
+                    Value = cell.IsEmpty() ? 0 : Convert.ToInt32(cellValue, CultureInfo.InvariantCulture)
+                },
+                TEMPLATE_EXCEL_HEADER_DATA_TYPE.DECIMAL => new MySqlParameter(paramName, MySqlDbType.Decimal)
+                {
+                    Value = cell.IsEmpty() ? 0m : Convert.ToDecimal(cellValue, CultureInfo.InvariantCulture)
+                },
+                TEMPLATE_EXCEL_HEADER_DATA_TYPE.STRING => new MySqlParameter(paramName, MySqlDbType.VarChar)
+                {
+                    Value = cellValue
+                },
+                TEMPLATE_EXCEL_HEADER_DATA_TYPE.DATETIME => new MySqlParameter(paramName, MySqlDbType.DateTime)
+                {
+                    Value = GetExcelDateTimeValue(cell, cellValue)
+                },
+                _ => throw new InvalidOperationException($"Kiểu dữ liệu Excel không được hỗ trợ: {dataType}.")
+            };
+        }
+
+        private static object GetExcelDateTimeValue(IXLCell cell, string cellValue)
+        {
+            if (cell.IsEmpty())
+            {
+                return DBNull.Value;
+            }
+
+            if (cell.TryGetValue<DateTime>(out var dateTime))
+            {
+                return dateTime;
+            }
+
+            string[] acceptedFormats = ["dd/MM/yyyy HH:mm:ss", "dd/MM/yyyy", "yyyy-MM-dd HH:mm:ss", "yyyy-MM-dd"];
+            if (DateTime.TryParseExact(
+                cellValue,
+                acceptedFormats,
+                CultureInfo.InvariantCulture,
+                DateTimeStyles.None,
+                out dateTime))
+            {
+                return dateTime;
+            }
+
+            throw new FormatException($"Giá trị ngày không hợp lệ: '{cellValue}'.");
         }
         private ImportExcelResponse InsertBnNhapVien(string excelTable, IFormFile file, string dbName)
         {
@@ -457,20 +619,20 @@ namespace api.Controllers
         }
 
         [Authorize(Roles ="ADMIN")]
-        [RequestSizeLimit(50_000_000)]
+        [RequestSizeLimit(50 * 1024 * 1024)]
         [HttpPost("ImportXMLHospitalData")]
         public async Task<IActionResult> ImportXMLHospitalData([FromForm] IFormFile file)
         {
             await Task.Delay(5000);
-            return Ok(new
-                 ImportXMLResponse
-                {
-                    message = "test xml import ok!",
-                    countXML1 = 1,
-                    countXML2 = 1,
-                    countXML3 = 1,
-                    isError = false
-                });
+            //return Ok(new
+            //     ImportXMLResponse
+            //    {
+            //        message = "test xml import ok!",
+            //        countXML1 = 1,
+            //        countXML2 = 1,
+            //        countXML3 = 1,
+            //        isError = false
+            //    });
             if (file == null || file.Length <= 0)
             {
                 return BadRequest(new ImportXMLResponse
@@ -499,7 +661,7 @@ namespace api.Controllers
 
             // Lấy tên database động thông qua service dùng chung
             var dbData = await _dbResolver.GetDatabaseByUserAsync(userName);
-            if (string.IsNullOrEmpty(dbData)) 
+			if (string.IsNullOrEmpty(dbData)) 
                 return BadRequest(new ImportXMLResponse
                 {
                     isError = true,
@@ -573,17 +735,17 @@ namespace api.Controllers
                         }
                         else if (loai.Equals("XML2"))
                         {
-                            countXml2++;
                             var chiTietThuocXmWrapper = noidung.Element("DSACH_CHI_TIET_THUOC");
-                            var dsChiTietThuocXml = chiTietThuocXmWrapper.Elements("CHI_TIET_THUOC");
+                            var dsChiTietThuocXml = chiTietThuocXmWrapper.Elements("CHI_TIET_THUOC").ToList();
+                            countXml2 += dsChiTietThuocXml.Count;
                             resThemDsThuoc = await ThemChiTietThuoc(dsChiTietThuocXml, $"`{dbData}`.xml2", csytId);
                         }
                         else if (loai.Equals("XML3"))
                         {
-                            countXml3++;
                             var chiTietDvktXmWrapper = noidung.Element("DSACH_CHI_TIET_DVKT");
-                            var dsChiTietDvktXml = chiTietDvktXmWrapper.Elements("CHI_TIET_DVKT");
-                            resThemDsThuoc = await ThemDvkt(dsChiTietDvktXml, $"`{dbData}`.xml3", csytId);
+                            var dsChiTietDvktXml = chiTietDvktXmWrapper.Elements("CHI_TIET_DVKT").ToList();
+                            countXml3 += dsChiTietDvktXml.Count;
+							resThemDsDvkt = await ThemDvkt(dsChiTietDvktXml, $"`{dbData}`.xml3", csytId);
                         }
                     }
                     var flag = 0;
@@ -845,8 +1007,7 @@ namespace api.Controllers
                 return Unauthorized();
 
             // Lấy tên database động thông qua service dùng chung
-            //var dbData = await _dbResolver.GetDatabaseByUserAsync(userName);
-            var dbData = "his_data_thanhliem";
+            var dbData = await _dbResolver.GetDatabaseByUserAsync(userName);
 
             if (string.IsNullOrEmpty(dbData))
                 return BadRequest("Không xác định được database dữ liệu cho user.");

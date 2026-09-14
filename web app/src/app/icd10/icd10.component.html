@@ -43,7 +43,7 @@
     </div>
 
     <div *ngIf="searchMode" class="alert alert-info py-2 small mb-2">
-      Kết quả cho <strong>“{{ searchTerm }}”</strong>: {{ searchMatchCount | number }} mục khớp (đã mở theo cây phân cấp).
+      Kết quả cho <strong>“{{ searchTerm }}”</strong>: {{ searchMatchCount | number }} mục khớp.
       <span *ngIf="searchTruncated"> — chỉ hiển thị 500 mục đầu, hãy nhập từ khóa cụ thể hơn.</span>
     </div>
 
