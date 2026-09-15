@@ -5,8 +5,8 @@ export type CONTENT_TYPE = null | 'FILE_UPLOAD'
   providedIn: 'root',
 })
 export class HttpConfigService {
-  // private readonly baseUrl = '/api';
-  private readonly baseUrl = 'https://localhost:7037/api';
+  private readonly baseUrl = '/api';
+  // private readonly baseUrl = 'https://localhost:7037/api';
 
   getHeaders(contentType: CONTENT_TYPE = null): HttpHeaders {
     const token = localStorage.getItem('token');
