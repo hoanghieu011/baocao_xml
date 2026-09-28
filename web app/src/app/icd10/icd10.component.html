@@ -73,7 +73,7 @@
                       (click)="toggleNode(node)">
                   <span class="tree-icon" *ngIf="node.is_leaf !== 1">
                     <span *ngIf="node.loading" class="spinner-border spinner-border-sm"></span>
-                    <span *ngIf="!node.loading">{{ node.expanded ? '▾' : '▸' }}</span>
+                    <span *ngIf="!node.loading">{{ node.expanded ? '&#9662;' : '&#9656;' }}</span>
                   </span>
                   <span class="tree-icon tree-leaf" *ngIf="node.is_leaf === 1"></span>
                   <span class="tree-code" [class.fw-semibold]="node.is_leaf !== 1">{{ node.ma_icd || '-' }}</span>

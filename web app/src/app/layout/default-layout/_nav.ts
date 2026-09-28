@@ -8,24 +8,24 @@ export interface INavDataExtended extends INavData {
 }
 
 export const navItems: INavDataExtended[] = [
-   {
+  {
     name: 'Dashboard',
     iconComponent: { name: 'cil-chart-pie' },
     url: '/dashboard',
     roles: ['all']
-  }, 
+  },
+  {
+    name: 'Danh sách bệnh nhân',
+    roles: ['ADMIN'],
+    url: '/ds_benhnhan',
+    iconComponent: { name: 'cil-people' }
+  },
   {
     name: 'Báo cáo và tra cứu',
     iconComponent: { name: 'cilSearch' },
     url: '/baocao-tracuu',
     roles: ['all'],
     children: [
-      {
-        name: 'Danh sách bệnh nhân',
-        roles: ['ADMIN'],
-        url: '/baocao-tracuu/ds_benhnhan',
-        iconComponent: { name: 'cil-people' }
-      },
       {
         name: 'Bảng chi tiết bác sĩ chỉ định',
         roles: ['ADMIN','BC_BSCD'],
@@ -61,14 +61,14 @@ export const navItems: INavDataExtended[] = [
         roles: ['BC_DIEM_CTKH', 'ADMIN'],
         url: '/baocao-tracuu/diem_ctkh',
         iconComponent: { name: 'cil-chart' }
-      },
-      {
-        name: 'Import dữ liệu',
-        roles: ['IMPORT_DATA', 'ADMIN'],
-        url: '/baocao-tracuu/import-du-lieu',
-        iconComponent: { name: 'cilCloudUpload' }
       }
     ]
+  },
+  {
+    name: 'Import dữ liệu',
+    roles: ['IMPORT_DATA', 'ADMIN'],
+    url: '/import-du-lieu',
+    iconComponent: { name: 'cilCloudUpload' }
   },
   {
     name: 'Danh mục',
