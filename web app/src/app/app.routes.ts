@@ -146,17 +146,26 @@ export const routes: Routes = [
         }
       },
       {
+        path: 'ds_benhnhan',
+        canActivate: [AuthGuard],
+        loadChildren: () => import('../app/ds-benhnhan/ds-benhnhan.routes').then(m => m.DS_BENHNHAN),
+        data: {
+          title: 'Danh sách bệnh nhân',
+          roles: ['']
+        }
+      },
+      {
         path: 'baocao-tracuu',
         children: [
-          {
-            path: 'ds_benhnhan',
-            canActivate: [AuthGuard],
-            loadChildren: () => import('../app/ds-benhnhan/ds-benhnhan.routes').then(m => m.DS_BENHNHAN),
-            data: {
-              title: 'Danh sách bệnh nhân',
-              roles: ['']
-            }
-          }, 
+          // {
+          //   path: 'ds_benhnhan',
+          //   canActivate: [AuthGuard],
+          //   loadChildren: () => import('../app/ds-benhnhan/ds-benhnhan.routes').then(m => m.DS_BENHNHAN),
+          //   data: {
+          //     title: 'Danh sách bệnh nhân',
+          //     roles: ['']
+          //   }
+          // }, 
           {
             path: 'doanhthu_bscd',
             canActivate: [AuthGuard],
@@ -211,15 +220,15 @@ export const routes: Routes = [
               roles: ['BC_DIEM_CTKH', 'ADMIN']
             }
           },
-          {
-            path: 'import-du-lieu',
-            canActivate: [AuthGuard],
-            loadChildren: () => import('../app/import-data/import-data.routes').then(m => m.IMPORT_DATA_ROUTES),
-            data: {
-              title: 'Import dữ liệu',
-              roles: ['IMPORT_DATA', 'ADMIN']
-            }
-          },      
+          // {
+          //   path: 'import-du-lieu',
+          //   canActivate: [AuthGuard],
+          //   loadChildren: () => import('../app/import-data/import-data.routes').then(m => m.IMPORT_DATA_ROUTES),
+          //   data: {
+          //     title: 'Import dữ liệu',
+          //     roles: ['IMPORT_DATA', 'ADMIN']
+          //   }
+          // },      
         ]
       },
       {
@@ -262,6 +271,15 @@ export const routes: Routes = [
             }
           }
         ]
+      },
+      {
+        path: 'import-du-lieu',
+        canActivate: [AuthGuard],
+        loadChildren: () => import('../app/import-data/import-data.routes').then(m => m.IMPORT_DATA_ROUTES),
+        data: {
+          title: 'Import dữ liệu',
+          roles: ['IMPORT_DATA', 'ADMIN']
+        }
       },
     ]
   },
