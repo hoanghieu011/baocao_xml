@@ -155,17 +155,8 @@ export const routes: Routes = [
         }
       },
       {
-        path: 'baocao-tracuu',
+        path: 'quanly-dieuhanh',
         children: [
-          // {
-          //   path: 'ds_benhnhan',
-          //   canActivate: [AuthGuard],
-          //   loadChildren: () => import('../app/ds-benhnhan/ds-benhnhan.routes').then(m => m.DS_BENHNHAN),
-          //   data: {
-          //     title: 'Danh sách bệnh nhân',
-          //     roles: ['']
-          //   }
-          // }, 
           {
             path: 'doanhthu_bscd',
             canActivate: [AuthGuard],
@@ -183,7 +174,21 @@ export const routes: Routes = [
               title: 'Bảng chi tiết bác sĩ thực hiện',
               roles: ['BC_BSTH', 'ADMIN']
             }
-          }, 
+          },
+          {
+            path: 'diem_ctkh',
+            canActivate: [AuthGuard],
+            loadChildren: () => import('../app/bao-cao-diem-ctkh/bao-cao-diem-ctkh.routes').then(m => m.BAOCAO_DIEM_CTKH),
+            data: {
+              title: 'Báo cáo điểm ctkh',
+              roles: ['BC_DIEM_CTKH', 'ADMIN']
+            }
+          }   
+        ]
+      },
+      {
+        path: 'baocao-tracuu',
+        children: [
           {
             path: 'doanhthu_khoa_ct',
             canActivate: [AuthGuard],
@@ -210,25 +215,7 @@ export const routes: Routes = [
               title: 'Báo cáo doanh thu toàn viện',
               roles: ['BC_TOANVIEN', 'ADMIN']
             }
-          },
-          {
-            path: 'diem_ctkh',
-            canActivate: [AuthGuard],
-            loadChildren: () => import('../app/bao-cao-diem-ctkh/bao-cao-diem-ctkh.routes').then(m => m.BAOCAO_DIEM_CTKH),
-            data: {
-              title: 'Báo cáo điểm ctkh',
-              roles: ['BC_DIEM_CTKH', 'ADMIN']
-            }
-          },
-          // {
-          //   path: 'import-du-lieu',
-          //   canActivate: [AuthGuard],
-          //   loadChildren: () => import('../app/import-data/import-data.routes').then(m => m.IMPORT_DATA_ROUTES),
-          //   data: {
-          //     title: 'Import dữ liệu',
-          //     roles: ['IMPORT_DATA', 'ADMIN']
-          //   }
-          // },      
+          }     
         ]
       },
       {
