@@ -39,11 +39,13 @@ namespace API.Controllers
                 var userName = User.FindFirst(ClaimTypes.Name)?.Value
                     ?? User.FindFirst("USER_NAME")?.Value;
 
-                var csytid = User.FindFirst(ClaimTypes.Name)?.Value
-                    ?? User.FindFirst("CSYTID")?.Value;
-
                 if (string.IsNullOrEmpty(userName))
                     return Unauthorized();
+
+                var csytid = User.FindFirst(ClaimTypes.Name)?.Value
+                    ?? User.FindFirst("CSYTID")?.Value;
+                // Lấy tên database động thông qua service dùng chung
+                var dbData = await _dbResolver.GetDatabaseByUserAsync(userName);
 
                 var pageNumber = Math.Max(1, req.PageNumber);
                 var pageSize = Math.Clamp(req.PageSize, 1, 1000);
@@ -55,13 +57,13 @@ namespace API.Controllers
                 var conn = _context.Database.GetDbConnection();
                 using var tempCmd = conn.CreateCommand();
 
-                whereBuilder.Append($" AND a.CSYTID = {csytid} and a.TRANGTHAI = 1 and a.NHOM_MABHYT_ID = b.NHOM_MABHYT_ID");
+                whereBuilder.Append($@" AND a.CSYTID = {csytid} and a.TRANGTHAI = 1 and a.NHOM_MABHYT_ID = b.NHOM_MABHYT_ID");
 
                 if (!string.IsNullOrWhiteSpace(req.SearchTerm) && req.SearchTerm != "All")
                 {
                     var p = tempCmd.CreateParameter();
                     p.ParameterName = "@search";
-                    p.Value = $"%{req.SearchTerm}%";
+                    p.Value = $@"%{req.SearchTerm}%";
                     paramList.Add(p);
 
                     whereBuilder.Append(" AND (a.MA_DICHVU LIKE @search OR a.TEN_DICHVU LIKE @search)");
@@ -69,14 +71,11 @@ namespace API.Controllers
 
                 if (req.IdLoaiDV != null && req.IdLoaiDV != 0)
                 {
-                    whereBuilder.Append($" AND (a.NHOM_MABHYT_ID = {req.IdLoaiDV})");
+                    whereBuilder.Append($@" AND (a.NHOM_MABHYT_ID = {req.IdLoaiDV})");
                 }
 
-                var sql = @"SELECT 
-                                a.MA_DICHVU,
-                                a.DICHVUID, a.TEN_DICHVU, b.TENNHOM, a.DONVI, a.CSYTID, a.GIA_BHYT, a.CHIPHI, a.HESO, a.nhom_mabhyt_id, a.HESO_CLS_BS, a.HESO_CLS_DD
-                                FROM dmc_dichvu a, dmc_nhom_mabhyt b"
-                            + whereBuilder.ToString() + $" ORDER BY a.LOAIID, a.nhom_mabhyt_id LIMIT {pageSize} OFFSET {offset}" ;
+                var sql = $@"SELECT   a.MA_DICHVU,  a.DICHVUID, a.TEN_DICHVU, b.TENNHOM, a.DONVI, a.CSYTID, a.GIA_BHYT, a.CHIPHI, a.HESO, a.nhom_mabhyt_id, a.HESO_CLS_BS, a.HESO_CLS_DD FROM `{dbData}`.dmc_dichvu a, dmc_nhom_mabhyt b"
+                            + whereBuilder.ToString() + $@" ORDER BY a.LOAIID, a.nhom_mabhyt_id LIMIT {pageSize} OFFSET {offset}" ;
 
                 var dsDichVu = await _context.dto_dichvu
                     .FromSqlRaw(sql, paramList.ToArray())
@@ -89,9 +88,9 @@ namespace API.Controllers
                 int totalRecords;
                 using (var cmd = conn.CreateCommand())
                 {
-                    cmd.CommandText = @"SELECT 
+                    cmd.CommandText = $@"SELECT 
                                 count(1)
-                                FROM dmc_dichvu a, dmc_nhom_mabhyt b"
+                                FROM `{dbData}`.dmc_dichvu a, dmc_nhom_mabhyt b"
                             + whereBuilder.ToString();
 
                     cmd.Parameters.Clear();
@@ -146,21 +145,15 @@ namespace API.Controllers
 
                 if (string.IsNullOrEmpty(userName))
                     return Unauthorized();
-
+                // Lấy tên database động thông qua service dùng chung
+                var dbData = await _dbResolver.GetDatabaseByUserAsync(userName);
                 var conn = _context.Database.GetDbConnection();
 
                 if (conn.State != System.Data.ConnectionState.Open)
                     await conn.OpenAsync();
 
                 using var cmd = conn.CreateCommand();
-                cmd.CommandText = @"
-                    UPDATE dmc_dichvu
-                    SET CHIPHI = @chiphi,
-                        HESO = @heso,
-                        HESO_CLS_BS = @heso_cls_bs,
-                        HESO_CLS_DD = @heso_cls_dd
-                    WHERE DICHVUID = @dichvuid
-                        AND CSYTID = @csytid";
+                cmd.CommandText = $@"UPDATE `{dbData}`.dmc_dichvu  SET CHIPHI = @chiphi, HESO = @heso,  HESO_CLS_BS = @heso_cls_bs,HESO_CLS_DD = @heso_cls_dd   WHERE DICHVUID = @dichvuid AND CSYTID = @csytid";
 
                 var p1 = cmd.CreateParameter();
                 p1.ParameterName = "@chiphi";
