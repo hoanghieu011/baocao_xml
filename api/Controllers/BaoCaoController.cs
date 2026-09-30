@@ -603,7 +603,7 @@ namespace API.Controllers
                                         nhom.NHOM_MABHYT_ID,IF(IFNULL(b.MA_DICH_VU,'') <> '', b.MA_DICH_VU, b.MA_VAT_TU) MA_DICH_VU,IF(IFNULL(b.TEN_DICH_VU,'') <> '',b.TEN_DICH_VU,b.TEN_VAT_TU) TEN_DICH_VU,nhom.TENNHOM,IFNULL(b.SO_LUONG,0) SO_LUONG,IFNULL(b.DON_GIA_BH, 0) DON_GIA_BH ,IFNULL(dv.HESO,0) HESO, (dv.GIA_BHYT - 280000)/60000 HESO_DNT, IFNULL(dv.CHIPHI,0) CHIPHI
                                     FROM  
                                         `{dbName}`.xml1 a, 
-                                        `{dbName}`.xml3 b LEFT JOIN dmc_dichvu dv on IF(IFNULL(b.MA_DICH_VU,'') <> '', b.MA_DICH_VU, b.MA_VAT_TU) = dv.MA_DICHVU AND IF(IFNULL(b.TEN_DICH_VU,'') <> '',b.TEN_DICH_VU,b.TEN_VAT_TU) = dv.TEN_DICHVU,
+                                        `{dbName}`.xml3 b LEFT JOIN`{dbName}`.dmc_dichvu dv on IF(IFNULL(b.MA_DICH_VU,'') <> '', b.MA_DICH_VU, b.MA_VAT_TU) = dv.MA_DICHVU AND IF(IFNULL(b.TEN_DICH_VU,'') <> '',b.TEN_DICH_VU,b.TEN_VAT_TU) = dv.TEN_DICHVU,
                                         dmc_nhom_mabhyt nhom
                                     WHERE a.ma_lk = b.ma_lk
                                     AND b.ma_nhom = nhom.MANHOM_BHYT
@@ -1190,7 +1190,7 @@ namespace API.Controllers
                             FROM  
                                 `{dbName}`.xml1 a, 
                                 `{dbName}`.xml3 b 
-                                LEFT JOIN dmc_dichvu dv 
+                                LEFT JOIN`{dbName}`.dmc_dichvu dv 
                                     ON IF(IFNULL(b.MA_DICH_VU, '') <> '',b.MA_DICH_VU, b.MA_VAT_TU) = dv.MA_DICHVU 
                                 AND IF(IFNULL(b.TEN_DICH_VU, '') <> '',b.TEN_DICH_VU, b.TEN_VAT_TU) = dv.TEN_DICHVU,
                                 dmc_nhom_mabhyt nhom
