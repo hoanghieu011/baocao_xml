@@ -193,15 +193,45 @@ namespace API.Controllers
         {
             using var cmd = conn.CreateCommand();
             cmd.CommandText = $@"
-SELECT
-    (SELECT COUNT(1) FROM `{dbName}`.xml1 WHERE YEAR(NGAY_VAO) = @year) AS sl_bnbh,
-    (SELECT COUNT(1) FROM `{dbName}`.xml_bnnd WHERE YEAR(`{mapping.VisitDateColumn}`) = @year) AS sl_bnvp,
-    (SELECT COALESCE(SUM(`{mapping.HospitalFeeAmountColumn}`), 0) FROM `{dbName}`.xml_bnnd WHERE YEAR(`{mapping.RevenueDateColumn}`) = @year) AS vp_tien_nhandan,
-    (SELECT COALESCE(SUM(T_BNCCT), 0) FROM `{dbName}`.xml2 WHERE YEAR(NGAY_YL) = @year) AS bncct_xml2,
-    (SELECT COALESCE(SUM(T_BNCCT), 0) FROM `{dbName}`.xml3 WHERE YEAR(NGAY_YL) = @year) AS bncct_xml3,
-    (SELECT COALESCE(SUM(T_BHTT), 0) FROM `{dbName}`.xml2 WHERE YEAR(NGAY_YL) = @year) AS bhtt_xml2,
-    (SELECT COALESCE(SUM(T_BHTT), 0) FROM `{dbName}`.xml3 WHERE YEAR(NGAY_YL) = @year) AS bhtt_xml3;
-";
+                WITH thuoc AS (
+                    SELECT
+                        COALESCE(SUM(t.T_BNCCT), 0) AS bncct,
+                        COALESCE(SUM(t.T_BHTT), 0) AS bhtt
+                    FROM `{dbName}`.xml2 t
+                    INNER JOIN `{dbName}`.xml1 bn ON t.MA_LK = bn.MA_LK
+                    WHERE YEAR(bn.NGAY_RA) = @year
+                ),
+                dvkt AS (
+                    SELECT
+                        COALESCE(SUM(t.T_BNCCT), 0) AS bncct,
+                        COALESCE(SUM(t.T_BHTT), 0) AS bhtt
+                    FROM `{dbName}`.xml3 t
+                    INNER JOIN `{dbName}`.xml1 bn ON t.MA_LK = bn.MA_LK
+                    WHERE YEAR(bn.NGAY_RA) = @year
+                ),
+                vienphi AS (
+                    SELECT
+                        COUNT(1) AS sl_bnvp,
+                        COALESCE(SUM(TIEN_DANOP), 0) AS vp_tien_nhandan
+                    FROM `{dbName}`.xml_bnnd
+                    WHERE YEAR(NGAY_RAVIEN) = @year
+                )
+                SELECT
+                    (
+                        SELECT COUNT(1)
+                        FROM `{dbName}`.xml1
+                        WHERE YEAR(NGAY_RA) = @year
+                    ) AS sl_bnbh,
+                    vp.sl_bnvp,
+                    vp.vp_tien_nhandan,
+                    t.bncct AS bncct_xml2,
+                    d.bncct AS bncct_xml3,
+                    t.bhtt AS bhtt_xml2,
+                    d.bhtt AS bhtt_xml3
+                FROM thuoc t
+                CROSS JOIN dvkt d
+                CROSS JOIN vienphi vp
+             ";
             AddYearParameter(cmd, year);
 
             using var reader = await cmd.ExecuteReaderAsync();
