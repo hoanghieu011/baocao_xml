@@ -110,11 +110,11 @@ export class DiemKeHoachService {
     );
   }
 
-  getTtDiemKeHoachByBacSiId(bacSiId: number, thangNam: string) {
+  getTtDiemKeHoachByBacSiId(bacSiId: number, thangNam: string, khoaId: number) {
     return this.http.get<any>(
       `${this.apiUrl}/tt_diemkehoach_by_bacsiid`, 
       {
-        params: { bacSiId, thangNam },
+        params: { bacSiId, thangNam, khoaId },
         headers: this.httpConfig.getHeaders()
       }
     );

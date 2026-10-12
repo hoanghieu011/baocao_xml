@@ -7,10 +7,10 @@ import { OrganizationService } from '../services/org-organization.service';
 import { DiemKeHoachService, ThemDiemKeHoach, ThemDiemKeHoachTheoKhoa, UpdateDiemKeHoach } from '../services/diem-ke-hoach.service';
 import { TranslateModule } from '@ngx-translate/core';
 import { TangCuongService } from '../services/tang-cuong.service';
-import { forkJoin } from 'rxjs';
+import { EMPTY, of } from 'rxjs';
 import { OfficerService } from '../services/officer.service';
 import { Subject } from 'rxjs';
-import { switchMap, tap } from 'rxjs/operators';
+import { catchError, switchMap, takeUntil, tap } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DestroyRef, inject } from '@angular/core';
 
@@ -86,7 +86,8 @@ export class DiemKeHoachComponent  {
   cur_thang: number = new Date().getMonth() + 1;
   cur_nam: number = new Date().getFullYear();
   private destroyRef = inject(DestroyRef);
-  private selectOfficer$ = new Subject<number>();
+  selectionChecked = false;
+  private selectionChange$ = new Subject<'officer' | 'khoa' | 'close'>();
 
   constructor(private organizationService: OrganizationService, private diemKeHoachService: DiemKeHoachService, private tangCuongService: TangCuongService, private officerService: OfficerService ,private cd: ChangeDetectorRef) { }
   ngOnInit(): void {
@@ -96,7 +97,7 @@ export class DiemKeHoachComponent  {
     }
     this.loadDsOfficer();
     this.loadDsOrganization();
-    this.listenOfficerSelection();
+    this.listenSelectionChanges();
   }
 
   loadDsOfficer() {
@@ -159,7 +160,10 @@ export class DiemKeHoachComponent  {
       return;
     }
     this.loading = true;
-    this.tangCuongService.getAllTangCuongByDiemKeHoachId(this.selectedDiemKeHoach.diemKeHoachId).subscribe({
+    this.tangCuongService.getAllTangCuongByDiemKeHoachId(this.selectedDiemKeHoach.diemKeHoachId).pipe(
+      takeUntil(this.selectionChange$),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
       next: (res) => {
         this.dataTangCuong = res?.dsTangCuong || [];
         this.loading = false;
@@ -175,42 +179,69 @@ export class DiemKeHoachComponent  {
     });
   }
   onSelectAddOfficer(event: Select2UpdateEvent<any>){
-    this.selected_bs_id = event.value;
+    const id = Number(event.value) || 0;
+    if (id === this.selected_bs_id) {
+      return;
+    }
+    this.selected_bs_id = id;
     this.selected_bs = this.ds_officer.find(b=> b.bacsiid == this.selected_bs_id)
     this.formDataDiemKeHoach.get('bacSiId')?.setValue(this.selected_bs_id);
-    this.selectOfficer$.next(this.selected_bs_id);
+    this.selectionChange$.next('officer');
   }
 
-  private listenOfficerSelection(): void {
-    this.selectOfficer$.pipe(
-      switchMap(id => {
-        const thangNam = `${this.cur_thang}${this.cur_nam}`;
-        return forkJoin({
-          officer: this.officerService.getTtOfficerByBacsiId(id),
-          diemKeHoach: this.diemKeHoachService.getTtDiemKeHoachByBacSiId(id, thangNam)
-        });
+  private listenSelectionChanges(): void {
+    this.selectionChange$.pipe(
+      switchMap(change => {
+        this.selectionChecked = false;
+        if (change === 'close') {
+          return EMPTY;
+        }
+        if (!this.selected_bs_id) {
+          this.addToast('Vui lòng chọn bác sĩ/điều dưỡng', 'warning');
+          return EMPTY;
+        }
+
+        // Only suggest the doctor's department when no department is selected.
+        const defaultKhoa$ = change === 'officer' && !this.selected_khoa_id
+          ? this.officerService.getTtOfficerByBacsiId(this.selected_bs_id).pipe(
+              tap(res => {
+                this.selected_khoa_id = Number(res.data?.khoaid) || 0;
+                this.selected_khoa = this.ds_khoa.find(k => k.value == this.selected_khoa_id);
+                this.formDataDiemKeHoach.get('khoa')?.setValue(this.selected_khoa_id);
+              })
+            )
+          : of(null);
+
+        return defaultKhoa$.pipe(
+          switchMap(() => {
+            if (!this.selected_khoa_id) {
+              this.addToast(change === 'officer'
+                ? 'Bác sĩ/điều dưỡng chưa được gán khoa trong hệ thống'
+                : 'Vui lòng chọn khoa', 'warning');
+              return EMPTY;
+            }
+            if (!this.cur_thang || !this.cur_nam) {
+              this.addToast('Vui lòng chọn tháng và năm', 'warning');
+              return EMPTY;
+            }
+            return this.diemKeHoachService.getTtDiemKeHoachByBacSiId(
+              this.selected_bs_id, `${this.cur_thang}${this.cur_nam}`, this.selected_khoa_id
+            );
+          }),
+          catchError(err => {
+            console.error(err);
+            this.addToast('Đã xảy ra lỗi khi kiểm tra điểm kế hoạch', 'danger');
+            return EMPTY;
+          })
+        );
       }),
       takeUntilDestroyed(this.destroyRef)
-    ).subscribe({
-      next: ({ officer, diemKeHoach }) =>
-        this.handleOfficerSelectionResult(officer.data, diemKeHoach.data),
-      error: (err) => {
-        console.error(err);
-        this.selected_khoa_id = 0;
-        this.addToast('Đã xảy ra lỗi khi lấy dữ liệu chi tiết bác sĩ', 'danger');
-      }
+    ).subscribe(res => {
+      this.selectionChecked = true;
+      this.handleSelectionResult(res.data);
     });
   }
-  private handleOfficerSelectionResult(officerDetail: any, existing: any): void {
-    if (officerDetail?.khoaid) {
-      this.selected_khoa_id = officerDetail.khoaid;
-      this.selected_khoa = this.ds_khoa.find(k => k.value == this.selected_khoa_id);
-      this.formDataDiemKeHoach.get('khoa')?.setValue(this.selected_khoa_id);
-    } else {
-      this.selected_khoa_id = 0;
-      this.addToast('Bác sĩ/điều dưỡng chưa được gán khoa trong hệ thống', 'warning');
-    }
-
+  private handleSelectionResult(existing: any): void {
     if (existing) {
       this.selectedDiemKeHoach = existing;
       this.isThemMoi = false;
@@ -218,10 +249,11 @@ export class DiemKeHoachComponent  {
         diemKeHoach: existing.diemKeHoach,
         soBuoiTruc: existing.soBuoiTruc,
         diemTruc: existing.diemTruc,
+        soBnNhapVienNgoaiGio: existing.soBnNhapVienNgoaiGio,
         diemLayMauXN: existing.diemLayMau,
       });
       this.getDsTangCuongByDiemKeHoachId();
-      this.addToast('Bác sĩ này đã có điểm kế hoạch trong tháng, đã tải dữ liệu hiện có', 'info');
+      this.addToast('Bác sĩ này đã có điểm kế hoạch trong tháng tại khoa đã chọn, đã tải dữ liệu hiện có', 'info');
     } else {
       this.selectedDiemKeHoach = null;
       this.isThemMoi = true;
@@ -229,9 +261,14 @@ export class DiemKeHoachComponent  {
   }
 
   onKhoaSelectThemChange(event: Select2UpdateEvent<any>){
-    this.selected_khoa_id = event.value;
+    const id = Number(event.value) || 0;
+    if (id === this.selected_khoa_id) {
+      return;
+    }
+    this.selected_khoa_id = id;
     this.selected_khoa = this.ds_khoa.find(k => k.value == this.selected_khoa_id)
     this.formDataDiemKeHoach.get('khoa')?.setValue(this.selected_khoa_id);
+    this.selectionChange$.next('khoa');
   }
   onKhoaFilterChange(event: Select2UpdateEvent<any>) {
     this.cur_khoa = event.value;
@@ -247,6 +284,8 @@ export class DiemKeHoachComponent  {
   }
 
   onCloseModal() {
+    this.selectionChange$.next('close');
+    this.loading = false;
     this.isShowModal = false;
     this.formDataDiemKeHoach.reset();
     this.selectedDiemKeHoach = null;
@@ -259,6 +298,10 @@ export class DiemKeHoachComponent  {
   }
 
   onSaveDiemKeHoach() {
+    if (this.isThemMoi && (!this.selected_bs_id || !this.selected_khoa_id || !this.selectionChecked)) {
+      this.addToast('Vui lòng chọn bác sĩ/điều dưỡng, khoa và chờ kiểm tra điểm kế hoạch', 'warning');
+      return;
+    }
     if (this.formDataDiemKeHoach.invalid) {
       this.addToast('Vui lòng điền đầy đủ thông tin', 'warning');
       return;
@@ -400,6 +443,7 @@ export class DiemKeHoachComponent  {
     return pageNumbers.slice(start - 1, end);
   }
   themDiemKeHoachClick(){
+    this.selectionChecked = false;
     this.isThemMoi = true;
     this.isShowModal = true;
     const newTangCuong: TangCuong = {

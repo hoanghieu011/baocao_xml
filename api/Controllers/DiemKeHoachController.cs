@@ -639,7 +639,8 @@ namespace API.Controllers
 		[HttpGet("tt_diemkehoach_by_bacsiid")]
 		public async Task<ActionResult<object>> GetDiemKeHoachByBacSiIdAsync(
 			[FromQuery] int bacSiId,
-			[FromQuery] string thangNam)
+			[FromQuery] string thangNam, 
+            [FromQuery] int khoaId)
 		{
 			var userName = User.FindFirst(ClaimTypes.Name)?.Value
 				?? User.FindFirst("USER_NAME")?.Value;
@@ -673,12 +674,14 @@ namespace API.Controllers
                     ) tc ON dkh.DIEMKEHOACHID = tc.DIEMKEHOACHID
                     LEFT JOIN his_common.org_organization org ON org.ORG_ID = dkh.KHOAID
                     WHERE dkh.BACSIID = @bacSiId
-                      AND dkh.THANGNAM = @thangNam";
+                      AND dkh.THANGNAM = @thangNam
+                      AND dkh.KHOAID = @khoaId";
 				var data = await _context.diemkehoach
 					.FromSqlRaw(
 						sql,
 						new MySqlParameter("@bacSiId", bacSiId),
-						new MySqlParameter("@thangNam", thangNam))
+						new MySqlParameter("@thangNam", thangNam),
+						new MySqlParameter("@khoaId", khoaId))
 					.AsNoTracking()
 					.FirstOrDefaultAsync();
 
