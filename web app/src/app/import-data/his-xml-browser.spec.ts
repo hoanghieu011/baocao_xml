@@ -1,4 +1,6 @@
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
+import { importLogCsv } from './his-import-log';
 import { TestBed } from '@angular/core/testing';
 import { ImportDataService } from '../services/import-data.service';
 import { HisBrowserStore } from './his-browser-store';
@@ -74,7 +76,7 @@ describe('Decode XML trong trình duyệt', () => {
     const bytes = await (await createXmlZip([{ name: 'crc.txt', blob: new Blob(['123456789']) }])).arrayBuffer();
     expect(new DataView(bytes).getUint32(14, true)).toBe(0xcbf43926);
   });
-  it('toggle mặc định đóng, input khóa trước kiểm tra và preview chỉ hiển thị text', async () => {
+  it('toggle mặc định đóng, cho chọn tháng trước kiểm tra và preview chỉ hiển thị text', async () => {
     await TestBed.configureTestingModule({ imports: [HisImportComponent], providers: [
       { provide: ImportDataService, useValue: {} }
     ] }).compileComponents();
@@ -82,7 +84,7 @@ describe('Decode XML trong trình duyệt', () => {
     fixture.detectChanges();
     const root: HTMLElement = fixture.nativeElement;
     expect((root.querySelector('details') as HTMLDetailsElement).open).toBeFalse();
-    expect(root.querySelector('#hisFrom')!.matches(':disabled')).toBeTrue();
+    expect(root.querySelector('#hisFrom')!.matches(':disabled')).toBeFalse();
     fixture.componentInstance.sessionValid = true;
     (fixture.componentInstance as unknown as { scope: string }).scope = 'test';
     fixture.componentInstance.previewText = '<img src=x onerror=alert(1) />';
@@ -96,7 +98,7 @@ describe('Decode XML trong trình duyệt', () => {
 
 describe('Kho IndexedDB và luồng import', () => {
   let name: string, store: HisBrowserStore;
-  const request = { year: 2026, month: 1, cskcb: '35147', locTheo: '2' };
+  const request = { year: 2026, month: 1, cskcb: '35046', locTheo: '2' };
   beforeEach(() => { name = 'his-browser-test-' + crypto.randomUUID(); store = new HisBrowserStore(name); });
   afterEach(async () => {
     await new Promise<void>((resolve, reject) => { const remove = indexedDB.deleteDatabase(name); remove.onsuccess = () => resolve(); remove.onerror = () => reject(remove.error); });
@@ -135,12 +137,64 @@ describe('Kho IndexedDB và luồng import', () => {
     await expectAsync(store.read('a', a.id, 'report')).toBeRejected();
     expect((await store.read('b', b.id)).size).toBeGreaterThan(0);
   });
+  it('reset xóa mọi scope và Blob, kho vẫn lưu được file mới', async () => {
+    const result = await decodeHisXml(rawXml());
+    for (const scope of ['a', 'b']) {
+      const file = await store.save(scope, request, rawXml(), 1);
+      await store.saveDecoded(scope, file.id, result.decoded, result.report);
+      await store.saveImportLog(scope, file.id, { at: new Date().toISOString(), status: 'success', message: 'OK' });
+    }
+    const [file] = await store.list('a');
+    await store.reset();
+    const reopened = new HisBrowserStore(name);
+    for (const scope of ['a', 'b']) {
+      expect(await reopened.list(scope)).toEqual([]);
+      for (const kind of ['raw', 'decoded', 'report'] as const) {
+        await expectAsync(reopened.read(scope, file.id, kind)).toBeRejected();
+      }
+    }
+    const fresh = await reopened.save('a', request, rawXml(), 1);
+    expect(fresh.importedAt).toBeNull(); expect(fresh.importLog).toBeUndefined();
+    expect((await reopened.list('a')).length).toBe(1);
+  });
+
+  it('reset cần xác nhận, dùng được trước kiểm tra phiên và xóa trạng thái màn hình', async () => {
+    const component = new HisImportComponent({} as ImportDataService);
+    Object.assign(component, { store });
+    component.files = [await store.save('a', request, rawXml(), 1)];
+    component.previewText = '<x/>'; component.previewName = 'test.xml'; component.previewPage = 2;
+    component.months[0].status = 'Đã import';
+    const confirm = spyOn(window, 'confirm').and.returnValue(false);
+    await component.resetStore();
+    expect(component.files.length).toBe(1); expect((await store.list('a')).length).toBe(1);
+    confirm.and.returnValue(true);
+    component.busy = true; await component.resetStore();
+    expect(confirm).toHaveBeenCalledTimes(1);
+    component.busy = false;
+    await component.resetStore();
+    expect(component.files).toEqual([]); expect(await store.list('a')).toEqual([]);
+    expect(component.previewText).toBe(''); expect(component.previewName).toBe(''); expect(component.previewPage).toBe(0);
+    expect(component.months[0].status).toBe(''); expect(component.busy).toBeFalse();
+  });
+
+  it('reset lỗi giữ danh sách hiện tại và báo lỗi', async () => {
+    const component = new HisImportComponent({} as ImportDataService);
+    Object.assign(component, { store });
+    component.files = [await store.save('a', request, rawXml(), 1)];
+    spyOn(window, 'confirm').and.returnValue(true);
+    spyOn(store, 'reset').and.rejectWith(new Error('Không thể xóa kho'));
+    await component.resetStore();
+    expect(component.files.length).toBe(1); expect(component.error).toBe('Không thể xóa kho');
+    expect(component.busy).toBeFalse(); expect(component.message).toBe('');
+  });
+
   it('fetch nhiều tháng chỉ lưu browser; decode không gọi HTTP; import mới upload raw', async () => {
     const upload = jasmine.createSpy('upload').and.returnValue(of({ isError: false, message: 'OK' }));
     const fetchXml = jasmine.createSpy('fetch').and.returnValue(of(rawXml()));
     const service = { checkHisSession: () => of({ isValid: true, message: 'OK' }), getHisBrowserScope: () => of({ scope: 'a' }),
       fetchHisRecords: () => of({ total: 1, records: [{ maLk: 'A', qd3176: 'auto' }] }), fetchHisXmlBatch: fetchXml, importXMLData: upload };
     const component = new HisImportComponent(service as unknown as ImportDataService);
+    spyOn<any>(component, 'saveImportLogDownload');
     (component as unknown as { store: HisBrowserStore }).store = store;
     spyOn(component as unknown as { delay(ms: number): Promise<void> }, 'delay').and.resolveTo();
     component.request.token = 't'; component.request.cookie = 'c';
@@ -160,5 +214,49 @@ describe('Kho IndexedDB và luồng import', () => {
     const component = new HisImportComponent({} as ImportDataService);
     component.fromMonth = '2026-01'; component.toMonth = '2026-01'; component.updateMonths(); component.files = await store.list('a');
     expect(component.selectedFiles.length).toBe(1); expect(component.pendingFiles.length).toBe(0);
+  });
+
+  for (const fails of [false, true]) {
+    it(`tự tải và lưu log import ${fails ? 'lỗi HTTP' : 'thành công'} khi chưa decode`, async () => {
+      const file = await store.save('a', request, rawXml(), 1);
+      const upload = jasmine.createSpy('upload').and.returnValue(fails
+        ? throwError(() => new HttpErrorResponse({ status: 500, error: 'Lỗi SQL: MA_LK A' }))
+        : of({ isError: false, message: 'Thêm mới thành công!', countXML1: 1, countXML2: 2, countXML3: 3 }));
+      const component = new HisImportComponent({ importXMLData: upload } as unknown as ImportDataService);
+      Object.assign(component, { store, scope: 'a', sessionValid: true });
+      component.fromMonth = component.toMonth = '2026-01'; component.updateMonths();
+      component.files = [file];
+      const download = spyOn<any>(component, 'saveImportLogDownload');
+      await component.importXml();
+      expect(download).toHaveBeenCalledTimes(1);
+      const [saved] = await new HisBrowserStore(name).list('a');
+      expect(saved.decode).toBeUndefined();
+      expect(saved.importLog?.status).toBe(fails ? 'error' : 'success');
+      expect(!!saved.importedAt).toBe(!fails);
+      expect(saved.importLog?.message).toContain(fails ? 'Lỗi SQL: MA_LK A' : 'Thêm mới thành công!');
+      await component.downloadLog(saved);
+      expect(download).toHaveBeenCalledTimes(2);
+      const csv = importLogCsv([{ fileName: '=file.xml', log: saved.importLog! }]);
+      expect(Array.from(new Uint8Array(await csv.slice(0, 3).arrayBuffer()))).toEqual([239, 187, 191]);
+      expect(await csv.text()).toContain("'=file.xml");
+      expect(await csv.text()).toContain(fails ? 'Lỗi SQL' : 'Thành công');
+    });
+  }
+
+  it('bật Log lỗi sau import không cần decode', async () => {
+    await TestBed.configureTestingModule({ imports: [HisImportComponent], providers: [
+      { provide: ImportDataService, useValue: {} }
+    ] }).compileComponents();
+    const fixture = TestBed.createComponent(HisImportComponent), component = fixture.componentInstance;
+    Object.assign(component, { scope: 'a', sessionValid: true });
+    component.fromMonth = component.toMonth = '2026-01'; component.updateMonths();
+    const file = await store.save('a', request, rawXml(), 1);
+    component.files = [file]; fixture.detectChanges();
+    const button = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('button'))
+      .find(button => button.textContent?.trim() === 'Log lỗi')!;
+    expect(button.disabled).toBeTrue();
+    file.importLog = { at: new Date().toISOString(), status: 'success', message: 'OK' };
+    fixture.detectChanges(); expect(button.disabled).toBeFalse();
+    fixture.destroy();
   });
 });

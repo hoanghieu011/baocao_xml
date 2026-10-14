@@ -1,4 +1,5 @@
-import { HisBrowserStore, HisLocalFile } from './his-browser-store';
+import { HisBrowserStore, HisImportLog, HisLocalFile } from './his-browser-store';
+import { importLogCsv } from './his-import-log';
 import { createXmlZip, decodeCsv, decodeHisXml, DecodeReport } from './his-xml-utils';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -21,7 +22,7 @@ export class HisImportComponent implements OnDestroy {
   @Output() busyChange = new EventEmitter<boolean>();
   request: HisFetchRequest = {
     year: new Date().getFullYear(), month: new Date().getMonth() + 1,
-    token: '', cookie: '', cskcb: '35147', locTheo: '2',
+    token: '', cookie: '', cskcb: '35046', locTheo: '2',
     qd3176: 'auto', page: 1, rows: 500, maLks: []
   };
   fromMonth = `${this.request.year}-${String(this.request.month).padStart(2, '0')}`;
@@ -31,7 +32,7 @@ export class HisImportComponent implements OnDestroy {
   busy = false;
   stopRequested = false;
   sessionValid = false;
-  sessionMessage = 'Nhập token và cookie, sau đó kiểm tra phiên để mở các chức năng.';
+  sessionMessage = 'Nhập token, cookie và mã CSKCB, sau đó kiểm tra phiên để mở các chức năng.';
   message = '';
   error = '';
   rangeError = '';
@@ -93,13 +94,16 @@ export class HisImportComponent implements OnDestroy {
   }
 
   async checkSession(): Promise<void> {
-    if (this.busy || this.disabled || !this.request.token.trim() || !this.request.cookie.trim()) return;
+    if (this.busy || this.disabled || !this.request.token.trim() || !this.request.cookie.trim()
+      || !/^\d{1,10}$/.test(this.request.cskcb) || this.rangeError || !this.selectedMonths.length) return;
     this.setBusy(true);
     this.sessionValid = false;
     this.sessionMessage = 'Đang kiểm tra phiên đăng nhập HIS…';
     this.error = '';
     try {
-      const status = await firstValueFrom(this.service.checkHisSession(this.request));
+      const status = await firstValueFrom(this.service.checkHisSession({ ...this.request,
+        year: this.selectedMonths[0]?.year ?? this.request.year,
+        month: this.selectedMonths[0]?.month ?? this.request.month }));
       if (this.destroyed) return;
       this.sessionValid = status.isValid;
       this.sessionMessage = status.message;
@@ -191,24 +195,50 @@ export class HisImportComponent implements OnDestroy {
     this.stopRequested = false;
     this.error = '';
     let completed = 0;
+    const logs: { fileName: string; log: HisImportLog }[] = [];
     try {
       for (const file of files) {
         if (this.stopRequested) break;
         this.message = `Đang import ${completed + 1}/${files.length}: ${file.fileName}`;
-        const raw = await this.store.read(this.scope, file.id);
-        const result = await firstValueFrom(this.service.importXMLData(new File([raw], file.fileName, { type: 'application/xml' })));
-        if (result.isError) throw new Error(result.message);
-        await this.store.markImported(this.scope, file.id);
-        file.importedAt = new Date().toISOString();
+        let log: HisImportLog;
+        try {
+          const raw = await this.store.read(this.scope, file.id);
+          const result = await firstValueFrom(this.service.importXMLData(new File([raw], file.fileName, { type: 'application/xml' })));
+          log = { at: new Date().toISOString(), status: result.isError ? 'error' : 'success',
+            message: result.message || (result.isError ? 'Import thất bại.' : 'Import thành công, không có lỗi được API báo về.'),
+            countXML1: result.countXML1, countXML2: result.countXML2, countXML3: result.countXML3 };
+        } catch (error) {
+          log = { at: new Date().toISOString(), status: 'error', message: this.errorMessage(error) };
+        }
+        // Giữ log trong bộ nhớ để vẫn tải được nếu IndexedDB không ghi thành công.
+        file.importLog = log;
+        logs.push({ fileName: file.fileName, log });
+        if (log.status === 'success') file.importedAt = log.at;
+        try { await this.store.saveImportLog(this.scope, file.id, log); }
+        catch (error) {
+          log.message += ` Không lưu được kết quả vào trình duyệt: ${this.errorMessage(error)}`;
+          throw new Error(log.message);
+        }
+        if (log.status === 'error') throw new Error(log.message);
         completed++;
         const month = this.months.find(m => m.year === file.year && m.month === file.month);
-        if (month) month.status = result.message;
+        if (month) month.status = log.message;
       }
       this.message = `${this.stopRequested ? 'Đã dừng.' : 'Hoàn tất.'} Import ${completed}/${files.length} file đã chọn.`;
     } catch (error) {
       this.error = this.errorMessage(error);
       this.message = `Đã import ${completed}/${files.length} file. Dừng tại file lỗi; lần tiếp theo bỏ qua các file đã thành công.`;
-    } finally { this.setBusy(false); }
+    } finally {
+      this.setBusy(false);
+      if (logs.length) {
+        try { this.saveImportLogDownload(logs); }
+        catch { this.error += ' Không tự tải được log. Bấm Log lỗi để tải lại.'; }
+      }
+    }
+  }
+
+  private saveImportLogDownload(logs: { fileName: string; log: HisImportLog }[]): void {
+    saveAs(importLogCsv(logs), `HIS_import_log_${new Date().toISOString().replace(/[:.]/g, '-')}.csv`);
   }
 
   async download(file: HisLocalFile): Promise<void> {
@@ -283,7 +313,10 @@ export class HisImportComponent implements OnDestroy {
   async downloadLog(file?: HisLocalFile): Promise<void> {
     if (!this.canOperate) return;
     this.setBusy(true);
-    try { saveAs(decodeCsv(await this.reports(file ? [file] : this.selectedFiles)), 'decode_log.csv'); }
+    try {
+      if (file?.importLog) this.saveImportLogDownload([{ fileName: file.fileName, log: file.importLog }]);
+      else saveAs(decodeCsv(await this.reports(file ? [file] : this.selectedFiles)), 'decode_log.csv');
+    }
     catch (error) { this.error = this.errorMessage(error); }
     finally { this.setBusy(false); }
   }
@@ -304,6 +337,8 @@ export class HisImportComponent implements OnDestroy {
         if (total > 200 * 1024 * 1024) throw new Error('ZIP vượt 200 MB. Hãy chọn ít tháng hơn.');
       }
       entries.push({ name: 'decode_log.csv', blob: decodeCsv(await this.reports(this.selectedFiles)) });
+      entries.push({ name: 'import_log.csv', blob: importLogCsv(this.selectedFiles
+        .filter(file => !!file.importLog).map(file => ({ fileName: file.fileName, log: file.importLog! }))) });
       saveAs(await createXmlZip(entries), 'HIS_XML.zip');
     } catch (error) { this.error = this.errorMessage(error); }
     finally { this.setBusy(false); }
@@ -321,6 +356,24 @@ export class HisImportComponent implements OnDestroy {
     finally { this.setBusy(false); }
   }
 
+  async resetStore(): Promise<void> {
+    if (this.busy || this.disabled || !window.confirm('Reset kho dữ liệu HIS? Toàn bộ XML gốc, bản decode, log và trạng thái import của mọi tài khoản/bệnh viện trong trình duyệt này sẽ bị xóa, kể cả các tháng không được chọn. Không thể hoàn tác. Dữ liệu trên server không bị xóa.')) return;
+    this.setBusy(true);
+    this.error = '';
+    this.message = '';
+    try {
+      await this.store.reset();
+      this.files = [];
+      this.previewText = '';
+      this.previewName = '';
+      this.previewPage = 0;
+      this.stopRequested = false;
+      this.months.forEach(month => { month.status = ''; });
+      this.message = 'Đã reset toàn bộ kho dữ liệu HIS trong trình duyệt. Dữ liệu đã import trên server được giữ nguyên.';
+    } catch (error) { this.error = this.errorMessage(error); }
+    finally { this.setBusy(false); }
+  }
+
   async removeFile(file: HisLocalFile): Promise<void> {
     if (!this.canOperate || !window.confirm(`Xóa ${file.fileName} và bản decode khỏi trình duyệt này? Dữ liệu đã import vào database không bị xóa.`)) return;
     this.setBusy(true);
@@ -333,7 +386,7 @@ export class HisImportComponent implements OnDestroy {
   }
 
   private errorMessage(error: unknown): string {
-    if (error instanceof HttpErrorResponse) return error.error?.message || (error.status === 0
+    if (error instanceof HttpErrorResponse) return (typeof error.error === 'string' ? error.error : error.error?.message) || (error.status === 0
       ? 'Mất kết nối API. Kiểm tra lại danh sách file trước khi thử tiếp.' : 'Yêu cầu thất bại. Kiểm tra phiên và thông tin HIS.');
     return error instanceof Error ? error.message : 'Không thể xử lý dữ liệu HIS.';
   }

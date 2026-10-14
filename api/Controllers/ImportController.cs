@@ -236,8 +236,7 @@ namespace api.Controllers
                 return Unauthorized();
 
             // Lấy tên database động thông qua service dùng chung
-            //var dbData = await _dbResolver.GetDatabaseByUserAsync(userName);
-            var dbData = "his_data_test";
+            var dbData = await _dbResolver.GetDatabaseByUserAsync(userName);
 
 			if (string.IsNullOrEmpty(dbData))
                 return BadRequest(new ImportExcelResponse
@@ -662,8 +661,7 @@ namespace api.Controllers
                 });
 
             // Lấy tên database động thông qua service dùng chung
-            //var dbData = await _dbResolver.GetDatabaseByUserAsync(userName);
-            var dbData = "his_data_test";
+            var dbData = await _dbResolver.GetDatabaseByUserAsync(userName);
 
 			if (string.IsNullOrEmpty(dbData)) 
                 return BadRequest(new ImportXMLResponse

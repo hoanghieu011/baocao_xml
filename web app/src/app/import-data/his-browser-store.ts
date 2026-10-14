@@ -1,6 +1,15 @@
 import type { HisFetchRequest } from '../services/import-data.service';
 import type { DecodeReport, DecodeSummary } from './his-xml-utils';
 
+export interface HisImportLog {
+  at: string;
+  status: 'success' | 'error';
+  message: string;
+  countXML1?: number;
+  countXML2?: number;
+  countXML3?: number;
+}
+
 export interface HisLocalFile {
   id: string;
   year: number;
@@ -13,6 +22,7 @@ export interface HisLocalFile {
   importedAt: string | null;
   fileName: string;
   decode?: DecodeSummary;
+  importLog?: HisImportLog;
 }
 
 // Tách metadata khỏi Blob để tải danh sách không đọc toàn bộ XML vào RAM.
@@ -98,6 +108,13 @@ export class HisBrowserStore {
     return this.update(scope, id, (file) => { file.importedAt = new Date().toISOString(); });
   }
 
+  saveImportLog(scope: string, id: string, log: HisImportLog): Promise<void> {
+    return this.update(scope, id, file => {
+      file.importLog = log;
+      if (log.status === 'success') file.importedAt = log.at;
+    });
+  }
+
   saveDecoded(scope: string, id: string, decoded: Blob | null, report: DecodeReport): Promise<void> {
     return this.update(scope, id, (file, tx) => {
       const { issues, ...summary } = report;
@@ -119,6 +136,14 @@ export class HisBrowserStore {
         files.put(request.result);
         done(undefined);
       };
+    });
+  }
+
+  reset(): Promise<void> {
+    return this.transaction('readwrite', (tx, done) => {
+      tx.objectStore('files').clear();
+      tx.objectStore('blobs').clear();
+      done(undefined);
     });
   }
 

@@ -23,23 +23,15 @@ public sealed class HisXmlClient : IDisposable
 
   public async Task<HisSessionStatus> CheckSession(HisSessionRequest credentials, CancellationToken ct)
   {
-    // Không dùng danh sách hồ sơ theo tháng để xác nhận phiên: cookie hết hạn
-    // có thể khiến HIS trả danh sách rỗng giống tháng không có bệnh nhân.
-    var request = new HisFetchRequest { Token = credentials.Token, Cookie = credentials.Cookie };
-    var raw = await Send(request, new { func = "ajaxCALL_SP_O", @params = new object[] { "DMC70.04", -1, 0 }, uuid = credentials.Token.Trim() }, null, ct, plainText: true);
-    using var document = JsonDocument.Parse(raw);
-    var root = document.RootElement;
-    // Chỉ xác nhận khi truy vấn khoa/phòng trả dữ liệu; null/rỗng/trang login
-    // và các cấu trúc chưa biết đều không đủ bằng chứng để mở chức năng.
-    var rows = root;
-    if (root.ValueKind == JsonValueKind.Object && root.TryGetProperty("rows", out var wrapped)) rows = wrapped;
-    var valid = rows.ValueKind == JsonValueKind.Array && rows.GetArrayLength() > 0 &&
-      rows.EnumerateArray().All(row => row.ValueKind == JsonValueKind.Object &&
-        row.EnumerateObject().Any(p => p.Name.Contains("ID", StringComparison.OrdinalIgnoreCase) &&
-          p.Value.ValueKind is JsonValueKind.String or JsonValueKind.Number && !string.IsNullOrWhiteSpace(p.Value.ToString())) &&
-        !row.EnumerateObject().Any(p => p.Name.Equals("error", StringComparison.OrdinalIgnoreCase)));
+    // DMC70.04 có thể trả rỗng dù phiên còn hợp lệ; xác minh bằng một hồ sơ.
+    var page = await FetchPage(new HisFetchRequest {
+      Token = credentials.Token, Cookie = credentials.Cookie, Cskcb = credentials.Cskcb,
+      Year = credentials.Year, Month = credentials.Month, LocTheo = credentials.LocTheo,
+      Page = 1, Rows = 1
+    }, ct);
+    var valid = page.Records.Count > 0;
     return new HisSessionStatus(valid, valid ? "Phiên HIS hợp lệ. Có thể fetch và import XML." :
-      "Chưa xác minh được phiên HIS: truy vấn khoa/phòng trả rỗng hoặc cấu trúc chưa được hỗ trợ. Hãy lấy lại token/cookie và kiểm tra phản hồi DMC70.04.");
+      "Chưa xác minh được phiên HIS: không có hồ sơ trong tháng đã chọn. Hãy chọn tháng có dữ liệu, kiểm tra CSKCB hoặc lấy lại token/cookie.");
   }
 
   private static (string From, string To) Dates(HisFetchRequest r) => (

@@ -1,44 +1,48 @@
 <details class="card mt-3">
-  <summary class="card-header fw-semibold p-3" style="cursor: pointer;">Lấy XML từ HIS và import</summary>
+  <summary class="card-header fw-semibold p-3" style="cursor: pointer;">Lấy XML từ HIS</summary>
   <div class="card-body">
-    <p class="text-body-secondary">Nhập thủ công UUID và Cookie của phiên HIS tại bvdakhoa.vncare.vn. Kiểm tra phiên trước khi sử dụng.</p>
     <form #sessionForm="ngForm" (ngSubmit)="checkSession()">
       <fieldset [disabled]="busy || disabled">
         <div class="row g-3 align-items-end">
-          <div class="col-md-5">
+          <div class="col-md-4">
             <label for="hisToken" class="form-label">Token HIS (uuid)</label>
             <input id="hisToken" name="token" type="password" class="form-control" required maxlength="16384" autocomplete="off" [(ngModel)]="request.token" (ngModelChange)="credentialsChanged()" />
           </div>
-          <div class="col-md-5">
+          <div class="col-md-4">
             <label for="hisCookie" class="form-label">Cookie HIS</label>
             <input id="hisCookie" name="cookie" type="password" class="form-control" required maxlength="16384" autocomplete="off" [(ngModel)]="request.cookie" (ngModelChange)="credentialsChanged()" />
           </div>
-          <div class="col-md-2"><button type="submit" class="btn btn-outline-primary w-100" [disabled]="sessionForm.invalid || !request.token.trim() || !request.cookie.trim()">Kiểm tra phiên</button></div>
+          <div class="col-md-2">
+            <label for="hisCskcb" class="form-label">Mã CSKCB nguồn</label>
+            <input id="hisCskcb" name="cskcb" class="form-control" required pattern="[0-9]{1,10}" maxlength="10" inputmode="numeric" aria-describedby="hisSessionHelp" #cskcbInput="ngModel" [(ngModel)]="request.cskcb" (ngModelChange)="credentialsChanged()" />
+            <div *ngIf="cskcbInput.invalid && (cskcbInput.dirty || cskcbInput.touched)" class="text-danger small">Nhập mã CSKCB gồm 1–10 chữ số.</div>
+          </div>
+          <div class="col-md-2"><button type="submit" class="btn btn-outline-primary w-100" [disabled]="sessionForm.invalid || !request.token.trim() || !request.cookie.trim() || !!rangeError || !selectedMonths.length">Kiểm tra phiên</button></div>
         </div>
+        <p id="hisSessionHelp" class="small text-body-secondary mt-2 mb-0">Nhập CSKCB thuộc phiên HIS đang dùng. Mã này dùng để kiểm tra phiên và lấy XML; đổi mã cần kiểm tra lại. Chọn tháng có dữ liệu bên dưới trước khi kiểm tra.</p>
       </fieldset>
     </form>
     <p class="mt-3" role="status" [class.text-success]="sessionValid" [class.text-body-secondary]="!sessionValid">{{ sessionMessage }}</p>
     <form #optionsForm="ngForm">
-      <fieldset [disabled]="!sessionValid || busy || disabled">
+      <fieldset [disabled]="busy || disabled">
         <div class="row g-3">
-          <div class="col-md-3"><label for="hisFrom" class="form-label">Từ tháng</label><input id="hisFrom" name="from" type="month" class="form-control" required min="2000-01" max="9999-12" [(ngModel)]="fromMonth" (ngModelChange)="updateMonths()" /></div>
-          <div class="col-md-3"><label for="hisTo" class="form-label">Đến tháng</label><input id="hisTo" name="to" type="month" class="form-control" required min="2000-01" max="9999-12" [(ngModel)]="toMonth" (ngModelChange)="updateMonths()" /></div>
-          <div class="col-md-3"><label for="hisCskcb" class="form-label">Mã CSKCB nguồn</label><input id="hisCskcb" name="cskcb" class="form-control" required pattern="[0-9]{1,10}" [(ngModel)]="request.cskcb" /></div>
-          <div class="col-md-3">
+          <div class="col-md-4"><label for="hisFrom" class="form-label">Từ tháng</label><input id="hisFrom" name="from" type="month" class="form-control" required min="2000-01" max="9999-12" [(ngModel)]="fromMonth" (ngModelChange)="updateMonths(); credentialsChanged()" /></div>
+          <div class="col-md-4"><label for="hisTo" class="form-label">Đến tháng</label><input id="hisTo" name="to" type="month" class="form-control" required min="2000-01" max="9999-12" [(ngModel)]="toMonth" (ngModelChange)="updateMonths(); credentialsChanged()" /></div>
+          <div class="col-md-4">
             <label for="hisLoc" class="form-label">Lọc theo</label>
-            <select id="hisLoc" name="loc" class="form-select" [(ngModel)]="request.locTheo">
+            <select id="hisLoc" name="loc" class="form-select" [(ngModel)]="request.locTheo" (ngModelChange)="credentialsChanged()">
               <option value="4">Ngày vào viện</option><option value="2">Ngày ra viện</option><option value="3">Ngày T.Toán</option>
               <option value="1">Ngày Q.Toán</option><option value="0">Ngày duyệt BH</option><option value="5">Ngày gửi cổng</option>
             </select>
           </div>
         </div>
-        <p class="small text-body-secondary mt-2">Chọn cùng tháng để xử lý một tháng, hoặc chọn khoảng tháng rồi đánh dấu các tháng cần xử lý. Tự nhận diện QĐ, tối đa 500 hồ sơ/file.</p>
         <p *ngIf="rangeError" class="text-danger">{{ rangeError }}</p>
-        <div class="d-flex gap-2 flex-wrap mb-3">
+        <div class="d-flex gap-2 flex-wrap mt-2 mb-3">
           <button type="button" class="btn btn-primary" [disabled]="!canOperate || optionsForm.invalid || !selectedMonths.length" (click)="fetchXml()">Fetch XML các tháng đã chọn</button>
           <button type="button" class="btn btn-outline-primary" [disabled]="!canOperate || !selectedFiles.length" (click)="decodeFiles()">Decode để kiểm tra ({{ selectedFiles.length }} file)</button>
           <button type="button" class="btn btn-success" [disabled]="!canOperate || optionsForm.invalid || !pendingFiles.length" (click)="importXml()">Import XML từ trình duyệt ({{ pendingFiles.length }} file)</button>
           <button type="button" class="btn btn-outline-secondary" [disabled]="!canOperate" (click)="refreshFiles()">Đọc lại kho trình duyệt</button>
+          <button type="button" class="btn btn-outline-danger" [disabled]="busy || disabled" (click)="resetStore()">Reset kho dữ liệu</button>
           <button type="button" class="btn btn-outline-secondary" [disabled]="!canOperate || !selectedFiles.length" (click)="downloadZip()">Tải ZIP XML gốc + decode</button>
           <button type="button" class="btn btn-outline-secondary" [disabled]="!canOperate || !selectedFiles.length" (click)="downloadLog()">Tải log decode CSV</button>
         </div>
@@ -57,8 +61,7 @@
     <button *ngIf="busy" type="button" class="btn btn-outline-secondary mt-2" [disabled]="stopRequested" (click)="stopRequested = true">{{ stopRequested ? 'Đang chờ yêu cầu hiện tại hoàn tất…' : 'Dừng sau yêu cầu hiện tại' }}</button>
     <p class="mt-3 mb-1" aria-live="polite"><span *ngIf="busy" class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>{{ message }}</p>
     <p *ngIf="error" class="text-danger" role="alert">{{ error }}</p>
-    <p class="small text-body-secondary">XML gốc, bản decode và tiến độ chỉ lưu trong trình duyệt này, theo tài khoản/bệnh viện; không lưu file trên server. Decode chạy trên máy bạn và giữ nguyên XML gốc. Chỉ nút Import gửi XML gốc lên API để nhập database; file decode có lỗi được loại khỏi lượt import.</p>
-    <p class="small text-body-secondary">Xóa dữ liệu trang web hoặc đổi trình duyệt/máy sẽ không còn kho file này; hãy tải ZIP để giữ bản sao. Fetch bị dừng/lỗi có thể chưa đủ tháng. Token/cookie không được lưu.</p>
+    <p class="small text-body-secondary">XML gốc, bản decode và tiến độ chỉ lưu trong trình duyệt, theo tài khoản/bệnh viện; không lưu file trên server</p>
     <div class="table-responsive" *ngIf="selectedFiles.length" style="max-height: 360px; overflow: auto;">
       <table class="table table-sm align-middle">
         <thead><tr><th>File XML</th><th>Hồ sơ</th><th>Import</th><th>Decode</th><th>Thao tác</th></tr></thead>
@@ -74,7 +77,7 @@
             <button type="button" class="btn btn-link btn-sm" [disabled]="!canOperate" (click)="decodeFiles(file)">Decode</button>
             <button type="button" class="btn btn-link btn-sm" [disabled]="!canOperate || !file.decode?.hasOutput" (click)="preview(file)">Xem</button>
             <button type="button" class="btn btn-link btn-sm" [disabled]="!canOperate || !file.decode?.hasOutput" (click)="downloadDecoded(file)">XML decode</button>
-            <button type="button" class="btn btn-link btn-sm" [disabled]="!canOperate || !file.decode" (click)="downloadLog(file)">Log lỗi</button>
+            <button type="button" class="btn btn-link btn-sm" [disabled]="!canOperate || (!file.importLog && !file.decode)" (click)="downloadLog(file)">Log lỗi</button>
             <button type="button" class="btn btn-link btn-sm text-danger" [disabled]="!canOperate" (click)="removeFile(file)">Xóa cục bộ</button>
           </div></td>
         </tr></tbody>

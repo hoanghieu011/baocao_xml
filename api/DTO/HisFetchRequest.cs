@@ -9,7 +9,7 @@ public class HisFetchRequest
   [Required, StringLength(16384)] public string Token { get; set; } = "";
   [Required, StringLength(16384), RegularExpression(@"^[^\r\n]+$")]
   public string Cookie { get; set; } = "";
-  [Required, RegularExpression(@"^\d{1,10}$")] public string Cskcb { get; set; } = "35147";
+  [Required, RegularExpression(@"^\d{1,10}$")] public string Cskcb { get; set; } = "35046";
   public string Dtbnid => "100";
   public string LoaiXml => "130";
   [Required, RegularExpression("^[0-5]$")] public string LocTheo { get; set; } = "2";
@@ -21,6 +21,10 @@ public class HisFetchRequest
 
 public class HisSessionRequest
 {
+  [Range(2000, 9999)] public int Year { get; set; } = DateTime.Today.Year;
+  [Range(1, 12)] public int Month { get; set; } = DateTime.Today.Month;
+  [Required, RegularExpression(@"^\d{1,10}$")] public string Cskcb { get; set; } = "35046";
+  [Required, RegularExpression("^[0-5]$")] public string LocTheo { get; set; } = "2";
   [Required, StringLength(16384)] public string Token { get; set; } = "";
   [Required, StringLength(16384), RegularExpression(@"^[^\r\n]+$")]
   public string Cookie { get; set; } = "";

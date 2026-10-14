@@ -64,9 +64,10 @@ export class ImportDataService {
       { headers: this.httpConfig.getHeaders() });
   }
 
-  checkHisSession(request: { token: string; cookie: string }): Observable<{ isValid: boolean; message: string }> {
+  checkHisSession(request: Pick<HisFetchRequest, 'token' | 'cookie' | 'cskcb' | 'year' | 'month' | 'locTheo'>): Observable<{ isValid: boolean; message: string }> {
     return this.http.post<{ isValid: boolean; message: string }>(`${this.apiUrl}/CheckHisSession`,
-      { token: request.token, cookie: request.cookie }, { headers: this.httpConfig.getHeaders() });
+      { token: request.token, cookie: request.cookie, cskcb: request.cskcb,
+        year: request.year, month: request.month, locTheo: request.locTheo }, { headers: this.httpConfig.getHeaders() });
   }
 
   fetchHisXmlBatch(request: HisFetchRequest): Observable<Blob> {
