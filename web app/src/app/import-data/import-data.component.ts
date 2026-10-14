@@ -1,3 +1,4 @@
+import { HisImportComponent } from './his-import.component';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
@@ -65,6 +66,7 @@ const DEFAULT_EXCEL_TYPES: ImportExcelTableInfo[] = [
   selector: 'app-import-data',
   standalone: true,
   imports: [
+    HisImportComponent,
     IconDirective,
     CommonModule,
     FormsModule,
@@ -85,6 +87,7 @@ export class ImportDataComponent implements OnDestroy, OnInit {
   listFileStatus: FileStatus[] = [];
   excelTypes: ImportExcelTableInfo[] = DEFAULT_EXCEL_TYPES;
   isSubmitting = false;
+  isFetchingHis = false;
   isDownloadingTemplate = false;
   isDeleting = false;
   toasts: ToastMessage[] = [];
@@ -203,6 +206,7 @@ export class ImportDataComponent implements OnDestroy, OnInit {
   }
 
   async onSubmit(): Promise<void> {
+    if (this.isFetchingHis || this.isSubmitting || this.isDeleting) return;
     if (this.formUpload.invalid) {
       this.formUpload.markAllAsTouched();
       this.addToast('Thiếu hoặc sai thông tin. Vui lòng kiểm tra lại.', 'danger');
@@ -246,6 +250,7 @@ export class ImportDataComponent implements OnDestroy, OnInit {
   }
 
   deleteHospitalDataByMonth(): void {
+    if (this.isFetchingHis || this.isSubmitting || this.isDeleting) return;
     if (this.formDelete.invalid) {
       this.formDelete.markAllAsTouched();
       this.addToast('Tháng hoặc năm không hợp lệ.', 'danger');

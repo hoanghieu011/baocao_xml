@@ -120,7 +120,7 @@
       </ul>
 
       <div class="actions">
-        <button type="submit" class="btn btn-primary" [disabled]="formUpload.invalid || isSubmitting">
+        <button type="submit" class="btn btn-primary" [disabled]="formUpload.invalid || isSubmitting || isDeleting || isFetchingHis">
           <span *ngIf="!isSubmitting">Import</span>
           <span *ngIf="isSubmitting">
             <span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
@@ -135,6 +135,8 @@
   </div>
 </div>
 
+<app-his-import [disabled]="isSubmitting || isDeleting" (busyChange)="isFetchingHis = $event"></app-his-import>
+
 <div class="card mt-3" style="display: none;">
   <div class="card-body">
     <h5 class="card-title">Xóa dữ liệu bệnh nhân, dịch vụ kĩ thuật (XML) theo tháng</h5>
@@ -148,7 +150,7 @@
         <input id="deleteYear" type="number" min="2000" max="9999" class="form-control" formControlName="nam" />
       </div>
       <div class="col-sm-6">
-        <button type="submit" class="btn btn-danger" [disabled]="formDelete.invalid || isDeleting || isSubmitting">
+        <button type="submit" class="btn btn-danger" [disabled]="formDelete.invalid || isDeleting || isSubmitting || isFetchingHis">
           <span *ngIf="!isDeleting">Xóa dữ liệu</span>
           <span *ngIf="isDeleting">
             <span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>

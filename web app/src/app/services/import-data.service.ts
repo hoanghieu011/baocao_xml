@@ -1,6 +1,6 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { catchError, Observable } from 'rxjs';
 import { HttpConfigService } from './http-config.service';
 
 export type ExcelTypeData = 'BNND' | 'BN15T' | 'BN_NHAPVIEN';
@@ -25,6 +25,29 @@ export interface ImportXMLResponse {
   countXML3?: number;
 }
 
+export interface HisFetchRequest {
+  year: number;
+  month: number;
+  token: string;
+  cookie: string;
+  cskcb: string;
+  locTheo: string;
+  qd3176: string;
+  page: number;
+  rows: number;
+  maLks: string[];
+}
+
+export interface HisRecord {
+  maLk: string;
+  qd3176: string;
+}
+
+export interface HisPage {
+  total: number;
+  records: HisRecord[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -35,6 +58,38 @@ export class ImportDataService {
     private http: HttpClient,
     private httpConfig: HttpConfigService
   ) {}
+
+  fetchHisRecords(request: HisFetchRequest): Observable<HisPage> {
+    return this.http.post<HisPage>(`${this.apiUrl}/FetchHisRecords`, request,
+      { headers: this.httpConfig.getHeaders() });
+  }
+
+  checkHisSession(request: Pick<HisFetchRequest, 'token' | 'cookie' | 'cskcb' | 'year' | 'month' | 'locTheo'>): Observable<{ isValid: boolean; message: string }> {
+    return this.http.post<{ isValid: boolean; message: string }>(`${this.apiUrl}/CheckHisSession`,
+      { token: request.token, cookie: request.cookie, cskcb: request.cskcb,
+        year: request.year, month: request.month, locTheo: request.locTheo }, { headers: this.httpConfig.getHeaders() });
+  }
+
+  fetchHisXmlBatch(request: HisFetchRequest): Observable<Blob> {
+    return this.http.post(`${this.apiUrl}/FetchHisXmlBatch`, request,
+      { headers: this.httpConfig.getHeaders(), responseType: 'blob' }).pipe(
+        catchError(async (error: HttpErrorResponse) => {
+          if (error.error instanceof Blob) {
+            let body: unknown;
+            try { body = JSON.parse(await error.error.text()); }
+            catch { body = { message: 'HIS không trả được XML. Kiểm tra lại phiên và tham số.' }; }
+            throw new HttpErrorResponse({ error: body, headers: error.headers, status: error.status,
+              statusText: error.statusText, url: error.url || undefined });
+          }
+          throw error;
+        })
+      );
+  }
+
+  getHisBrowserScope(): Observable<{ scope: string }> {
+    return this.http.get<{ scope: string }>(`${this.apiUrl}/HisBrowserScope`,
+      { headers: this.httpConfig.getHeaders() });
+  }
 
   getImportExcelTablesInfo(): Observable<ImportExcelTableInfo[]> {
     return this.http.post<ImportExcelTableInfo[]>(

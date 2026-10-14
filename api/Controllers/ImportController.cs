@@ -1,4 +1,4 @@
-﻿using api.Models;
+using api.Models;
 using API.Common;
 using API.Data;
 using API.Models;
@@ -33,7 +33,7 @@ namespace api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ImportController : ControllerBase
+    public partial class ImportController : ControllerBase
     {
         private readonly ApplicationDbContext _dbContext;
         private readonly DatabaseResolver _dbResolver;
@@ -237,6 +237,7 @@ namespace api.Controllers
 
             // Lấy tên database động thông qua service dùng chung
             var dbData = await _dbResolver.GetDatabaseByUserAsync(userName);
+
 			if (string.IsNullOrEmpty(dbData))
                 return BadRequest(new ImportExcelResponse
                     {
@@ -623,7 +624,7 @@ namespace api.Controllers
         [HttpPost("ImportXMLHospitalData")]
         public async Task<IActionResult> ImportXMLHospitalData([FromForm] IFormFile file)
         {
-            await Task.Delay(5000);
+
             //return Ok(new
             //     ImportXMLResponse
             //    {
@@ -661,6 +662,7 @@ namespace api.Controllers
 
             // Lấy tên database động thông qua service dùng chung
             var dbData = await _dbResolver.GetDatabaseByUserAsync(userName);
+
 			if (string.IsNullOrEmpty(dbData)) 
                 return BadRequest(new ImportXMLResponse
                 {
@@ -688,139 +690,92 @@ namespace api.Controllers
                         isError = true,
                         message = "Tên database không hợp lệ."
                     });
-            var settings = new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, Async = true };
+            var settings = new XmlReaderSettings
+            {
+                DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null,
+                MaxCharactersInDocument = 50 * 1024 * 1024
+            };
             try
             {
                 using var stream = file.OpenReadStream();
                 using var reader = XmlReader.Create(stream, settings);
-                var msg = "";
+                var document = XDocument.Load(reader);
+                var records = document.Descendants("HOSO").ToList();
+                if (records.Count == 0) throw new InvalidDataException("File không có hồ sơ HOSO.");
                 var countXml1 = 0;
                 var countXml2 = 0;
                 var countXml3 = 0;
-                // đọc xml
-                while (reader.Read())
+                var skipped = 0;
+                // Một file/lô là một giao dịch: lỗi bất kỳ hồ sơ nào sẽ hoàn tác cả lô.
+                using var transaction = await _dbContext.Database.BeginTransactionAsync();
+                foreach (var record in records)
                 {
-                    if (reader.NodeType != XmlNodeType.Element || reader.Name != "HOSO")
+                    var parts = new Dictionary<string, XElement>();
+                    foreach (var part in record.Elements("FILEHOSO"))
+                    {
+                        var type = (string?)part.Element("LOAIHOSO") ?? "";
+                        if (type is not ("XML1" or "XML2" or "XML3")) continue;
+                        var content = part.Element("NOIDUNGFILE")
+                            ?? throw new InvalidDataException($"Thiếu NOIDUNGFILE của {type}.");
+                        if (!parts.TryAdd(type, HisXmlClient.DecodeContent(content)))
+                            throw new InvalidDataException($"Hồ sơ có nhiều phần {type}.");
+                    }
+                    if (!parts.TryGetValue("XML1", out var patient))
+                        throw new InvalidDataException("Hồ sơ thiếu XML1.");
+                    var maLk = (string?)patient.Element("MA_LK");
+                    if (string.IsNullOrWhiteSpace(maLk)) throw new InvalidDataException("XML1 thiếu MA_LK.");
+                    using var check = _dbContext.Database.GetDbConnection().CreateCommand();
+                    check.Transaction = transaction.GetDbTransaction();
+                    check.CommandText = $"SELECT COUNT(1) FROM `{dbData}`.xml1 WHERE MA_LK = @maLk";
+                    check.Parameters.Add(new MySqlParameter("@maLk", maLk));
+                    if (Convert.ToInt64(await check.ExecuteScalarAsync()) > 0)
+                    {
+                        skipped++;
                         continue;
-                    var hosoEl = XElement.ReadFrom(reader) as XElement;
-                    if (hosoEl == null) continue;
-
-                    var bn = new XML1();
-                    var dsChiTietThuoc = new List<XML2>();
-                    var dsDichVuKiThuat = new List<XML3>();
-
-                    ResultInfo resThemBn = null;
-                    ResultInfo resThemDsThuoc = null;
-                    ResultInfo resThemDsDvkt = null;
-                    var maLK = "";
-                    foreach (var fileHNode in hosoEl.Elements("FILEHOSO"))
-                    {
-                        var loai = (string?)fileHNode.Element("LOAIHOSO") ?? "";
-                        var noidungXml = fileHNode.Element("NOIDUNGFILE");
-                        var encodedContent = noidungXml.Value;
-                        byte[] decoded = Convert.FromBase64String(encodedContent);
-                        string xml = Encoding.UTF8.GetString(decoded);
-                        XElement noidung = XElement.Parse(xml);
-                        if (loai.Equals("XML1"))
-                        {
-                            countXml1++;
-                            if (noidung == null) continue;
-                            maLK = (string?)noidung.Element("MA_LK") ?? "";
-                            if (string.IsNullOrWhiteSpace(maLK)) continue;
-                            var exists = await _dbResolver.CheckIfBenhNhanTonTai(maLK, $"`{dbData}`.xml1");
-                            if (exists != 0) continue;
-
-                            // thông tin bệnh nhân
-                            resThemBn = await ThemBenhNhan(noidung, $"`{dbData}`.xml1", csytId);
-                        }
-                        else if (loai.Equals("XML2"))
-                        {
-                            var chiTietThuocXmWrapper = noidung.Element("DSACH_CHI_TIET_THUOC");
-                            var dsChiTietThuocXml = chiTietThuocXmWrapper.Elements("CHI_TIET_THUOC").ToList();
-                            countXml2 += dsChiTietThuocXml.Count;
-                            resThemDsThuoc = await ThemChiTietThuoc(dsChiTietThuocXml, $"`{dbData}`.xml2", csytId);
-                        }
-                        else if (loai.Equals("XML3"))
-                        {
-                            var chiTietDvktXmWrapper = noidung.Element("DSACH_CHI_TIET_DVKT");
-                            var dsChiTietDvktXml = chiTietDvktXmWrapper.Elements("CHI_TIET_DVKT").ToList();
-                            countXml3 += dsChiTietDvktXml.Count;
-							resThemDsDvkt = await ThemDvkt(dsChiTietDvktXml, $"`{dbData}`.xml3", csytId);
-                        }
                     }
-                    var flag = 0;
-                    if (resThemBn != null && resThemBn.status_code != 200)
+                    var result = await ThemBenhNhan(patient, $"`{dbData}`.xml1", csytId);
+                    if (result.status_code != 200) throw new InvalidDataException($"Không thể import XML1 của {maLk}.");
+                    countXml1++;
+                    foreach (var type in new[] { "XML2", "XML3" })
                     {
-                        flag = 1;
-                        msg += resThemBn.message + "\n";
-                    }
-                    if (resThemDsDvkt != null && resThemDsDvkt.status_code != 200)
-                    {
-                        flag = 1;
-                        msg += resThemDsDvkt.message + "\n";
-                    }
-                    if (resThemDsThuoc != null && resThemDsThuoc.status_code != 200)
-                    {
-                        flag = 1;
-                        msg += resThemDsThuoc.message + "\n";
-                    }
-                    if (flag == 1)
-                    {
-                        if (maLK != "")
-                        {
-                            // xoá dữ liệu với mã lk đang bị lỗi;
-                            var sqlDel1 = $"DELETE FROM `{dbData}`.xml1 WHERE MA_LK={maLK}";
-                            var sqlDel2 = $"DELETE FROM `{dbData}`.xml2 WHERE MA_LK={maLK}";
-                            var sqlDel3 = $"DELETE FROM `{dbData}`.xml3 WHERE MA_LK={maLK}";
-                            await _dbContext.Database.ExecuteSqlRawAsync(sqlDel1);
-                            await _dbContext.Database.ExecuteSqlRawAsync(sqlDel2);
-                            await _dbContext.Database.ExecuteSqlRawAsync(sqlDel3);
-                        }
-                        return StatusCode(500, new ImportXMLResponse
-                        {
-                            message = $"Lỗi SQL: ở {maLK} : {msg}",
-                            isError = true
-                        });
+                        if (!parts.TryGetValue(type, out var detail)) continue;
+                        var wrapperName = type == "XML2" ? "DSACH_CHI_TIET_THUOC" : "DSACH_CHI_TIET_DVKT";
+                        var rowName = type == "XML2" ? "CHI_TIET_THUOC" : "CHI_TIET_DVKT";
+                        var wrapper = detail.Element(wrapperName)
+                            ?? throw new InvalidDataException($"{type} thiếu {wrapperName}.");
+                        var rows = wrapper.Elements(rowName).ToList();
+                        if (rows.Any(row => (string?)row.Element("MA_LK") != maLk))
+                            throw new InvalidDataException($"MA_LK trong {type} không khớp XML1.");
+                        if (rows.Count == 0) continue;
+                        result = type == "XML2"
+                            ? await ThemChiTietThuoc(rows, $"`{dbData}`.xml2", csytId)
+                            : await ThemDvkt(rows, $"`{dbData}`.xml3", csytId);
+                        if (result.status_code != 200) throw new InvalidDataException($"Không thể import {type} của {maLk}.");
+                        if (type == "XML2") countXml2 += rows.Count;
+                        else countXml3 += rows.Count;
                     }
                 }
-                msg = "Thêm mới thành công!";
-                return Ok(new
-                 ImportXMLResponse
+                await transaction.CommitAsync();
+                return Ok(new ImportXMLResponse
                 {
-                    message = msg,
-                    countXML1 = countXml1,
-                    countXML2 = countXml2,
-                    countXML3 = countXml3,
-                    isError = false
+                    message = $"Import thành công {countXml1} hồ sơ; bỏ qua {skipped} hồ sơ đã tồn tại.",
+                    countXML1 = countXml1, countXML2 = countXml2, countXML3 = countXml3, isError = false
                 });
             }
-            catch (XmlException xe)
+            catch (Exception ex) when (ex is XmlException or FormatException or InvalidDataException)
             {
                 return BadRequest(new ImportXMLResponse
                 {
-                    isError = true,
-                    message = $"Lỗi XML: " + xe.Message
+                    isError = true, message = "Đã hoàn tác lô import. " + ex.Message
                 });
             }
-            catch (FormatException fe)
+            catch (Exception)
             {
-                return BadRequest(new ImportXMLResponse
-                {
-                    isError = true,
-                    message = $"Lỗi Base64: " + fe.Message
-                });
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex);
-
                 return StatusCode(500, new ImportXMLResponse
                 {
-                    isError = true,
-                    message = "Lỗi server: " + ex.Message
+                    isError = true, message = "Import thất bại; đã hoàn tác lô dữ liệu. Kiểm tra cấu trúc và kết nối database."
                 });
             }
-
         }
 
         private async Task<IActionResult> ImportXMLHospitalData_old(IFormFile file)
@@ -1199,19 +1154,20 @@ namespace api.Controllers
             }
             ResultInfo result;
             //return new ResultInfo { message = "Ok", status_code = 200 };
-            DbTransaction transaction = conn.BeginTransaction();
+            using var ownedTransaction = _dbContext.Database.CurrentTransaction == null ? conn.BeginTransaction() : null;
+            var transaction = _dbContext.Database.CurrentTransaction?.GetDbTransaction() ?? ownedTransaction!;
             try
             {
                 // Start a local transaction.
                 cmd.Transaction = transaction;
                 cmd.ExecuteNonQuery();
-                transaction.Commit();
+                ownedTransaction?.Commit();
                 return new ResultInfo { message = "Ok", status_code = 200 };
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
-                transaction.Rollback();
+                ownedTransaction?.Rollback();
                 return new ResultInfo { message = ex.Message, status_code = 500 };
             }
         }
@@ -1320,19 +1276,20 @@ namespace api.Controllers
             }
             ResultInfo result;
             //return new ResultInfo { message = "Ok", status_code = 200 };
-            DbTransaction transaction = conn.BeginTransaction();
+            using var ownedTransaction = _dbContext.Database.CurrentTransaction == null ? conn.BeginTransaction() : null;
+            var transaction = _dbContext.Database.CurrentTransaction?.GetDbTransaction() ?? ownedTransaction!;
             try
             {
                 cmd.Transaction = transaction;
                 cmd.CommandText = sql;
                 cmd.ExecuteNonQuery();
-                transaction.Commit();
+                ownedTransaction?.Commit();
                 return new ResultInfo { message = "Ok", status_code = 200 };
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
-                transaction.Rollback();
+                ownedTransaction?.Rollback();
                 return new ResultInfo { message = ex.Message, status_code = 500 };
             }
         }
