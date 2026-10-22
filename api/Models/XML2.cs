@@ -23,7 +23,7 @@ namespace api.Models
         public string? SO_DANG_KY { get; set; }
         public string? TT_THAU { get; set; }
         public string? PHAM_VI { get; set; }
-        public decimal? TYLE_TT_BH { get; set; }
+        public int? TYLE_TT_BH { get; set; }
         public decimal? SO_LUONG { get; set; }
         public decimal? DON_GIA { get; set; }
         public decimal? THANH_TIEN_BV { get; set; }

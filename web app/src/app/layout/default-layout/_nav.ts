@@ -21,23 +21,37 @@ export const navItems: INavDataExtended[] = [
     iconComponent: { name: 'cil-people' }
   },
   {
-    name: 'Báo cáo và tra cứu',
-    iconComponent: { name: 'cilSearch' },
-    url: '/baocao-tracuu',
+    name: 'Quản lý điều hành',
+    iconComponent: { name: 'cilList' },
+    url: '/quanly-dieuhanh',
     roles: ['all'],
     children: [
       {
         name: 'Bảng chi tiết bác sĩ chỉ định',
         roles: ['ADMIN','BC_BSCD'],
-        url: '/baocao-tracuu/doanhthu_bscd',
-        iconComponent: { name: 'cil-chart' }
+        url: '/quanly-dieuhanh/doanhthu_bscd',
+        iconComponent: { name: 'cilNotes' }
       },
       {
         name: 'Bảng chi tiết bác sĩ thực hiện',
         roles: ['ADMIN','BC_BSTH'],
-        url: '/baocao-tracuu/doanhthu_bsth',
-        iconComponent: { name: 'cil-chart' }
+        url: '/quanly-dieuhanh/doanhthu_bsth',
+        iconComponent: { name: 'cilMedicalCross' }
       },
+      {
+        name: 'Báo cáo điểm ctkh',
+        roles: ['BC_DIEM_CTKH', 'ADMIN'],
+        url: '/quanly-dieuhanh/diem_ctkh',
+        iconComponent: { name: 'cilPencil' }
+      }
+    ]
+  },
+  {
+    name: 'Báo cáo và tra cứu',
+    iconComponent: { name: 'cilSearch' },
+    url: '/baocao-tracuu',
+    roles: ['all'],
+    children: [
       {
         name: 'Báo cáo doanh thu theo khoa (chi tiết theo nhóm dịch vụ)',
         roles: ['ADMIN', 'BC_KHOA'],
@@ -54,12 +68,6 @@ export const navItems: INavDataExtended[] = [
         name: 'Báo cáo doanh thu toàn viện',
         roles: ['ADMIN', 'BC_TOANVIEN'],
         url: '/baocao-tracuu/doanhthu_toanvien',
-        iconComponent: { name: 'cil-chart' }
-      },
-      {
-        name: 'Báo cáo điểm ctkh',
-        roles: ['BC_DIEM_CTKH', 'ADMIN'],
-        url: '/baocao-tracuu/diem_ctkh',
         iconComponent: { name: 'cil-chart' }
       }
     ]
