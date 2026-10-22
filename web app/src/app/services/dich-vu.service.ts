@@ -39,6 +39,44 @@ export class DichVuService {
     );
   }
 
+  exportExcel(
+    searchTerm: string = '',
+    idLoaiDV?: number
+  ): Observable<Blob> {
+
+    const body: any = {
+      pageNumber: 1,
+      pageSize: 1,
+      searchTerm
+    };
+
+    if (idLoaiDV && idLoaiDV !== 0) {
+      body.idLoaiDV = idLoaiDV;
+    }
+
+    return this.http.post(
+      `${this.apiUrl}/ds_dichvu_excel`,
+      body,
+      { headers: this.httpConfig.getHeaders(), responseType: 'blob' }
+    );
+  }
+
+  previewCapNhatGia(): Observable<any> {
+    return this.http.post<any>(
+      `${this.apiUrl}/preview-cap-nhat-gia`,
+      {},
+      { headers: this.httpConfig.getHeaders() }
+    );
+  }
+
+  confirmCapNhatGia(dichVuIds: number[]): Observable<any> {
+    return this.http.post<any>(
+      `${this.apiUrl}/confirm-cap-nhat-gia`,
+      { dichVuIds },
+      { headers: this.httpConfig.getHeaders() }
+    );
+  }
+
   updateDichVu(
     dichVuId: number,
     chiPhi: number,

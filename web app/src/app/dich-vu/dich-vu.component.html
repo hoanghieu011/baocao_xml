@@ -33,6 +33,20 @@
           <span *ngIf="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
         </button>
       </div>
+
+      <div class="col-auto">
+        <button class="btn btn-success w-100 text-white" (click)="exportExcel()" [disabled]="loadingExcel || loading">
+          <span *ngIf="!loadingExcel"><i class="bi bi-file-earmark-excel"></i> Xuất Excel</span>
+          <span *ngIf="loadingExcel" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+        </button>
+      </div>
+
+      <div class="col-auto">
+        <button class="btn btn-warning w-100 text-white" (click)="moCapNhatGia()" [disabled]="loadingGia || loading">
+          <span *ngIf="!loadingGia"><i class="bi bi-arrow-repeat"></i> Cập nhật giá mới nhất</span>
+          <span *ngIf="loadingGia" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+        </button>
+      </div>
     </div>
 
     <div class="table-responsive">
@@ -281,6 +295,66 @@
       <button class="btn btn-primary" (click)="saveDichVu()" [disabled]="saving">
         <span *ngIf="!saving">Cập nhật</span>
         <span *ngIf="saving" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal xem trước cập nhật giá mới nhất từ xml3 -->
+<div class="modal-backdrop" *ngIf="showGiaModal">
+  <div class="modal-card" style="max-width: 900px; width: 95%;">
+    <div class="modal-header">
+      <h5 class="modal-title">Cập nhật giá mới nhất từ dữ liệu XML3</h5>
+      <button type="button" class="btn-close" aria-label="Close" (click)="dongGiaModal()" [disabled]="confirmingGia"></button>
+    </div>
+
+    <div class="modal-body">
+      <div class="row g-2 mb-3" *ngIf="previewStats">
+        <div class="col"><div class="border rounded p-2 text-center"><div class="small text-muted">Tổng dịch vụ</div><div class="fw-bold">{{ previewStats.tongSoDichVu | number }}</div></div></div>
+        <div class="col"><div class="border rounded p-2 text-center"><div class="small text-muted">Có nguồn giá</div><div class="fw-bold">{{ previewStats.soCoNguon | number }}</div></div></div>
+        <div class="col"><div class="border rounded p-2 text-center bg-warning-subtle"><div class="small text-muted">Giá thay đổi</div><div class="fw-bold text-warning">{{ previewStats.soGiaThayDoi | number }}</div></div></div>
+        <div class="col"><div class="border rounded p-2 text-center"><div class="small text-muted">Giá không đổi</div><div class="fw-bold">{{ previewStats.soGiaKhongDoi | number }}</div></div></div>
+        <div class="col"><div class="border rounded p-2 text-center"><div class="small text-muted">Không có nguồn</div><div class="fw-bold text-muted">{{ previewStats.soKhongCoNguon | number }}</div></div></div>
+      </div>
+
+      <div class="small text-muted mb-2">
+        Danh sách dưới đây là các dịch vụ sẽ được cập nhật giá (giá mới khác giá hiện tại). Giá lấy theo bản ghi có ngày y lệnh mới nhất trong XML3.
+      </div>
+
+      <div class="table-responsive" style="max-height: 50vh; overflow:auto;">
+        <table [cBorder]="1" borderColor="primary" bordered cTable>
+          <thead class="table-primary text-center align-middle">
+            <tr>
+              <th>#</th>
+              <th>Mã dịch vụ</th>
+              <th>Tên dịch vụ</th>
+              <th>Giá hiện tại</th>
+              <th>Giá mới</th>
+              <th>Ngày y lệnh</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let dv of previewData; let i = index">
+              <td class="text-center">{{ i + 1 }}</td>
+              <td>{{ dv.maDichVu || '-' }}</td>
+              <td>{{ dv.tenDichVu || '-' }}</td>
+              <td class="text-end">{{ dv.giaHienTai != null ? (dv.giaHienTai | number:'1.0-0') : '-' }}</td>
+              <td class="text-end fw-bold text-warning">{{ dv.giaMoi != null ? (dv.giaMoi | number:'1.0-0') : '-' }}</td>
+              <td class="text-center">{{ formatDate(dv.ngayYl) }}</td>
+            </tr>
+            <tr *ngIf="previewData.length === 0">
+              <td colspan="6" class="text-center">Không có dịch vụ nào cần cập nhật giá.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="modal-footer gap-2" style="justify-content: flex-end;">
+      <button class="btn btn-secondary" (click)="dongGiaModal()" [disabled]="confirmingGia">Đóng</button>
+      <button class="btn btn-primary" (click)="xacNhanCapNhatGia()" [disabled]="confirmingGia || previewData.length === 0">
+        <span *ngIf="!confirmingGia">Xác nhận cập nhật ({{ previewData.length | number }})</span>
+        <span *ngIf="confirmingGia" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
       </button>
     </div>
   </div>

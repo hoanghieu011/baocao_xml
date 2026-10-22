@@ -28,6 +28,14 @@ export class DichVuComponent {
 
   dsDichVu: any[] = [];
   loading = false;
+  loadingExcel = false;
+
+  // Cập nhật giá mới nhất từ xml3
+  loadingGia = false;
+  showGiaModal = false;
+  confirmingGia = false;
+  previewStats: any | null = null;
+  previewData: any[] = [];
 
   selectedDV: any | null = null;
   editChiPhi: number | null = null;
@@ -227,6 +235,100 @@ formatDate(value: any): string {
       }
     });
   } 
+
+  exportExcel() {
+    if (this.loadingExcel) return;
+    this.loadingExcel = true;
+
+    this.dichVuService.exportExcel(
+      this.searchTerm && this.searchTerm.trim().length ? this.searchTerm.trim() : '',
+      this.cur_loai_dichvu
+    ).subscribe({
+      next: (res) => {
+        this.loadingExcel = false;
+        const blob = new Blob([res], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const now = new Date();
+        const stamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`;
+        a.download = `DanhMucDichVu_${stamp}.xlsx`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+        this.addToast('Xuất Excel thành công', 'success');
+      },
+      error: (err) => {
+        this.loadingExcel = false;
+        this.addToast('Xuất Excel thất bại, vui lòng thử lại!');
+        console.error(err);
+      }
+    });
+  }
+
+  // Mở xem trước cập nhật giá mới nhất từ xml3
+  moCapNhatGia() {
+    if (this.loadingGia) return;
+    this.loadingGia = true;
+
+    this.dichVuService.previewCapNhatGia().subscribe({
+      next: (res) => {
+        this.loadingGia = false;
+        this.previewStats = {
+          tongSoDichVu: res?.tongSoDichVu ?? 0,
+          soCoNguon: res?.soCoNguon ?? 0,
+          soGiaThayDoi: res?.soGiaThayDoi ?? 0,
+          soGiaKhongDoi: res?.soGiaKhongDoi ?? 0,
+          soKhongCoNguon: res?.soKhongCoNguon ?? 0
+        };
+        // Chỉ hiển thị các dịch vụ có giá thay đổi
+        this.previewData = (res?.danhSach ?? []).filter((x: any) => x.trangThai === 'THAY_DOI');
+        this.showGiaModal = true;
+      },
+      error: (err) => {
+        this.loadingGia = false;
+        this.addToast('Không lấy được dữ liệu xem trước, vui lòng thử lại!');
+        console.error(err);
+      }
+    });
+  }
+
+  dongGiaModal() {
+    if (this.confirmingGia) return;
+    this.showGiaModal = false;
+    this.previewStats = null;
+    this.previewData = [];
+  }
+
+  xacNhanCapNhatGia() {
+    if (this.confirmingGia) return;
+
+    const ids = this.previewData.map((x: any) => x.dichvuid).filter((x: any) => !!x);
+    if (ids.length === 0) {
+      this.addToast('Không có dịch vụ nào cần cập nhật giá.', 'warning');
+      return;
+    }
+
+    this.confirmingGia = true;
+    this.dichVuService.confirmCapNhatGia(ids).subscribe({
+      next: (res) => {
+        this.confirmingGia = false;
+        if (res?.thanhCong) {
+          this.addToast(res?.message || `Đã cập nhật ${res?.soDichVuCapNhat ?? 0} dịch vụ.`, 'success');
+          this.showGiaModal = false;
+          this.previewStats = null;
+          this.previewData = [];
+          this.loadData(true);
+        } else {
+          this.addToast(res?.message || 'Cập nhật không thành công.', 'danger');
+        }
+      },
+      error: (err) => {
+        this.confirmingGia = false;
+        this.addToast('Cập nhật giá thất bại, đã hủy thay đổi!', 'danger');
+        console.error(err);
+      }
+    });
+  }
 
   formatCurrency(value: any): string {
   if (value == null || value === '') return '';

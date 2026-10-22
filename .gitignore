@@ -6,3 +6,9 @@ api/publish/
 api/Common/ConnectionStrings.cs
 api/global.json
 api/global.json
+/docs
+/api/App_Data
+/api/docs
+/api/tests
+/api/api.csproj
+*.md
