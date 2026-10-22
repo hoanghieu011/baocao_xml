@@ -1,5 +1,6 @@
 using API.Common;
 using API.Data;
+using API.DTO;
 using API.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -49,30 +50,13 @@ namespace API.Controllers
                 var pageSize = Math.Clamp(req.PageSize, 1, 1000);
                 var offset = (pageNumber - 1) * pageSize;
 
-                var whereBuilder = new System.Text.StringBuilder(" WHERE 1=1");
-                var paramList = new List<DbParameter>();
-
                 var conn = _context.Database.GetDbConnection();
                 using var tempCmd = conn.CreateCommand();
 
-                whereBuilder.Append($" AND a.CSYTID = {csytid} and a.TRANGTHAI = 1 and a.NHOM_MABHYT_ID = b.NHOM_MABHYT_ID");
+                // Xây dựng điều kiện lọc dùng chung cho cả tra cứu và xuất Excel
+                var whereBuilder = BuildDichVuFilter(req, csytid, tempCmd, out var paramList);
 
-                if (!string.IsNullOrWhiteSpace(req.SearchTerm) && req.SearchTerm != "All")
-                {
-                    var p = tempCmd.CreateParameter();
-                    p.ParameterName = "@search";
-                    p.Value = $"%{req.SearchTerm}%";
-                    paramList.Add(p);
-
-                    whereBuilder.Append(" AND (a.MA_DICHVU LIKE @search OR a.TEN_DICHVU LIKE @search)");
-                }
-
-                if (req.IdLoaiDV != null && req.IdLoaiDV != 0)
-                {
-                    whereBuilder.Append($" AND (a.NHOM_MABHYT_ID = {req.IdLoaiDV})");
-                }
-
-                var sql = @"SELECT 
+                var sql = @"SELECT
                                 a.MA_DICHVU,
                                 a.DICHVUID, a.TEN_DICHVU, b.TENNHOM, a.DONVI, a.CSYTID, a.GIA_BHYT, a.CHIPHI, a.HESO, a.nhom_mabhyt_id, a.HESO_CLS_BS, a.HESO_CLS_DD
                                 FROM dmc_dichvu a, dmc_nhom_mabhyt b"
@@ -120,6 +104,100 @@ namespace API.Controllers
             {
                 return StatusCode(500, new { message = "Lỗi server", detail = ex.Message });
             }
+        }
+
+        /// <summary>
+        /// Xuất danh sách dịch vụ ra file Excel (.xlsx) theo đúng bộ lọc hiện tại của màn hình.
+        /// Không phân trang — xuất toàn bộ bản ghi khớp bộ lọc trong phạm vi bệnh viện của user.
+        /// </summary>
+        [Authorize]
+        [HttpPost("ds_dichvu_excel")]
+        public async Task<IActionResult> ExportDsDichVu([FromBody] DsDichVuRequest req)
+        {
+            try
+            {
+                if (req == null)
+                    return BadRequest("Yêu cầu không hợp lệ.");
+
+                var userName = User.FindFirst(ClaimTypes.Name)?.Value
+                    ?? User.FindFirst("USER_NAME")?.Value;
+
+                var csytid = User.FindFirst(ClaimTypes.Name)?.Value
+                    ?? User.FindFirst("CSYTID")?.Value;
+
+                if (string.IsNullOrEmpty(userName))
+                    return Unauthorized();
+
+                var conn = _context.Database.GetDbConnection();
+                using var tempCmd = conn.CreateCommand();
+
+                // Dùng chung điều kiện lọc với tra cứu => dữ liệu xuất khớp màn hình
+                var whereBuilder = BuildDichVuFilter(req, csytid, tempCmd, out var paramList);
+
+                // Không LIMIT/OFFSET: lấy toàn bộ bản ghi khớp bộ lọc
+                var sql = @"SELECT
+                                a.MA_DICHVU,
+                                a.DICHVUID, a.TEN_DICHVU, b.TENNHOM, a.DONVI, a.CSYTID, a.GIA_BHYT, a.CHIPHI, a.HESO, a.nhom_mabhyt_id, a.HESO_CLS_BS, a.HESO_CLS_DD
+                                FROM dmc_dichvu a, dmc_nhom_mabhyt b"
+                            + whereBuilder.ToString() + " ORDER BY a.LOAIID, a.nhom_mabhyt_id";
+
+                var dsDichVu = await _context.dto_dichvu
+                    .FromSqlRaw(sql, paramList.ToArray())
+                    .AsNoTracking()
+                    .ToListAsync();
+
+                var columns = new List<ExcelColumn<DichVuDto>>
+                {
+                    new() { Header = "Mã dịch vụ / vật tư", Value = x => x.ma_dichvu, AsText = true, Width = 22 },
+                    new() { Header = "Tên dịch vụ / vật tư", Value = x => x.ten_dichvu, Width = 45 },
+                    new() { Header = "Đơn vị", Value = x => x.donvi, Width = 10 },
+                    new() { Header = "Giá", Value = x => x.gia_bhyt, NumberFormat = "#,##0", Width = 14 },
+                    new() { Header = "Chi phí", Value = x => x.chiphi, NumberFormat = "#,##0.##", Width = 14 },
+                    new() { Header = "Hệ số", Value = x => x.heso, NumberFormat = "#,##0.##", Width = 10 },
+                    new() { Header = "Hệ số CLS BS", Value = x => x.heso_cls_bs, NumberFormat = "#,##0.##", Width = 12 },
+                    new() { Header = "Hệ số CLS ĐD", Value = x => x.heso_cls_dd, NumberFormat = "#,##0.##", Width = 12 },
+                    new() { Header = "Loại dịch vụ", Value = x => x.tennhom, Width = 30 },
+                };
+
+                var bytes = ExcelExportHelper.Build(dsDichVu, columns, "DANH_MUC_DICH_VU");
+                var fileName = $"DanhMucDichVu_{DateTime.Now:yyyyMMddHHmm}.xlsx";
+
+                return File(bytes, ExcelExportHelper.XlsxContentType, fileName);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Lỗi server", detail = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Xây dựng mệnh đề WHERE + tham số dùng chung cho tra cứu và xuất Excel danh mục dịch vụ.
+        /// Luôn gắn điều kiện CSYTID (phạm vi bệnh viện của user) để đảm bảo phân quyền dữ liệu.
+        /// </summary>
+        private static System.Text.StringBuilder BuildDichVuFilter(
+            DsDichVuRequest req, string? csytid, DbCommand tempCmd, out List<DbParameter> paramList)
+        {
+            var whereBuilder = new System.Text.StringBuilder(" WHERE 1=1");
+            paramList = new List<DbParameter>();
+
+            whereBuilder.Append($" AND a.CSYTID = {csytid} and a.TRANGTHAI = 1 and a.NHOM_MABHYT_ID = b.NHOM_MABHYT_ID");
+
+            if (!string.IsNullOrWhiteSpace(req.SearchTerm) && req.SearchTerm != "All")
+            {
+                var p = tempCmd.CreateParameter();
+                p.ParameterName = "@search";
+                p.Value = $"%{req.SearchTerm}%";
+                paramList.Add(p);
+
+                whereBuilder.Append(" AND (a.MA_DICHVU LIKE @search OR a.TEN_DICHVU LIKE @search)");
+            }
+
+            if (req.IdLoaiDV != null && req.IdLoaiDV != 0)
+            {
+                whereBuilder.Append($" AND (a.NHOM_MABHYT_ID = {req.IdLoaiDV})");
+            }
+
+            return whereBuilder;
         }
 
         /// <summary>

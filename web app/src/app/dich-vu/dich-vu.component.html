@@ -33,6 +33,13 @@
           <span *ngIf="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
         </button>
       </div>
+
+      <div class="col-auto">
+        <button class="btn btn-success w-100 text-white" (click)="exportExcel()" [disabled]="loadingExcel || loading">
+          <span *ngIf="!loadingExcel"><i class="bi bi-file-earmark-excel"></i> Xuất Excel</span>
+          <span *ngIf="loadingExcel" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+        </button>
+      </div>
     </div>
 
     <div class="table-responsive">

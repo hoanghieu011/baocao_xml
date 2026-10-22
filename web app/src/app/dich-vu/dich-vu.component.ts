@@ -28,6 +28,7 @@ export class DichVuComponent {
 
   dsDichVu: any[] = [];
   loading = false;
+  loadingExcel = false;
 
   selectedDV: any | null = null;
   editChiPhi: number | null = null;
@@ -227,6 +228,35 @@ formatDate(value: any): string {
       }
     });
   } 
+
+  exportExcel() {
+    if (this.loadingExcel) return;
+    this.loadingExcel = true;
+
+    this.dichVuService.exportExcel(
+      this.searchTerm && this.searchTerm.trim().length ? this.searchTerm.trim() : '',
+      this.cur_loai_dichvu
+    ).subscribe({
+      next: (res) => {
+        this.loadingExcel = false;
+        const blob = new Blob([res], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const now = new Date();
+        const stamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`;
+        a.download = `DanhMucDichVu_${stamp}.xlsx`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+        this.addToast('Xuất Excel thành công', 'success');
+      },
+      error: (err) => {
+        this.loadingExcel = false;
+        this.addToast('Xuất Excel thất bại, vui lòng thử lại!');
+        console.error(err);
+      }
+    });
+  }
 
   formatCurrency(value: any): string {
   if (value == null || value === '') return '';

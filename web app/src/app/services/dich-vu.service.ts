@@ -39,6 +39,28 @@ export class DichVuService {
     );
   }
 
+  exportExcel(
+    searchTerm: string = '',
+    idLoaiDV?: number
+  ): Observable<Blob> {
+
+    const body: any = {
+      pageNumber: 1,
+      pageSize: 1,
+      searchTerm
+    };
+
+    if (idLoaiDV && idLoaiDV !== 0) {
+      body.idLoaiDV = idLoaiDV;
+    }
+
+    return this.http.post(
+      `${this.apiUrl}/ds_dichvu_excel`,
+      body,
+      { headers: this.httpConfig.getHeaders(), responseType: 'blob' }
+    );
+  }
+
   updateDichVu(
     dichVuId: number,
     chiPhi: number,
