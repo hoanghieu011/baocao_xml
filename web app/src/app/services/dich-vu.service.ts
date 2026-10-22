@@ -61,6 +61,22 @@ export class DichVuService {
     );
   }
 
+  previewCapNhatGia(): Observable<any> {
+    return this.http.post<any>(
+      `${this.apiUrl}/preview-cap-nhat-gia`,
+      {},
+      { headers: this.httpConfig.getHeaders() }
+    );
+  }
+
+  confirmCapNhatGia(dichVuIds: number[]): Observable<any> {
+    return this.http.post<any>(
+      `${this.apiUrl}/confirm-cap-nhat-gia`,
+      { dichVuIds },
+      { headers: this.httpConfig.getHeaders() }
+    );
+  }
+
   updateDichVu(
     dichVuId: number,
     chiPhi: number,
